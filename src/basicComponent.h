@@ -29,7 +29,7 @@ public:
   // { "parameter_name", "description", "default value or NULL if required" }
   SST_ELI_DOCUMENT_PARAMS(
     { "clockFreq",  "Frequency of perid (with units) of the clock", "1GHz" },
-    { "maxCount", "Number of clock ticks to execute",             "10"  }
+    { "stop", "Number of clock ticks to execute",             "20"  }
   )
 
   // [Optional] Document the ports: we do not define any 
@@ -56,7 +56,7 @@ private:
   // Params
   SST::Output* out;       // SST Output object for printing, messaging, etc
   std::string clockFreq;  // Clock frequency
-  uint64_t max;     // Cycle counter
+  uint32_t stop;     // Cycle counter
 
   Top* top;
   VerilatedContext* contextp;

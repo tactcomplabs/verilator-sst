@@ -5,18 +5,12 @@ import sst
 verilog_component = {}
 
 
-def SSTVerilogComponent(name, element_type):
-    # todo sanitize user_input
-    add_component(name, element_type)
-
-
 def add_component(name, element_type):
     global verilog_component
     ps = subprocess.Popen(['sst-info', element_type], stdout=subprocess.PIPE)
     element_header_path = subprocess.check_output(
         ['awk', '/using file: [^ ]*/{print $NF}'], stdin=ps.stdout).decode('utf-8')
     lib_dir_path = os.path.dirname(element_header_path)
-    print(lib_dir_path)
     assert os.path.exists(lib_dir_path)
     assert (not (name in verilog_component))
     verilog_component[name] = {'lib_dir_path': lib_dir_path,
@@ -48,7 +42,7 @@ def compileComponent(component):
                                'clean'], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
     assert ret_code == 0
     ret_code = subprocess.call(
-        ['make', f'VERILOG_MACROS={macros_str}', '-C', component['lib_dir_path'], 'install'])
+        ['make', f'VERILOG_MACROS={macros_str}', '-C', component['lib_dir_path'], 'register'], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
     assert ret_code == 0
 
 

@@ -17,7 +17,7 @@ basicVerilogCounter::basicVerilogCounter(ComponentId_t id, Params& params)
 
   out = new Output("", 1, 0, Output::STDOUT);
   clockFreq  = params.find<std::string>("clockFreq", "1GHz");
-  max = params.find<std::uint64_t>("maxCount", "20");
+  stop = params.find<std::uint64_t>("stop", "20");
 
   verilatorSetup();
   registerAsPrimaryComponent();
@@ -25,6 +25,7 @@ basicVerilogCounter::basicVerilogCounter(ComponentId_t id, Params& params)
 
   registerClock(clockFreq, new Clock::Handler<basicVerilogCounter>(this, &basicVerilogCounter::clock));
   out->output("Registering clock with frequency=%s\n", clockFreq.c_str());
+  out->output("Counter set to stop=%u\n", stop);
 }
 
 void basicVerilogCounter::verilatorSetup(){
@@ -38,7 +39,7 @@ void basicVerilogCounter::verilatorSetup(){
   top = new Top;
   top->reset_l = 0;
   top->clk = 0;
-  top->max = max;
+  top->stop = stop;
 }
 
 basicVerilogCounter::~basicVerilogCounter(){

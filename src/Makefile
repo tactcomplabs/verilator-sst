@@ -77,4 +77,4 @@ verify:
 	sst-info $(COMPONENT_NAME)
 
 clean:
-	rm -Rf build
+	rm -Rf $(BUILD_DIR)
