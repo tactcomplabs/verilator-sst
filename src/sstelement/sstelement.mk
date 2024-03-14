@@ -8,7 +8,7 @@ SST_LDFLAGS = $(shell sst-config --ELEMENT_LDFLAGS)
 SST_CPPFLAGS = -I$(BUILD_DIR)
 
 SSTELEMENT_SRC_DIR = $(abspath $(CURDIR)/sstelement)
-SSTELEMENT_SRC_SOURCES := /Users/mjeje/verilator-sst/src/sstelement/basicComponent.cc /Users/mjeje/verilator-sst/src/sstelement/basicComponent.cc
+SSTELEMENT_SRC_SOURCES := $(wildcard $(SSTELEMENT_SRC_DIR)/*.cc)
 SSTELEMENT_SOURCES := $(notdir $(SSTELEMENT_SRC_SOURCES))
 
 $(info $$SSTELEMENT_SRC_DIR $(SSTELEMENT_SRC_DIR))
@@ -19,14 +19,14 @@ SSTELEMENT_BUILD_OBJS := $(patsubst %.cc, %.o, $(addprefix $(BUILD_DIR)/, $(SSTE
 
 $(info $$SSTELEMENT_BUILD_OBJS $(SSTELEMENT_BUILD_OBJS))
 
-SSTELEMENT_SRC_HEADERS := /Users/mjeje/verilator-sst/src/sstelement/basicComponent.h
+SSTELEMENT_SRC_HEADERS := $(wildcard $(SSTELEMENT_SRC_DIR)/*.h)
 SSTELEMENT_HEADERS := $(notdir $(SSTELEMENT_SRC_HEADERS))
 
 $(info $$SSTELEMENT_SRC_HEADERS $(SSTELEMENT_SRC_HEADERS))
 $(info $$SSTELEMENT_HEADERS $(SSTELEMENT_HEADERS))
 
 SSTELEMENT_NAME = basicComponent
-SSTELEMENT_LIB = lib$(SSTELEMENT_NAME).so
+SSTELEMENT_LIB = lib$(SSTELEMENT_NAME)
 
 $(info $$SSTELEMENT_NAME $(SSTELEMENT_NAME))
 $(info $$SSTELEMENT_LIB $(SSTELEMENT_LIB))

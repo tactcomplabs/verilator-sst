@@ -29,6 +29,7 @@ basicVerilogCounter::basicVerilogCounter(ComponentId_t id, Params& params)
 }
 
 void basicVerilogCounter::verilatorSetup(){
+  VerilatorSST top;
   // contextp = new VerilatedContext;
   // contextp->debug(0);
   // contextp->randReset(2);

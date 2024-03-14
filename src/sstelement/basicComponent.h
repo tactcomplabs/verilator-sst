@@ -7,6 +7,7 @@
 
 // #include "Top.h"
 #include <sst/core/component.h>
+#include "verilatorSST.h"
 
 namespace SST {
 namespace basicComponent {
