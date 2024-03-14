@@ -11,13 +11,13 @@ module Top
    // Declare some signals so we can see how I/O works
    input              clk,
    input              reset_l,
-   input [INPUT_WIDTH-1:0]       stop,
+   input [63:0]       stop,
    output wire        done
    );
    
-   reg [INPUT_WIDTH-1:0] ctr;
-   reg [INPUT_WIDTH-1:0] safe_stop;
-   wire [INPUT_WIDTH-1:0] next_ctr;
+   reg [63:0] ctr;
+   reg [63:0] safe_stop;
+   wire [63:0] next_ctr;
 
    always_ff @ (posedge clk) begin
       if (!reset_l) begin

@@ -42,7 +42,7 @@ def compileComponent(component):
                                'clean'], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
     assert ret_code == 0
     ret_code = subprocess.call(
-        ['make', f'VERILOG_MACROS={macros_str}', '-C', component['lib_dir_path'], 'register'], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+        ['make', f'VERILOG_MACROS={macros_str}', '-C', component['lib_dir_path']], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
     assert ret_code == 0
 
 

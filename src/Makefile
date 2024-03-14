@@ -2,44 +2,19 @@
 # src/Makefile
 #
 
-VERILATOR_ROOT = $(abspath $(dir $(shell which verilator))../share/verilator)
-include $(VERILATOR_ROOT)/include/verilated.mk
-ifeq (, $(shell which sst-config))
- $(error "No sst-config in $(PATH), add `sst-config` to your PATH")
-endif
-
 NPROC = $(shell sysctl -n hw.physicalcpu)
 
-SRC_DIR = $(abspath $(CURDIR))
-BUILD_DIR = $(abspath ../build)
-INSTALL_DIR = $(abspath ../install)
+export SRC_DIR = $(abspath $(CURDIR))
+export BUILD_DIR = $(abspath ../build)
+export INSTALL_DIR = $(abspath ../install)
 
-COMOPNENT_NAME = basicComponent
+include $(abspath $(CURDIR)/verilog/verilog.mk)
+include $(abspath $(CURDIR)/sstelement/sstelement.mk)
 
-COMPONENT_LIB=lib$(COMOPNENT_NAME).so
-BUILD_LIB=$(BUILD_DIR)/$(COMPONENT_LIB)
-INSTALL_LIB=$(INSTALL_DIR)/$(COMPONENT_LIB)
+.DEFAULT_GOAL := register
+.PHONY: register verify clean
 
-BASICCOMPONENT_SOURCES := $(wildcard *.cc)
-SRC_SOURCES := $(SRC_DIR)/$(BASICCOMPONENT_SOURCES)
-
-BASICCOMPONENT_HEADERS := $(patsubst %.cc,%.h, $(BASICCOMPONENT_SOURCES))
-SRC_HEADERS := $(SRC_DIR)/$(BASICCOMPONENT_HEADERS)
-
-INSTALL_HEADERS := $(INSTALL_DIR)/$(BASICCOMPONENT_HEADERS) 
-BUILD_OBJS := $(patsubst %.cc,%.o, $(BUILD_DIR)/$(BASICCOMPONENT_SOURCES))
-
-OPTIMIZE_FLAGS=-O3
-SST_CXX=$(shell sst-config --CXX)
-SST_CXXFLAGS = $(shell sst-config --ELEMENT_CXXFLAGS)
-SST_LDFLAGS = $(shell sst-config --ELEMENT_LDFLAGS)
-SST_CPPFLAGS = -I$(BUILD_DIR)
-
-.PHONY: clean register verify
-
-all: register
-
-$(BUILD_OBJS): $(SRC_SOURCES)
+$(SSTELEMENT_BUILD_OBJS): $(VERILOG_SRC_SOURCES) $(SSTELEMENT_SRC_SOURCES) 
 	mkdir -p $(dir $@)
 	verilator \
 	--cc \
@@ -52,29 +27,28 @@ $(BUILD_OBJS): $(SRC_SOURCES)
 	$(VERILOG_MACROS) \
 	-Wall \
 	--prefix Top \
-	--top-module Top \
+	--top-module $(TOP_MODULE) \
 	-Mdir $(BUILD_DIR) \
-	$< top.v
+	$< $(SSTELEMENT_SRC_SOURCES)
 
-$(BUILD_LIB): $(BUILD_OBJS)
+$(SSTELEMENT_BUILD_LIB): $(SSTELEMENT_BUILD_OBJS)
 	mkdir -p $(dir $@)
-	$(CXX) $(OPTIMIZE_FLAGS) $(CXXFLAGS) $(SST_CXXFLAGS) $(CPPFLAGS) $(SST_CPPFLAGS) $(LDFLAGS) $(SST_LDFLAGS) -o $@ $(BUILD_DIR)/*.o
+	$(CXX) $(OPTIMIZE_FLAGS) $(CXXFLAGS) $(SST_CXXFLAGS) $(CPPFLAGS) $(SST_CPPFLAGS) $(LDFLAGS) $(SST_LDFLAGS) -o $@ $(SSTELEMENT_BUILD_OBJS)
 
-$(INSTALL_HEADERS): $(SRC_HEADERS)
-	mkdir -p $(dir $@)
-	cp $^ $@
+$(SSTELEMENT_INSTALL_HEADERS): $(SSTELEMENT_SRC_HEADERS)
+	install -d $(dir $@)
+	install -m 644 $^ $(dir $@)
 
-$(INSTALL_LIB): $(BUILD_LIB)
-	echo $(BUILD_LIB)
-	mkdir -p $(dir $@)
-	cp $^ $@
+$(SSTELEMENT_INSTALL_LIB): $(SSTELEMENT_BUILD_LIB)
+	install -d $(dir $@)
+	install -m 644 $^ $(dir $@)
 
-register: $(INSTALL_HEADERS) $(INSTALL_LIB)
-	sst-register -u $(COMOPNENT_NAME)
-	sst-register $(COMOPNENT_NAME) $(COMOPNENT_NAME)_LIBDIR=$(INSTALL_DIR)
+register: $(SSTELEMENT_INSTALL_LIB) $(SSTELEMENT_INSTALL_HEADERS)
+	sst-register -u $(SSTELEMENT_NAME)
+	sst-register $(SSTELEMENT_NAME) $(SSTELEMENT_NAME)_LIBDIR=$(INSTALL_DIR)
 
-verify:
-	sst-info $(COMPONENT_NAME)
+verify: $(SSTELEMENT_INSTALL_LIB)
+	sst-info $(SSTELEMENT_NAME)
 
 clean:
 	rm -Rf $(BUILD_DIR)

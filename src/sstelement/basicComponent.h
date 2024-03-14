@@ -5,7 +5,7 @@
 #ifndef _BASIC_COMPONENT_H_
 #define _BASIC_COMPONENT_H_
 
-#include "Top.h"
+// #include "Top.h"
 #include <sst/core/component.h>
 
 namespace SST {
@@ -58,8 +58,8 @@ private:
   std::string clockFreq;  // Clock frequency
   uint32_t stop;     // Cycle counter
 
-  Top* top;
-  VerilatedContext* contextp;
+  // Top* top;
+  // VerilatedContext* contextp;
   void verilatorSetup();
 
 };  // class basicClocks
