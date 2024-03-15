@@ -1,5 +1,5 @@
-#include "Top.h"
 #include "verilatorSST.h"
+#include <iostream>
 // #include "macros.h"
 // #include <map>
 // #include <string>
@@ -7,16 +7,30 @@
 // #include <variant>
 // #include <utility>
 
-SST::VerilatorSST::VerilatorSST() : Top{"top"} {}
+using namespace SST::VerilatorSST;
 
-SST::VerilatorSST::~VerilatorSST() {}
+// VerilatorSST::VerilatorSST() : a(1), b(2), c(3) {};
 
-// // template <typename P>
-// // void VerilatorSST::writeInputPort(P* port, P* data){
-// //     // static_assert(std::is_unsigned<P>::value);
-// //     // *port = *data;
-// //     // this->eval();
-// // }
+VerilatorSST::VerilatorSST() {
+    top = std::make_unique<Top>("top");
+}
+VerilatorSST::~VerilatorSST() {}
+
+void VerilatorSST::writeInputPort(std::string port, PortType data){
+    // auto p = reflect_values.find(port);
+    // uint8_t portTypeIndex = data.index();
+    // if(portTypeIndex != p->second(this)->index()){
+    //     return;
+    // }
+    // std::cout << "writing " << std::get<data.index>(data) << " to port " << p->first << std::endl;
+    // *(p->second(this)) = std::get<data.index>(data);
+}
+
+void readOutputPort(std::string port, PortType data) {
+    // VerilatorSST::map_t::iterator p = reflect_values.find(port);
+    // std::cout << "reading " << p->second << " from port " << p->first << std::endl;
+    // *data = p->second;
+}
 
 // // template <typename P>
 // // void VerilatorSST::readOutputPort(P* port, P* data){
