@@ -1,28 +1,26 @@
 //
-// _basicComponent_h_
+// _BasicVerilogCounter_h_
 //
 
-#ifndef _BASIC_COMPONENT_H_
-#define _BASIC_COMPONENT_H_
+#ifndef _BASIC_VERILOG_COUNTER_H_
+#define _BASIC_VERILOG_COUNTER_H_
 
-// #include "Top.h"
 #include <sst/core/component.h>
 #include "verilatorSST.h"
 
-namespace SST {
-namespace basicComponent {
+namespace SST::VerilatorSST {
 
-class basicVerilogCounter : public SST::Component
+class BasicVerilogCounter : public SST::Component
 {
 public:
 
   // Register the component with the SST element library
   SST_ELI_REGISTER_COMPONENT(
-    basicVerilogCounter,                               // Component class
-    "basicComponent",                         // Component library
-    "basicVerilogCounter",                             // Component name
+    BasicVerilogCounter,                               // Component class
+    "basicverilogcounter",                         // Component library
+    "BasicVerilogCounter",                             // Component name
     SST_ELI_ELEMENT_VERSION(1,0,0),           // Version of the component
-    "basicVerilogCounter: simple clocked component",   // Description of the component
+    "BasicVerilogCounter: simple clocked component",   // Description of the component
     COMPONENT_CATEGORY_UNCATEGORIZED          // Component category
   )
 
@@ -44,10 +42,10 @@ public:
 
   // Constructor: Components receive a unique ID and the set of parameters
   //              that were assigned in the simulation configuration script
-  basicVerilogCounter(SST::ComponentId_t id, SST::Params& params);
+  BasicVerilogCounter(SST::ComponentId_t id, SST::Params& params);
 
   // Destructor
-  ~basicVerilogCounter();
+  ~BasicVerilogCounter();
 
 private:
 
@@ -59,12 +57,11 @@ private:
   std::string clockFreq;  // Clock frequency
   uint32_t stop;     // Cycle counter
 
-  // Top* top;
+  std::unique_ptr<VerilatorSST> top;
   // VerilatedContext* contextp;
   void verilatorSetup();
 
 };  // class basicClocks
-}   // namespace basicComponent
-}   // namespace SST
+}   // namespace SST::VerilatorSST
 
 #endif

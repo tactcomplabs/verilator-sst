@@ -1,5 +1,5 @@
 //
-// _basicComponent_cc_
+// _BasicVerilogCounter_cc_
 //
 
 #include <memory>
@@ -7,12 +7,11 @@
 // #include "Top.h"
 
 #include <sst/core/sst_config.h>
-#include "basicComponent.h"
+#include "BasicVerilogCounter.h"
 
-using namespace SST;
-using namespace SST::basicComponent;
+using namespace SST::VerilatorSST;
 
-basicVerilogCounter::basicVerilogCounter(ComponentId_t id, Params& params)
+BasicVerilogCounter::BasicVerilogCounter(ComponentId_t id, Params& params)
   : Component(id) {
 
   out = new Output("", 1, 0, Output::STDOUT);
@@ -23,13 +22,22 @@ basicVerilogCounter::basicVerilogCounter(ComponentId_t id, Params& params)
   registerAsPrimaryComponent();
   primaryComponentDoNotEndSim();
 
-  registerClock(clockFreq, new Clock::Handler<basicVerilogCounter>(this, &basicVerilogCounter::clock));
+  registerClock(clockFreq, new Clock::Handler<BasicVerilogCounter>(this, &BasicVerilogCounter::clock));
   out->output("Registering clock with frequency=%s\n", clockFreq.c_str());
   out->output("Counter set to stop=%u\n", stop);
 }
 
-void basicVerilogCounter::verilatorSetup(){
-  VerilatorSST top;
+void BasicVerilogCounter::verilatorSetup(){
+  top = std::make_unique<VerilatorSST>();
+  uint8_t init_clk = 0;
+  uint8_t init_reset_l = 0;
+  PortType init_clk_port = PortType{&init_clk};
+  PortType init_reset_l_port = PortType{&init_reset_l};
+
+  top->writeInputPort("clk", init_clk_port);
+  top->writeInputPort("reset_l", init_reset_l_port);
+  top->writeInputPort("stop", PortType{&stop});
+
   // contextp = new VerilatedContext;
   // contextp->debug(0);
   // contextp->randReset(2);
@@ -43,11 +51,11 @@ void basicVerilogCounter::verilatorSetup(){
   // top->stop = stop;
 }
 
-basicVerilogCounter::~basicVerilogCounter(){
+BasicVerilogCounter::~BasicVerilogCounter(){
   delete out;
 }
 
-bool basicVerilogCounter::clock(Cycle_t cycles){
+bool BasicVerilogCounter::clock(Cycle_t cycles){
   // contextp->timeInc(1);
   // top->clk = !top->clk;
   // //clk period = 1/2 cycle period
