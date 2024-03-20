@@ -22,56 +22,56 @@ VerilatorSST::VerilatorSST(std::function<void()> finalCallback) :
 VerilatorSST::~VerilatorSST() {
 }
 
-template<typename T>
-void VerilatorSST::writePort(std::string portName, const T & data){
-    std::cout << "writePort(std::string, const T&) start" << std::endl;
-    auto search = reflect_values.find(portName);
-    if (search == reflect_values.end()){
-        throw std::runtime_error("Port not found");
-    }
+// template<typename T>
+// void VerilatorSST::writePort(std::string portName, const T & data){
+//     std::cout << "writePort(std::string, const T&) start" << std::endl;
+//     auto search = reflect_values.find(portName);
+//     if (search == reflect_values.end()){
+//         throw std::runtime_error("Port not found");
+//     }
 
-    PortType port = search->second;
-    std::cout << "writePort(std::string, const T&) found port" << std::endl;
+//     PortType port = search->second;
+//     std::cout << "writePort(std::string, const T&) found port" << std::endl;
 
-    if(!std::holds_alternative<T*>(port)){
-        throw std::runtime_error("VerilatorSST::writePort(std::string, const T&): Incoming data does not match port type");
-    }
-    std::cout << "writePort(std::string, const T&) type match" << std::endl;
+//     if(!std::holds_alternative<T*>(port)){
+//         throw std::runtime_error("VerilatorSST::writePort(std::string, const T&): Incoming data does not match port type");
+//     }
+//     std::cout << "writePort(std::string, const T&) type match" << std::endl;
 
-    std::cout << "writing " << +data << " to port " << search->first << std::endl;
+//     std::cout << "writing " << +data << " to port " << search->first << std::endl;
 
-    *(std::get<T*>(port)) = data;
+//     *(std::get<T*>(port)) = data;
     
-    std::cout << "clk=" << +(top->clk) << std::endl;
-    std::cout << "reset_l=" << +(top->reset_l) << std::endl;
-    std::cout << "stop=" << +(top->stop) << std::endl;
+//     std::cout << "clk=" << +(top->clk) << std::endl;
+//     std::cout << "reset_l=" << +(top->reset_l) << std::endl;
+//     std::cout << "stop=" << +(top->stop) << std::endl;
 
-    top->eval();
-    std::cout << "writePort(std::string, const T&) finish" << std::endl;
-}
+//     top->eval();
+//     std::cout << "writePort(std::string, const T&) finish" << std::endl;
+// }
 
-template<typename T>
-void VerilatorSST::readPort(std::string portName, T & data) {
-    std::cout << "readPort(std::string, T&) start" << std::endl;
-    auto search = reflect_values.find(portName);
-    if (search == reflect_values.end()){
-        throw std::runtime_error("Port not found");
-    }
+// template<typename T>
+// void VerilatorSST::readPort(std::string portName, T & data) {
+//     std::cout << "readPort(std::string, T&) start" << std::endl;
+//     auto search = reflect_values.find(portName);
+//     if (search == reflect_values.end()){
+//         throw std::runtime_error("Port not found");
+//     }
 
-    PortType port = search->second;
+//     PortType port = search->second;
 
-    if(!std::holds_alternative<T*>(port)){
-        throw std::runtime_error("VerilatorSST::readPort(std::string, T&): Incoming data does not match port type");
-    }
+//     if(!std::holds_alternative<T*>(port)){
+//         throw std::runtime_error("VerilatorSST::readPort(std::string, T&): Incoming data does not match port type");
+//     }
 
-    std::cout << "reading ";
-    std::visit([](auto d){std::cout << +*d;}, port);
-    std::cout << " from port " << search->first << std::endl;
+//     std::cout << "reading ";
+//     std::visit([](auto d){std::cout << +*d;}, port);
+//     std::cout << " from port " << search->first << std::endl;
 
-    data = *(std::get<T*>(port));
+//     data = *(std::get<T*>(port));
     
-    std::cout << "readPort(std::string, T&) finish" << std::endl;
-}
+//     std::cout << "readPort(std::string, T&) finish" << std::endl;
+// }
 
 void VerilatorSST::tick(uint64_t t, std::string clockPort){
     std::cout << "tick() start" << std::endl;
