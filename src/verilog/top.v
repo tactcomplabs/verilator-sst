@@ -1,27 +1,27 @@
-`ifndef START
-`define START 10
+// `ifndef _INPUT_WIDTH
+`ifndef _INPUT_WIDTH
+`define _INPUT_WIDTH 64
 `endif
-`ifndef INPUT_WIDTH
-`define INPUT_WIDTH 32
-`endif
+// `endif
 
 /* verilator lint_off DECLFILENAME */
 module Top
+   #(parameter INPUT_WIDTH=`_INPUT_WIDTH)
   (
    // Declare some signals so we can see how I/O works
    input              clk,
    input              reset_l,
-   input [63:0]       stop,
+   input [INPUT_WIDTH-1:0]       stop,
    output wire        done
    );
    
-   reg [63:0] ctr;
-   reg [63:0] safe_stop;
-   wire [63:0] next_ctr;
+   reg [INPUT_WIDTH-1:0] ctr;
+   reg [INPUT_WIDTH-1:0] safe_stop;
+   wire [INPUT_WIDTH-1:0] next_ctr;
 
    always_ff @ (posedge clk) begin
       if (!reset_l) begin
-         ctr <= `START;
+         ctr <= '0;
          safe_stop <= stop;
       end
       else begin
