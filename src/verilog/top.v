@@ -1,12 +1,12 @@
 // `ifndef _INPUT_WIDTH
-`ifndef _INPUT_WIDTH
-`define _INPUT_WIDTH 64
+`ifndef INPUT_WIDTH
+`define INPUT_WIDTH 8
 `endif
 // `endif
 
 /* verilator lint_off DECLFILENAME */
 module Top
-   #(parameter INPUT_WIDTH=`_INPUT_WIDTH)
+   #(parameter INPUT_WIDTH=`INPUT_WIDTH)
   (
    // Declare some signals so we can see how I/O works
    input              clk,
