@@ -31,17 +31,18 @@ void BasicVerilogCounter::verilatorSetup(){
   std::cout << "verilatorSetup() start" << std::endl;
   std::function<void()> myfunc = [this]() {primaryComponentOKToEndSim();};
   top = std::make_unique<VerilatorSST>(myfunc);
+  /////////DEBUG/////////
+  std::cout << "DEBUG"<< std::endl;
+  const uint8_t debug_val1 = 10;
+  const uint16_t debug_val2 = 10;
+  const float debug_val3 = -3.14;
+  top->writePort<uint16_t>("stop", debug_val2);
+  /////////DEBUG/////////
   const uint8_t init_low = 0;
   top->writePort("clk", init_low);
   top->writePort("reset_l", init_low);
 
 
-  /////////DEBUG/////////
-  std::cout << "DEBUG"<< std::endl;
-  const uint8_t debug_val1 = 10;
-  const uint16_t debug_val2 = 10;
-  top->writePort("stop", debug_val2);
-  /////////DEBUG/////////
 
   std::cout << "verilatorSetup() finish" << std::endl;
 }
@@ -52,19 +53,17 @@ BasicVerilogCounter::~BasicVerilogCounter(){
 
 bool BasicVerilogCounter::clock(Cycle_t cycles){
   top->tick(1, "clk");
+  const uint8_t high = 1;
   if(top->getCurrentTick() > 5){
-    top->writePort("reset_l", HIGH);
+    top->writePort("reset_l", high);
   }
 
-  PortType done;
+  uint8_t done;
   top->readPort("done",done);
 
-  bool ret = false;
-  std::visit([&, this](auto&& arg) {
-    if(*arg == HIGH){
-      top->finish();
-      ret = true;
-    }
-  },done);
-  return ret;
+  if(done == HIGH){
+    top->finish();
+    return true;
+  }
+  return false;
 }
