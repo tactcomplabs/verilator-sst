@@ -41,9 +41,11 @@ void VerilatorSST::writePort(std::string portName, const T & data){
     std::cout << "writing " << +data << " to port " << search->first << std::endl;
 
     *(std::get<T*>(port)) = data;
+    
+    std::cout << "clk=" << +(top->clk) << std::endl;
+    std::cout << "reset_l=" << +(top->reset_l) << std::endl;
+    std::cout << "stop=" << +(top->stop) << std::endl;
 
-    std::cout << "clk" << +(top->clk) << std::endl;
-    std::cout << "stop" << +(top->stop) << std::endl;
     top->eval();
     std::cout << "writePort(std::string, const T&) finish" << std::endl;
 }

@@ -27,8 +27,8 @@ public:
   // Document the parameters that this component accepts
   // { "parameter_name", "description", "default value or NULL if required" }
   SST_ELI_DOCUMENT_PARAMS(
-    { "clockFreq",  "Frequency of perid (with units) of the clock", "1GHz" },
-    { "stop", "Number of clock ticks to execute",             "20"  }
+    { "CLOCK_FREQ",  "Frequency of perid (with units) of the clock", "1GHz" },
+    { "STOP", "Number of clock ticks to execute",             "20"  }
   )
 
   // [Optional] Document the ports: we do not define any 
