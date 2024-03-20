@@ -3,10 +3,9 @@
 #
 
 import verilatorSST
-import sst
 
-verilatorSST.add_component("CounterComponent", "basicComponent.basicVerilogCounter")
-verilatorSST.define_macro("CounterComponent", [('INPUT_WIDTH',8),('START',5),('stop',15),('clockFreq','1Ghz')])
+verilatorSST.add_component("CounterComponent", "basicverilogcounter.BasicVerilogCounter")
+verilatorSST.define_macros("CounterComponent", [('_INPUT_WIDTH',8),('stop',15),('clockFreq','1Ghz')])
 verilatorSST.finalize("CounterComponent")
 
 ## equivalent to ....
