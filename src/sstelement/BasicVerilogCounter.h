@@ -58,7 +58,6 @@ private:
   uint32_t stop;     // Cycle counter
 
   std::unique_ptr<VerilatorSST> top;
-  // VerilatedContext* contextp;
   void verilatorSetup();
 
 };  // class basicClocks

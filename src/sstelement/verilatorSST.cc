@@ -1,59 +1,92 @@
 #include "verilatorSST.h"
 #include <iostream>
-// #include "macros.h"
-// #include <map>
-// #include <string>
-// #include <functional>
-// #include <variant>
-// #include <utility>
+#include <stdexcept>
 
 using namespace SST::VerilatorSST;
 
-// VerilatorSST::VerilatorSST() : a(1), b(2), c(3) {};
+VerilatorSST::VerilatorSST(std::function<void()> finalCallback) : 
+    finalCallback(finalCallback)  {
+    std::cout << "VerilatorSST() start" << std::endl;
+    contextp = std::make_unique<VerilatedContext>();
+    std::cout << "VerilatorSST() contextp init" << std::endl;
+    contextp->debug(0);
+    contextp->randReset(2);
+    contextp->traceEverOn(true);
+    const char* empty {};
+    contextp->commandArgs(0, &empty);
 
-VerilatorSST::VerilatorSST() {
-    top = std::make_unique<Top>("top");
+    top = std::make_unique<Top>(contextp.get(), "TOP");
+    reflect_values = init_reflect_values();
+    std::cout << "VerilatorSST() finish" << std::endl;
 }
-VerilatorSST::~VerilatorSST() {}
-
-void VerilatorSST::writeInputPort(std::string port, PortType data){
-    // auto p = reflect_values.find(port);
-    // uint8_t portTypeIndex = data.index();
-    // if(portTypeIndex != p->second(this)->index()){
-    //     return;
-    // }
-    // std::cout << "writing " << std::get<data.index>(data) << " to port " << p->first << std::endl;
-    // *(p->second(this)) = std::get<data.index>(data);
-}
-
-void readOutputPort(std::string port, PortType data) {
-    // VerilatorSST::map_t::iterator p = reflect_values.find(port);
-    // std::cout << "reading " << p->second << " from port " << p->first << std::endl;
-    // *data = p->second;
+VerilatorSST::~VerilatorSST() {
 }
 
-// // template <typename P>
-// // void VerilatorSST::readOutputPort(P* port, P* data){
-// //     // static_assert(std::is_unsigned<P>::value);
-// //     // using map_t = std::map<std::string, function_t>;
-// //     // map_t reflect_value{};
-// //     // *data = *port;
-// // }
+template<typename T>
+void VerilatorSST::writePort(std::string portName, const T & data){
+    std::cout << "writePort(std::string, const T&) start" << std::endl;
+    auto search = reflect_values.find(portName);
+    if (search == reflect_values.end()){
+        throw std::runtime_error("Port not found");
+    }
 
-// //REFLECT_INIT(Test);
+    PortType port = search->second;
+    std::cout << "writePort(std::string, const T&) found port" << std::endl;
 
-// // #include <iostream>
+    if(!std::holds_alternative<T*>(port)){
+        throw std::runtime_error("VerilatorSST::writePort(std::string, const T&): Incoming data does not match port type");
+    }
+    std::cout << "writePort(std::string, const T&) type match" << std::endl;
 
-// // int main() {
-// //    Test t{};
-// //    for(auto i : Test::reflect_values) {
-// //       std::cout << i.first << std::endl;
-// //       Test::PortType v = i.second(t);
-// //       if(v.index() == 1) {
-// //          std::cout << std::get<1>(v) << std::endl;
-// //       }
-// //       else if(std::holds_alternative<SData*>(v)) {
-// //          std::cout << std::get<SData*>(v) << std::endl;
-// //       }
-// //    }
-// // }
+    std::cout << "writing " << +data << " to port " << search->first << std::endl;
+
+    *(std::get<T*>(port)) = data;
+
+    std::cout << "clk" << +(top->clk) << std::endl;
+    std::cout << "stop" << +(top->stop) << std::endl;
+    top->eval();
+    std::cout << "writePort(std::string, const T&) finish" << std::endl;
+}
+
+template<typename T>
+void VerilatorSST::readPort(std::string portName, T & data) {
+    std::cout << "readPort(std::string, T&) start" << std::endl;
+    auto search = reflect_values.find(portName);
+    if (search == reflect_values.end()){
+        throw std::runtime_error("Port not found");
+    }
+
+    PortType port = search->second;
+
+    if(!std::holds_alternative<T*>(port)){
+        throw std::runtime_error("VerilatorSST::readPort(std::string, T&): Incoming data does not match port type");
+    }
+
+    std::cout << "reading ";
+    std::visit([](auto d){std::cout << +*d;}, port);
+    std::cout << " from port " << search->first << std::endl;
+
+    data = *(std::get<T*>(port));
+    
+    std::cout << "readPort(std::string, T&) finish" << std::endl;
+}
+
+void VerilatorSST::tick(uint64_t t, std::string clockPort){
+    std::cout << "tick() start" << std::endl;
+    uint8_t clk;
+    readPort(clockPort, clk);
+    clk = ~clk;
+    writePort(clockPort, clk);
+
+    contextp->timeInc(t);
+    std::cout << "tick() finish" << std::endl;
+}
+
+uint64_t VerilatorSST::getCurrentTick(){
+    return contextp->time();
+}
+
+void VerilatorSST::finish(){
+    top->final();
+    finalCallback();
+}

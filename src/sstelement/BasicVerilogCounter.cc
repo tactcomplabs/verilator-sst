@@ -3,20 +3,20 @@
 //
 
 #include <memory>
-// #include <verilated.h>
-// #include "Top.h"
-
 #include <sst/core/sst_config.h>
 #include "BasicVerilogCounter.h"
+
+#define LOW 0
+#define HIGH 1
 
 using namespace SST::VerilatorSST;
 
 BasicVerilogCounter::BasicVerilogCounter(ComponentId_t id, Params& params)
   : Component(id) {
-
+  std::cout << "init" << std::endl;
   out = new Output("", 1, 0, Output::STDOUT);
   clockFreq  = params.find<std::string>("clockFreq", "1GHz");
-  stop = params.find<std::uint64_t>("stop", "20");
+  stop = params.find<std::uint32_t>("stop", "20");
 
   verilatorSetup();
   registerAsPrimaryComponent();
@@ -28,27 +28,14 @@ BasicVerilogCounter::BasicVerilogCounter(ComponentId_t id, Params& params)
 }
 
 void BasicVerilogCounter::verilatorSetup(){
-  top = std::make_unique<VerilatorSST>();
-  uint8_t init_clk = 0;
-  uint8_t init_reset_l = 0;
-  PortType init_clk_port = PortType{&init_clk};
-  PortType init_reset_l_port = PortType{&init_reset_l};
-
-  top->writeInputPort("clk", init_clk_port);
-  top->writeInputPort("reset_l", init_reset_l_port);
-  top->writeInputPort("stop", PortType{&stop});
-
-  // contextp = new VerilatedContext;
-  // contextp->debug(0);
-  // contextp->randReset(2);
-  // contextp->traceEverOn(true);
-  // char ** empty = {};
-  // contextp->commandArgs(0, empty);
-
-  // top = new Top;
-  // top->reset_l = 0;
-  // top->clk = 0;
-  // top->stop = stop;
+  std::cout << "verilatorSetup() start" << std::endl;
+  std::function<void()> myfunc = [this]() {primaryComponentOKToEndSim();};
+  top = std::make_unique<VerilatorSST>(myfunc);
+  const uint8_t init_low = 0;
+  top->writePort("clk", init_low);
+  top->writePort("reset_l", init_low);
+  top->writePort("stop", stop);
+  std::cout << "verilatorSetup() finish" << std::endl;
 }
 
 BasicVerilogCounter::~BasicVerilogCounter(){
@@ -56,27 +43,20 @@ BasicVerilogCounter::~BasicVerilogCounter(){
 }
 
 bool BasicVerilogCounter::clock(Cycle_t cycles){
-  // contextp->timeInc(1);
-  // top->clk = !top->clk;
-  // //clk period = 1/2 cycle period
+  top->tick(1, "clk");
+  if(top->getCurrentTick() > 5){
+    top->writePort("reset_l", HIGH);
+  }
 
-  // if(!top->clk){
-  //   if(contextp->time() > 5){
-  //     top->reset_l = 1;
-  //   }
-  // }
+  PortType done;
+  top->readPort("done",done);
 
-  // top->eval();
-
-  // if(top->done == 1){
-  //   out->output("sst: done signal high\n");
-  //   top->final();
-  //   primaryComponentOKToEndSim();
-  //   return true;
-  // }else {
-  //   return false;
-  // }
-
-  primaryComponentOKToEndSim();
-  return true;
+  bool ret = false;
+  std::visit([&, this](auto&& arg) {
+    if(*arg == HIGH){
+      top->finish();
+      ret = true;
+    }
+  },done);
+  return ret;
 }
