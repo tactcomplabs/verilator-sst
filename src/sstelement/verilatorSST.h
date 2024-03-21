@@ -91,7 +91,7 @@ class VerilatorSST {
     std::cout << "readPort(std::string, T&) finish" << std::endl;
 }
     // void tick(uint64_t add);
-    void tick(uint64_t add, std::string port);
+    void clockTick(uint64_t add, std::string port);
     uint64_t getCurrentTick();
     void finish();
 

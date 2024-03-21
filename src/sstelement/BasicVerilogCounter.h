@@ -54,12 +54,9 @@ private:
 
   // Params
   SST::Output* out;       // SST Output object for printing, messaging, etc
-  std::string clockFreq;  // Clock frequency
-  uint32_t stop;     // Cycle counter
 
   std::unique_ptr<VerilatorSST> top;
-  void verilatorSetup();
-
+  void verilatorSetup(const uint16_t stop);
 };  // class basicClocks
 }   // namespace SST::VerilatorSST
 

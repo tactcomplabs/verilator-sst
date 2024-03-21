@@ -13,12 +13,11 @@ using namespace SST::VerilatorSST;
 
 BasicVerilogCounter::BasicVerilogCounter(ComponentId_t id, Params& params)
   : Component(id) {
-  std::cout << "init" << std::endl;
   out = new Output("", 1, 0, Output::STDOUT);
-  clockFreq  = params.find<std::string>("CLOCK_FREQ", "1GHz");
-  stop = params.find<std::uint32_t>("STOP", "20");
+  const std::string clockFreq = params.find<std::string>("CLOCK_FREQ", "1GHz");
+  const uint16_t stop = params.find<std::uint16_t>("STOP", "20");
 
-  verilatorSetup();
+  verilatorSetup(stop);
   registerAsPrimaryComponent();
   primaryComponentDoNotEndSim();
 
@@ -27,24 +26,13 @@ BasicVerilogCounter::BasicVerilogCounter(ComponentId_t id, Params& params)
   out->output("Counter set to stop=%u\n", stop);
 }
 
-void BasicVerilogCounter::verilatorSetup(){
-  std::cout << "verilatorSetup() start" << std::endl;
+void BasicVerilogCounter::verilatorSetup(const uint16_t stop){
   std::function<void()> myfunc = [this]() {primaryComponentOKToEndSim();};
   top = std::make_unique<VerilatorSST>(myfunc);
-  /////////DEBUG/////////
-  std::cout << "DEBUG"<< std::endl;
-  const uint8_t debug_val1 = 10;
-  const uint16_t debug_val2 = 10;
-  const float debug_val3 = -3.14;
-  top->writePort<uint16_t>("stop", debug_val2);
-  /////////DEBUG/////////
-  const uint8_t init_low = 0;
+  const uint8_t init_low = LOW;
   top->writePort("clk", init_low);
   top->writePort("reset_l", init_low);
-
-
-
-  std::cout << "verilatorSetup() finish" << std::endl;
+  top->writePort("stop", stop);
 }
 
 BasicVerilogCounter::~BasicVerilogCounter(){
@@ -52,7 +40,7 @@ BasicVerilogCounter::~BasicVerilogCounter(){
 }
 
 bool BasicVerilogCounter::clock(Cycle_t cycles){
-  top->tick(1, "clk");
+  top->clockTick(1, "clk");
   const uint8_t high = 1;
   if(top->getCurrentTick() > 5){
     top->writePort("reset_l", high);
