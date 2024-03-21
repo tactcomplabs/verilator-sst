@@ -12,26 +12,14 @@
 #include "Top.h"
 
 namespace SST::VerilatorSST {
-using PortType = std::variant<CData*, SData*, IData*, QData* >;
 
 class VerilatorSST {
     private:
-    using SelfType = Top;
+    using PortType = Top::PortType;
     using function_t = std::function<PortType(VerilatorSST&)>;
     using map_t = std::map<std::string, PortType>;
     std::unique_ptr<VerilatedContext> contextp;
-    std::unique_ptr<SelfType> top;
-    map_t reflect_values;
-    map_t init_reflect_values() { 
-        map_t ret{};
-        std::vector< std::pair<std::string, PortType> > values = { 
-            std::make_pair<std::string, PortType>(std::string{"clk"}, PortType{&(top->clk)}),
-            std::make_pair<std::string, PortType>(std::string{"reset_l"}, PortType{&(top->reset_l)}),
-            std::make_pair<std::string, PortType>(std::string{"done"}, PortType{&(top->done)}),
-            std::make_pair<std::string, PortType>(std::string{"stop"}, PortType{&(top->stop)}),
-        };
-        for(auto v : values) { ret.insert(v);} return ret;
-    }
+    std::unique_ptr<Top> top;
 
     std::function<void()> finalCallback;
     public:
@@ -42,12 +30,12 @@ class VerilatorSST {
     template<typename T>
     void writePort(std::string portName, const T & data){
         std::cout << "writePort(std::string, const T&) start" << std::endl;
-        auto search = reflect_values.find(portName);
-        if (search == reflect_values.end()){
+        auto search = top->reflect_values.find(portName);
+        if (search == top->reflect_values.end()){
             throw std::runtime_error("Port not found");
         }
 
-        PortType port = search->second;
+        PortType port = search->second.second;
         std::cout << "writePort(std::string, const T&) found port" << std::endl;
 
         if(!std::holds_alternative<T*>(port)){
@@ -71,12 +59,12 @@ class VerilatorSST {
     template<typename T>
     void readPort(std::string portName, T & data) {
     std::cout << "readPort(std::string, T&) start" << std::endl;
-    auto search = reflect_values.find(portName);
-    if (search == reflect_values.end()){
+    auto search = top->reflect_values.find(portName);
+    if (search == top->reflect_values.end()){
         throw std::runtime_error("Port not found");
     }
 
-    PortType port = search->second;
+    PortType port = search->second.second;
 
     if(!std::holds_alternative<T*>(port)){
         throw std::runtime_error("VerilatorSST::readPort(std::string, T&): Incoming data does not match port type");
@@ -94,7 +82,7 @@ class VerilatorSST {
     void clockTick(uint64_t add, std::string port);
     uint64_t getCurrentTick();
     void finish();
-
+    void getAllPortNames(std::vector<std::string> & ports);
 };
 
 

@@ -16,7 +16,6 @@ VerilatorSST::VerilatorSST(std::function<void()> finalCallback) :
     contextp->commandArgs(0, &empty);
 
     top = std::make_unique<Top>(contextp.get(), "TOP");
-    reflect_values = init_reflect_values();
     std::cout << "VerilatorSST() finish" << std::endl;
 }
 
@@ -39,4 +38,11 @@ uint64_t VerilatorSST::getCurrentTick(){
 void VerilatorSST::finish(){
     top->final();
     finalCallback();
+}
+
+void VerilatorSST::getAllPortNames(std::vector<std::string> & ports){
+    ports.clear();
+    for(auto it = top->reflect_values.begin(); it != top->reflect_values.end(); ++it){
+        ports.push_back(it->first);
+    }
 }
