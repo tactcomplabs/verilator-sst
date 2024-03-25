@@ -20,16 +20,15 @@ $(VERILOG_BUILD_HEADERS): $(VERILOG_SRC_SOURCES)
 	--cc \
 	--build \
 	--exe \
-	$(OPTIMIZE_FLAGS) \
 	-CFLAGS "$(SST_CXXFLAGS)" \
 	-LDFLAGS "$(SST_LDFLAGS)" \
 	-j $(NPROC) \
 	$(VERILOG_MACROS) \
 	-Wall \
-	--prefix Top \
+	--prefix VTop \
 	--top-module $(TOP_MODULE) \
 	-Mdir $(BUILD_DIR) \
-	$<
+	$^
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/sstelement/%.cc $(VERILOG_BUILD_HEADERS)
 	mkdir -p $(dir $@)

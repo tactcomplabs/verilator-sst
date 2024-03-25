@@ -9,18 +9,17 @@
 #include <memory>
 #include <iostream>
 #include <stdexcept>
-#include "Top.h"
+#include "VTop.h"
 
 namespace SST::VerilatorSST {
 using PortType = std::variant<CData*, SData*, IData*, QData* >;
 
 class VerilatorSST {
     private:
-    using SelfType = Top;
     using function_t = std::function<PortType(VerilatorSST&)>;
     using map_t = std::map<std::string, PortType>;
     std::unique_ptr<VerilatedContext> contextp;
-    std::unique_ptr<SelfType> top;
+    std::unique_ptr<VTop> top;
     map_t reflect_values;
     map_t init_reflect_values() { 
         map_t ret{};

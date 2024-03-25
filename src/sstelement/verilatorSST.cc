@@ -15,7 +15,7 @@ VerilatorSST::VerilatorSST(std::function<void()> finalCallback) :
     const char* empty {};
     contextp->commandArgs(0, &empty);
 
-    top = std::make_unique<Top>(contextp.get(), "TOP");
+    top = std::make_unique<VTop>(contextp.get(), "");
     reflect_values = init_reflect_values();
     std::cout << "VerilatorSST() finish" << std::endl;
 }

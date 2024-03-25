@@ -5,7 +5,6 @@
 SST_CXX=$(shell sst-config --CXX)
 SST_CXXFLAGS = -I$(BUILD_DIR) $(shell sst-config --ELEMENT_CXXFLAGS)
 SST_LDFLAGS = $(shell sst-config --ELEMENT_LDFLAGS)
-OPTIMIZE_FLAGS=-O3
 
 SSTELEMENT_SRC_DIR = $(abspath $(CURDIR)/sstelement)
 SSTELEMENT_SRC_SOURCES := $(wildcard $(SSTELEMENT_SRC_DIR)/*.cc)
