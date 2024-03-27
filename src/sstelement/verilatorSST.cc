@@ -9,13 +9,14 @@ VerilatorSST::VerilatorSST(std::function<void()> finalCallback) :
     std::cout << "VerilatorSST() start" << std::endl;
     contextp = std::make_unique<VerilatedContext>();
     std::cout << "VerilatorSST() contextp init" << std::endl;
-    contextp->debug(0);
+    contextp->debug(1);
     contextp->randReset(2);
     contextp->traceEverOn(true);
     const char* empty {};
     contextp->commandArgs(0, &empty);
 
     top = std::make_unique<VTop>(contextp.get(), "");
+    contextp->internalsDump();
     reflect_values = init_reflect_values();
     std::cout << "VerilatorSST() finish" << std::endl;
 }

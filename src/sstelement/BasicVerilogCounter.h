@@ -56,7 +56,7 @@ private:
   SST::Output* out;       // SST Output object for printing, messaging, etc
 
   std::unique_ptr<VerilatorSST> top;
-  void verilatorSetup(const uint16_t stop);
+  void verilatorSetup(uint16_t stop);
 };  // class basicClocks
 }   // namespace SST::VerilatorSST
 

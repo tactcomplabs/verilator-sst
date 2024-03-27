@@ -10,6 +10,7 @@
 #include <iostream>
 #include <stdexcept>
 #include "VTop.h"
+#include "verilated_vpi.h"
 
 namespace SST::VerilatorSST {
 using PortType = std::variant<CData*, SData*, IData*, QData* >;
@@ -38,57 +39,58 @@ class VerilatorSST {
     ~VerilatorSST();
 
 
-    template<typename T>
-    void writePort(std::string portName, const T & data){
+    void writePort(std::string portName, const PLI_BYTE8 data){
         std::cout << "writePort(std::string, const T&) start" << std::endl;
-        auto search = reflect_values.find(portName);
-        if (search == reflect_values.end()){
+        char * name;
+        strcpy(name,portName.c_str());
+        vpiHandle vh1 = vpi_handle_by_name(name, NULL);
+        if (!vh1){
             throw std::runtime_error("Port not found");
         }
 
-        PortType port = search->second;
-        std::cout << "writePort(std::string, const T&) found port" << std::endl;
+        std::cout << "writing " << +data << " to port " << portName << std::endl;
 
-        if(!std::holds_alternative<T*>(port)){
-            throw std::runtime_error("VerilatorSST::writePort(std::string, const T&): Incoming data does not match port type");
-        }
-        std::cout << "writePort(std::string, const T&) type match" << std::endl;
+        s_vpi_time vpi_time_s;
+        vpi_time_s.type = vpiSimTime;
+        vpi_time_s.high = 0;
+        vpi_time_s.low = 0;
+        s_vpi_value v;
+        v.value.integer = static_cast<PLI_INT32>(data);
+        v.format = vpiIntVal;
+        vpi_put_value(vh1,&v,&vpi_time_s,vpiInertialDelay);
 
-        std::cout << "writing " << +data << " to port " << search->first << std::endl;
-
-        *(std::get<T*>(port)) = data;
-        
         std::cout << "clk=" << +(top->clk) << std::endl;
         std::cout << "reset_l=" << +(top->reset_l) << std::endl;
         std::cout << "stop=" << +(top->stop) << std::endl;
 
         top->eval();
         std::cout << "writePort(std::string, const T&) finish" << std::endl;
-}   
+    }   
 
 
     template<typename T>
     void readPort(std::string portName, T & data) {
-    std::cout << "readPort(std::string, T&) start" << std::endl;
-    auto search = reflect_values.find(portName);
-    if (search == reflect_values.end()){
-        throw std::runtime_error("Port not found");
+        std::cout << "readPort(std::string, T&) start" << std::endl;
+
+        char * name;
+        strcpy(name,portName.c_str());
+
+        vpiHandle vh1 = vpi_handle_by_name(name, NULL);;
+        if (!vh1){
+            throw std::runtime_error("Port not found");
+        }
+
+        s_vpi_value v;
+        v.format = vpiIntVal;
+        vpi_put_value(vh1,&v,NULL,vpiNoDelay);
+
+        const char* namee = vpi_get_str(vpiName, vh1);
+        std::cout << "reading " << +v.value.integer<< " from port " << portName << std::endl;
+        
+        data = v.value.integer;
+
+        std::cout << "readPort(std::string, T&) finish" << std::endl;
     }
-
-    PortType port = search->second;
-
-    if(!std::holds_alternative<T*>(port)){
-        throw std::runtime_error("VerilatorSST::readPort(std::string, T&): Incoming data does not match port type");
-    }
-
-    std::cout << "reading ";
-    std::visit([](auto d){std::cout << +*d;}, port);
-    std::cout << " from port " << search->first << std::endl;
-
-    data = *(std::get<T*>(port));
-    
-    std::cout << "readPort(std::string, T&) finish" << std::endl;
-}
     // void tick(uint64_t add);
     void clockTick(uint64_t add, std::string port);
     uint64_t getCurrentTick();

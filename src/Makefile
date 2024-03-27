@@ -20,7 +20,9 @@ $(VERILOG_BUILD_HEADERS): $(VERILOG_SRC_SOURCES)
 	--cc \
 	--build \
 	--exe \
-	-CFLAGS "$(SST_CXXFLAGS)" \
+	--vpi \
+	--public-flat-rw \
+	-CFLAGS "$(SST_CXXFLAGS) -DVL_DEBUG=1" \
 	-LDFLAGS "$(SST_LDFLAGS)" \
 	-j $(NPROC) \
 	$(VERILOG_MACROS) \
