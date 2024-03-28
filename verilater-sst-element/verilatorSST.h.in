@@ -1,0 +1,97 @@
+#ifndef _VERILATOR_SST_H_
+#define _VERILATOR_SST_H_
+
+// -- Standard Headers
+#include <vector>
+#include <string>
+
+// -- SST Headers
+#include "SST.h"
+
+namespace SST::VerilatorSST{
+
+// ---------------------------------------------------------------
+// VerilatorSSTBase
+// ---------------------------------------------------------------
+class VerilatorSSTBase : public SST::SubComponent{
+public:
+  SST_ELI_REGISTER_SUBCOMPONENT_API(SST::VerilatorSST::VerilatorSSTBase)
+
+  SST_ELI_DOCUMENT_PARAMS({ "verbose",
+                            "Set the verbosity of output for the device", "0" }
+
+  /// VerilatorSSTBase: constructor
+  VerilatorSSTBase( std::string DerivedName,
+                    ComponentId_t id, const Params& params );
+
+  /// VerilatorSSTBase: virtual destructor
+  virtual ~VerilatorSSTBase();
+
+  /// VerilatorSSTBase: initialization function
+  virtual void init(unsigned int phase) = 0;
+
+  /// VerilatorSSTBase: setup function
+  virtual void setup() = 0;
+
+  /// VerilatorSSTBase: finish function
+  virtual void finish() = 0;
+
+  /// VerliatorSSTBase: clock tick function
+  virtual bool ClockTick(SST::Cycle_t cycle) = 0;
+
+protected:
+  SST::Output *output;        ///< VerilatorSST: SST output handler
+  uint32_t verbosity;         ///< VerilatorSST: verbosity parameter
+
+};  // class VerilatorSST
+
+// ---------------------------------------------------------------
+// VerilatorSSTDevice
+// ---------------------------------------------------------------
+class VerilatorSSTDevice : public VerilatorSSTBase{
+public:
+  SST_ELI_REGISTER_SUBCOMPONENT(VerilatorSSTDevice, "verilatorsst",
+                                "VerilatorSSTDevice",
+                                SST_ELI_ELEMENT_VERSION(1, 0, 0),
+                                "Verilator SST Device Wrapper",
+                                SST::VerilatorSST::VerilatorSSTBase
+  )
+
+  // Set up parameters accesible from the python configuration
+  SST_ELI_DOCUMENT_PARAMS()
+
+  // Register any subcomponents used by this element
+  SST_ELI_DOCUMENT_SUBCOMPONENT_SLOTS()
+
+  // Register any ports used with this element
+  SST_ELI_DOCUMENT_PORTS(
+  @VERILATOR_SST_PORT_DEF@
+  )
+
+  // Add statistics
+  SST_ELI_DOCUMENT_STATISTICS()
+
+  /// VerilatorSSTDevice: default constructor
+  VerilatorSSTDevice();
+
+  /// VerilatorSSTDevice: default destructor
+  virtual ~VerilatorSSTDevice();
+
+  /// VerilatorSSTDevice: initialization function
+  virtual void init(unsigned int phase) override;
+
+  /// VerilatorSSTDevice: setup function
+  virtual void setup() override;
+
+  /// VerilatorSSTDevice: finish function
+  virtual void finish() override;
+
+  /// VerliatorSSTBase: clock tick function
+  virtual bool ClockTick(SST::Cycle_t cycle) override;
+
+private:
+};
+
+} // namespace SST::VerilatorSST
+
+#endif // _VERILATOR_SST_H_
