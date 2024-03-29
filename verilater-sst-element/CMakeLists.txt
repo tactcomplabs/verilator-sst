@@ -8,6 +8,16 @@
 #
 
 # -----------------------------------------------------------------
+# Generate the Verilator source
+# Relevant CMake variables:
+# - VERILOG_SOURCE : path to the verilog source
+# - VERILOG_TOP : names of the top modules
+# - VERILOG_TOP_SOURCES : list of the top module files
+# - VERILATOR_OPTIONS : verilator compilation options
+# - VERILOG_DEVICE : device name of the target verilog module
+# -----------------------------------------------------------------
+
+# -----------------------------------------------------------------
 # Generate the signals from the Verilator top
 # -----------------------------------------------------------------
 execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/BuildPortDef.sh
@@ -22,18 +32,29 @@ execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/BuildPortMap.sh
 
 
 # -----------------------------------------------------------------
-# Configure the verilatorSST header
+# Configure the verilatorSST files
 # -----------------------------------------------------------------
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/verilatorSST.h.in"
   "${CMAKE_CURRENT_SOURCE_DIR}/verilatorSST.h"
 )
 
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/verilatorSST.cpp.in"
+  "${CMAKE_CURRENT_SOURCE_DIR}/verilatorSST.cpp"
+)
+
+
 # -----------------------------------------------------------------
 # Build the entire source
 # -----------------------------------------------------------------
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-#add_library(foo SHARED ${FooSrcs})
+set(verilatorSSTSrcs
+  verilatorSST.cpp
+  verilatorSST.h
+)
+
+add_library(foo SHARED ${verilatorSSTSrcs})
 #target_include_directories(foo PRIVATE ${REVCPU_INCLUDE_PATH}
 #                           PUBLIC ${SST_INSTALL_DIR}/include)
 
