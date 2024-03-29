@@ -14,9 +14,9 @@ OUTPUTS=`cat $Top | grep VL_OUT`
 
 for IN in $INPUTS;do
   NOPAREN=`sed 's/.*(\(.*\))/\1/' <<< $IN`
-  SIGNAME=`echo $NOPAREN | sed "s/,/ /g" | awk {'print $1}' | sed "s/&//g"`
-  ENDBIT=`echo $NOPAREN | sed "s/,/ /g" | awk {'print $2}'`
-  STARTBIT=`echo $NOPAREN | sed "s/,/ /g" | awk {'print $3}' | sed "s/;//g"`
+  SIGNAME=`echo $NOPAREN | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g"`
+  ENDBIT=`echo $NOPAREN | sed "s/,/ /g" | awk '{print $2}'`
+  STARTBIT=`echo $NOPAREN | sed "s/,/ /g" | awk '{print $3}' | sed "s/;//g"`
 
   ENDBIT=$(($ENDBIT + 1))
   WIDTH=$(($ENDBIT - $STARTBIT))
@@ -27,8 +27,8 @@ done;
 #-- Generate all the output signals
 for OUT in $OUTPUTS;do
   NOPAREN=`sed 's/.*(\(.*\))/\1/' <<< $OUT`
-  SIGNAME=`echo $NOPAREN | sed "s/,/ /g" | awk {'print $1}' | sed "s/&//g"`
-  ENDBIT=`echo $NOPAREN | sed "s/,/ /g" | awk {'print $2}'`
+  SIGNAME=`echo $NOPAREN | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g"`
+  ENDBIT=`echo $NOPAREN | sed "s/,/ /g" | awk '{print $2}'`
 
   ENDBIT=$(($ENDBIT + 1))
   WIDTH=$(($ENDBIT - $STARTBIT))

@@ -16,7 +16,7 @@ IDX=0
 
 for IN in $INPUTS;do
   NOPAREN=`sed 's/.*(\(.*\))/\1/' <<< $IN`
-  SIGNAME=`echo $NOPAREN | sed "s/,/ /g" | awk {'print $1}' | sed "s/&//g"`
+  SIGNAME=`echo $NOPAREN | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g"`
   echo "{\"$SIGNAME\", $IDX },"
   IDX=$(($IDX + 1))
 done;
@@ -24,7 +24,7 @@ done;
 #-- Generate all the output signals
 for OUT in $OUTPUTS;do
   NOPAREN=`sed 's/.*(\(.*\))/\1/' <<< $OUT`
-  SIGNAME=`echo $NOPAREN | sed "s/,/ /g" | awk {'print $1}' | sed "s/&//g"`
+  SIGNAME=`echo $NOPAREN | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g"`
   echo "{\"$SIGNAME\", $IDX },"
   IDX=$(($IDX + 1))
 done;
