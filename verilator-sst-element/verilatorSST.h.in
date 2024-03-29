@@ -58,7 +58,7 @@ public:
   virtual void finish() = 0;
 
   /// VerliatorSSTBase: clock tick function
-  virtual bool ClockTick(SST::Cycle_t cycle) = 0;
+  virtual bool clock(SST::Cycle_t cycle) = 0;
 
 protected:
   SST::Output *output;        ///< VerilatorSST: SST output handler
@@ -93,10 +93,10 @@ public:
   SST_ELI_DOCUMENT_STATISTICS()
 
   /// default constructor
-  VerilatorSSTDevice();
+  VerilatorSST@VERILOG_DEVICE@(ComponentId_t id, const Params& params);
 
   /// default destructor
-  virtual ~VerilatorSSTDevice();
+  virtual ~VerilatorSST@VERILOG_DEVICE@();
 
   /// initialization function
   virtual void init(unsigned int phase) override;
@@ -108,10 +108,11 @@ public:
   virtual void finish() override;
 
   /// clock tick function
-  virtual bool ClockTick(SST::Cycle_t cycle) override;
+  virtual bool clock(SST::Cycle_t cycle) override;
 
 private:
 
+  // --- TODO: move these to the base API
   ///< Vector of port descriptor tuples
   const std::vector<PortEntry>  Ports = {
     @VERILATOR_SST_PORT_ENTRY@

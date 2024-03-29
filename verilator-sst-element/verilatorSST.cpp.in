@@ -12,6 +12,26 @@
 
 namespace SST::VerilatorSST{
 
+VerilatorSST@VERILOG_DEVICE@::VerilatorSST@VERILOG_DEVICE@(ComponentId_t id,
+                                                           const Params& params)
+  : VerilatorSSTBase("@VERILOG_DEVICE@", id, params){
+}
+
+VerilatorSST@VERILOG_DEVICE@::~VerilatorSST@VERILOG_DEVICE@(){
+}
+
+void VerilatorSST@VERILOG_DEVICE@::init(unsigned int phase){
+}
+
+void VerilatorSST@VERILOG_DEVICE@::setup(){
+}
+
+void VerilatorSST@VERILOG_DEVICE@::finish(){
+}
+
+bool VerilatorSST@VERILOG_DEVICE@::clock(SST::Cycle_T cycle){
+}
+
 } // namespace SST::VerilatorSST
 
 // EOF
