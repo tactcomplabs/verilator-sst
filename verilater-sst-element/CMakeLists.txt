@@ -7,9 +7,17 @@
 # See LICENSE in the top level directory for licensing details
 #
 
-execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/BuildPortMapping.sh
+execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/BuildPortDef.sh
                 OUTPUT_VARIABLE VERILATOR_SST_PORT_DEF
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/BuildPortEntry.sh
+                OUTPUT_VARIABLE VERILATOR_SST_PORT_ENTRY
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/BuildPortMap.sh
+                OUTPUT_VARIABLE VERILATOR_SST_PORT_MAP
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+
 
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/verilatorSST.h.in"

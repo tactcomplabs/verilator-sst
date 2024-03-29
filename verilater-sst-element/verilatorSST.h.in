@@ -4,11 +4,22 @@
 // -- Standard Headers
 #include <vector>
 #include <string>
+#include <tuple>
 
 // -- SST Headers
 #include "SST.h"
 
 namespace SST::VerilatorSST{
+
+enum class VPortType : uint8_t {
+  V_INPUT   = 0b00000000,       /// VPortType: input port
+  V_OUTPUT  = 0b00000001,       /// VPortType: output port
+};
+
+#define V_NAME  0
+#define V_TYPE  1
+#define V_WIDTH 2
+typedef std::tuple<std::string, VPortType, unsigned> PortEntry;
 
 // ---------------------------------------------------------------
 // VerilatorSSTBase
@@ -71,25 +82,35 @@ public:
   // Add statistics
   SST_ELI_DOCUMENT_STATISTICS()
 
-  /// VerilatorSSTDevice: default constructor
+  /// default constructor
   VerilatorSSTDevice();
 
-  /// VerilatorSSTDevice: default destructor
+  /// default destructor
   virtual ~VerilatorSSTDevice();
 
-  /// VerilatorSSTDevice: initialization function
+  /// initialization function
   virtual void init(unsigned int phase) override;
 
-  /// VerilatorSSTDevice: setup function
+  /// setup function
   virtual void setup() override;
 
-  /// VerilatorSSTDevice: finish function
+  /// finish function
   virtual void finish() override;
 
-  /// VerliatorSSTBase: clock tick function
+  /// clock tick function
   virtual bool ClockTick(SST::Cycle_t cycle) override;
 
 private:
+
+  ///< Vector of port descriptor tuples
+  const std::vector<PortEntry>  Ports = {
+    @VERILATOR_SST_PORT_ENTRY@
+  };
+
+  ///< Map of port names to descriptors
+  const std::map<std::string, unsigned> PortMap = {
+    @VERILATOR_SST_PORT_MAP@
+  };
 };
 
 } // namespace SST::VerilatorSST

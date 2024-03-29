@@ -1,5 +1,5 @@
 #!/bin/bash
-# BuildPortMapping.sh
+# BuildPortEntry.sh
 #
 # Copyright (C) 2017-2024 Tactical Computing Laboratories, LLC
 # All Rights Reserved
@@ -17,7 +17,11 @@ for IN in $INPUTS;do
   SIGNAME=`echo $NOPAREN | sed "s/,/ /g" | awk {'print $1}' | sed "s/&//g"`
   ENDBIT=`echo $NOPAREN | sed "s/,/ /g" | awk {'print $2}'`
   STARTBIT=`echo $NOPAREN | sed "s/,/ /g" | awk {'print $3}' | sed "s/;//g"`
-  echo "{\"$SIGNAME\", \"Input Port\", \"SST::VerilatorSST::PortEvent\" },"
+
+  ENDBIT=$(($ENDBIT + 1))
+  WIDTH=$(($ENDBIT - $STARTBIT))
+
+  echo "{\"$SIGNAME\", V_INPUT, $WIDTH },"
 done;
 
 #-- Generate all the output signals
@@ -25,8 +29,11 @@ for OUT in $OUTPUTS;do
   NOPAREN=`sed 's/.*(\(.*\))/\1/' <<< $OUT`
   SIGNAME=`echo $NOPAREN | sed "s/,/ /g" | awk {'print $1}' | sed "s/&//g"`
   ENDBIT=`echo $NOPAREN | sed "s/,/ /g" | awk {'print $2}'`
-  STARTBIT=`echo $NOPAREN | sed "s/,/ /g" | awk {'print $3}' | sed "s/;//g"`
-  echo "{\"$SIGNAME\", \"Output port\", \"SST::VerilatorSST::PortEvent\" },"
+
+  ENDBIT=$(($ENDBIT + 1))
+  WIDTH=$(($ENDBIT - $STARTBIT))
+
+  echo "{\"$SIGNAME\", V_OUTPUT, $WIDTH },"
 done;
 
 
