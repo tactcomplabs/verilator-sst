@@ -5,19 +5,19 @@ import sst
 verilator_components = {}
 
 class VerilatorSSTBuildDescription:
-    def __init__(self,name,src_dir_path,element_type,install_exists):
+    def __init__(self,name,src_dir_path,element_type,install_valid):
         self.name=name
         self.src_dir_path = src_dir_path
         self.element_type = element_type
         self.macros_sst = []
         self.macros_verilog = ''
-        self.install_exists = install_exists
+        self.install_valid = install_valid
 
     def __str__(self):
         return (f'src_dir_path: {self.src_dir_path}\n'
             f'element_type: {self.element_type}\n'
             f'macros: {self.macros_sst}\n'
-            f'install_exists: {self.install_exists}')
+            f'install_valid: {self.install_valid}')
 
 
 def create_component(name, element_type):
@@ -30,9 +30,9 @@ def create_component(name, element_type):
     
     src_dir_path = ''
     element_header_path_stripped = element_header_path.strip('\n')
-    install_exists = os.path.exists(element_header_path_stripped)
+    install_valid = os.path.exists(element_header_path_stripped)
 
-    if(install_exists):
+    if(install_valid):
         src_dir_path = os.path.join(os.path.dirname(element_header_path_stripped),os.path.pardir)
     else:
         src_dir_path = os.path.join(os.path.dirname(__file__),os.path.pardir,'src')
@@ -44,7 +44,7 @@ def create_component(name, element_type):
         name,
         abs_src_dir_path,
         element_type,
-        install_exists)
+        install_valid)
 
 
 def get_component(name):
@@ -100,12 +100,9 @@ def smart_compile(component):
     if os.path.exists(build_data_file):
         old_build_data = read_build_data(build_data_file)
 
-    print(curr_build_data)
-    print(old_build_data)
     has_changed = (curr_build_data != old_build_data)
-    print(f'has_changed {has_changed}')
 
-    if not component.install_exists or has_changed:
+    if not component.install_valid or has_changed:
         compileComponent(component)
         write_build_data(build_data_file, curr_build_data)
 
