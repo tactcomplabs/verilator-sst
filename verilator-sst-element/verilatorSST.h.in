@@ -32,6 +32,37 @@ enum class VPortType : uint8_t {
 typedef std::tuple<std::string, VPortType, unsigned> PortEntry;
 
 // ---------------------------------------------------------------
+// PortEvent
+// ---------------------------------------------------------------
+class PortEvent : public SST::Event{
+public:
+  /// PortEvent: default constructor
+  explicit PortEvent()
+    : Event() {
+  }
+
+  /// PortEvent: virtual clone function
+  virtual Event* clone(void) override{
+    PortEvent *pe = new PortEvent(*this);
+    return pe;
+  }
+
+private:
+  std::vector<uint8_t> Packet;  /// event packet
+
+public:
+  // PortEvent: event serializer
+  void serialize_order(SST::Core::Serialization::serializer &ser) override{
+    // we only serialize the raw packet
+    Event::serialize_order(ser);
+    ser & Packet;
+  }
+
+  // PortEvent: implements the nic serialization
+  ImplementSerializable(SST::VerilatorSST::PortEvent);
+};
+
+// ---------------------------------------------------------------
 // VerilatorSSTBase
 // ---------------------------------------------------------------
 class VerilatorSSTBase : public SST::SubComponent{
@@ -40,6 +71,7 @@ public:
 
   SST_ELI_DOCUMENT_PARAMS({ "verbose",
                             "Set the verbosity of output for the device", "0" }
+                         )
 
   /// VerilatorSSTBase: constructor
   VerilatorSSTBase( std::string DerivedName,
@@ -129,7 +161,8 @@ public:
   virtual const std::vector<std::string> getPortsNames() override;
 
   /// retrieve the port type of the target port
-  virtual bool getPortType(std::string PortName, VPortType& Type) override;
+  virtual bool getPortType(std::string PortName,
+                           SST::VerilatorSST::VPortType& Type) override;
 
   /// retrieve the port width of the target port
   virtual bool getPortWidth(std::string PortName, unsigned& Width) override;

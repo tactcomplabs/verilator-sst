@@ -21,7 +21,7 @@ for IN in $INPUTS;do
   ENDBIT=$(($ENDBIT + 1))
   WIDTH=$(($ENDBIT - $STARTBIT))
 
-  echo "{\"$SIGNAME\", V_INPUT, $WIDTH },"
+  echo "{\"$SIGNAME\", SST::VerilatorSST::VPortType::V_INPUT, $WIDTH },"
 done;
 
 #-- Generate all the output signals
@@ -33,7 +33,7 @@ for OUT in $OUTPUTS;do
   ENDBIT=$(($ENDBIT + 1))
   WIDTH=$(($ENDBIT - $STARTBIT))
 
-  echo "{\"$SIGNAME\", V_OUTPUT, $WIDTH },"
+  echo "{\"$SIGNAME\", SST::VerilatorSST::VPortType::V_OUTPUT, $WIDTH },"
 done;
 
 

@@ -48,7 +48,8 @@ void VerilatorSST@VERILOG_DEVICE@::setup(){
 void VerilatorSST@VERILOG_DEVICE@::finish(){
 }
 
-bool VerilatorSST@VERILOG_DEVICE@::clock(SST::Cycle_T cycle){
+bool VerilatorSST@VERILOG_DEVICE@::clock(SST::Cycle_t cycle){
+  return false;
 }
 
 unsigned VerilatorSST@VERILOG_DEVICE@::getNumPorts(){
@@ -66,16 +67,18 @@ const std::vector<std::string> VerilatorSST@VERILOG_DEVICE@::getPortsNames(){
 }
 
 bool VerilatorSST@VERILOG_DEVICE@::getPortType(std::string PortName,
-                                               VPortType& Type){
+                                               SST::VerilatorSST::VPortType& Type){
   unsigned Idx = 0;
   try{
     Idx = PortMap.at(PortName);
   }catch(const std::out_of_range& oor){
-    output->fatal(CALL_INFO, -1, "Could not find port with name=%d\n",
+    output->fatal(CALL_INFO, -1, "Could not find port with name=%s\n",
                   PortName.c_str());
+    return false;
   }
 
-  return std::get<V_TYPE>(Ports[Idx]);
+  Type = std::get<V_TYPE>(Ports[Idx]);
+  return true;
 }
 
 bool VerilatorSST@VERILOG_DEVICE@::getPortWidth(std::string PortName,
@@ -84,11 +87,13 @@ bool VerilatorSST@VERILOG_DEVICE@::getPortWidth(std::string PortName,
   try{
     Idx = PortMap.at(PortName);
   }catch(const std::out_of_range& oor){
-    output->fatal(CALL_INFO, -1, "Could not find port with name=%d\n",
+    output->fatal(CALL_INFO, -1, "Could not find port with name=%s\n",
                   PortName.c_str());
+    return false;
   }
 
-  return std::get<V_WIDTH>(Ports[Idx]);
+  Width = std::get<V_WIDTH>(Ports[Idx]);
+  return true;
 }
 
 } // namespace SST::VerilatorSST

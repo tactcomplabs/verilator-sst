@@ -15,14 +15,14 @@ OUTPUTS=`cat $Top | grep VL_OUT`
 for IN in $INPUTS;do
   NOPAREN=`sed 's/.*(\(.*\))/\1/' <<< $IN`
   SIGNAME=`echo $NOPAREN | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g"`
-  echo "{\"$SIGNAME\", \"Input Port\", \"SST::VerilatorSST::PortEvent\" },"
+  echo "{\"$SIGNAME\", \"Input Port\", {\"SST::VerilatorSST::PortEvent\"} },"
 done;
 
 #-- Generate all the output signals
 for OUT in $OUTPUTS;do
   NOPAREN=`sed 's/.*(\(.*\))/\1/' <<< $OUT`
   SIGNAME=`echo $NOPAREN | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g"`
-  echo "{\"$SIGNAME\", \"Output port\", \"SST::VerilatorSST::PortEvent\" },"
+  echo "{\"$SIGNAME\", \"Output port\", {\"SST::VerilatorSST::PortEvent\"} },"
 done;
 
 

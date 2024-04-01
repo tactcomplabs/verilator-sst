@@ -43,6 +43,36 @@ if (NOT verilator_FOUND)
 endif()
 
 #------------------------------------------------------------------
+# SST SETUP
+#------------------------------------------------------------------
+# SST Environment Derivation
+execute_process(COMMAND sst-config --prefix
+                OUTPUT_VARIABLE SST_INSTALL_DIR
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+execute_process(COMMAND sst-config --CXX
+                OUTPUT_VARIABLE CXX
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+execute_process(COMMAND sst-config --ELEMENT_CXXFLAGS
+                OUTPUT_VARIABLE SST_CXXFLAGS
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+set(CXXFLAGS "${SST_CXXFLAGS}  -fno-stack-protector")
+execute_process(COMMAND sst-config --ELEMENT_LDFLAGS
+                OUTPUT_VARIABLE SST_LDFLAGS
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+message(STATUS "[SST] SST_INSTALL_DIR=${SST_INSTALL_DIR}")
+message(STATUS "[SST] SST CXX=${CXX}")
+message(STATUS "[SST] SST_CXXFLAGS=${SST_CXXFLAGS}")
+message(STATUS "[SST] SST_LDFLAGS=${SST_LDFLAGS}")
+
+set(CXXFLAGS "${SST_CXXFLAGS}")
+set(LDFLAGS "${SST_LDFLAGS}")
+
+#------------------------------------------------------------------
 # ADD THE SUBDIRECTORIES
 #------------------------------------------------------------------
 add_subdirectory(verilator-sst-element)
