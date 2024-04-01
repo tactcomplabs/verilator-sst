@@ -28,7 +28,7 @@ $(VERILOG_BUILD_HEADERS): $(VERILOG_SRC_SOURCES)
 	--top-module $(TOP_MODULE) \
 	-Mdir $(BUILD_DIR) \
 	$^
-	make -C $(dir $@) -j $(NPROC) -f Vtop.mk
+	make -C $(dir $@) -j $(NPROC) -f VTop.mk
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/sstelement/%.cc $(VERILOG_BUILD_HEADERS)
 	mkdir -p $(dir $@)
