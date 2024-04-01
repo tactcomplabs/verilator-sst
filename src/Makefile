@@ -18,7 +18,6 @@ $(VERILOG_BUILD_HEADERS): $(VERILOG_SRC_SOURCES)
 	mkdir -p $(dir $@)
 	verilator \
 	--cc \
-	--build \
 	--exe \
 	-CFLAGS "$(SST_CXXFLAGS)" \
 	-LDFLAGS "$(SST_LDFLAGS)" \
@@ -29,6 +28,7 @@ $(VERILOG_BUILD_HEADERS): $(VERILOG_SRC_SOURCES)
 	--top-module $(TOP_MODULE) \
 	-Mdir $(BUILD_DIR) \
 	$^
+	make -C $(dir $@) -j $(NPROC) -f Vtop.mk
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/sstelement/%.cc $(VERILOG_BUILD_HEADERS)
 	mkdir -p $(dir $@)
