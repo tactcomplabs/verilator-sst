@@ -12,6 +12,25 @@
 
 namespace SST::VerilatorSST{
 
+// ---------------------------------------------------------------
+// VerilatorSSTBase
+// ---------------------------------------------------------------
+VerilatorSSTBase::VerilatorSSTBase( std::string DerivedName,
+                                    ComponentId_t id, const Params& params )
+  : SubComponent(id), output(nullptr){
+  verbosity = params.find<uint32_t>("verbose");
+  std::string outStr = "[" + DerivedName + " @t]: ";
+  output = new SST::Output(outStr, verbosity, 0,
+                           SST::Output::STDOUT);
+}
+
+VerilatorSSTBase::~VerilatorSSTBase(){
+  delete output;
+}
+
+// ---------------------------------------------------------------
+// VerilatorSST@VERILOG_DEVICE@
+// ---------------------------------------------------------------
 VerilatorSST@VERILOG_DEVICE@::VerilatorSST@VERILOG_DEVICE@(ComponentId_t id,
                                                            const Params& params)
   : VerilatorSSTBase("@VERILOG_DEVICE@", id, params){
@@ -30,6 +49,46 @@ void VerilatorSST@VERILOG_DEVICE@::finish(){
 }
 
 bool VerilatorSST@VERILOG_DEVICE@::clock(SST::Cycle_T cycle){
+}
+
+unsigned VerilatorSST@VERILOG_DEVICE@::getNumPorts(){
+  return Ports.size();
+}
+
+const std::vector<std::string> VerilatorSST@VERILOG_DEVICE@::getPortsNames(){
+  std::vector<std::string> Names;
+
+  for( unsigned i=0; i<Ports.size(); i++ ){
+    Names.push_back(std::get<V_NAME>(Ports[i]));
+  }
+
+  return Names;
+}
+
+bool VerilatorSST@VERILOG_DEVICE@::getPortType(std::string PortName,
+                                               VPortType& Type){
+  unsigned Idx = 0;
+  try{
+    Idx = PortMap.at(PortName);
+  }catch(const std::out_of_range& oor){
+    output->fatal(CALL_INFO, -1, "Could not find port with name=%d\n",
+                  PortName.c_str());
+  }
+
+  return std::get<V_TYPE>(Ports[Idx]);
+}
+
+bool VerilatorSST@VERILOG_DEVICE@::getPortWidth(std::string PortName,
+                                                unsigned& Width){
+  unsigned Idx = 0;
+  try{
+    Idx = PortMap.at(PortName);
+  }catch(const std::out_of_range& oor){
+    output->fatal(CALL_INFO, -1, "Could not find port with name=%d\n",
+                  PortName.c_str());
+  }
+
+  return std::get<V_WIDTH>(Ports[Idx]);
 }
 
 } // namespace SST::VerilatorSST

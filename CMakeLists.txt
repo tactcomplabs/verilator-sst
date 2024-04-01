@@ -19,20 +19,20 @@ project(verilatorSST CXX)
 #------------------------------------------------------------------
 # PROJECT ARGUMENTS
 #------------------------------------------------------------------
-option(VERILOG_SOURCE "../verilog" CACHE STRING "Path to the verilog source tree")
+option(VERILOG_SOURCE "../verilog" "Path to the verilog source tree")
 if(EXISTS "${VERILOG_SOURCE}")
   message(STATUS "Found verilog source at ${VERILOG_SOURCE}")
 else()
   message(FATAL "Could not find verilog source at ${VERILOG_SOURCE}")
 endif()
 
-option(VERILOG_DEVICE "Device" CACHE STRING "Name of the verilog device being simulated")
+option(VERILOG_DEVICE "Device" "Name of the verilog device being simulated")
 
-option(VERILOG_TOP "Top" CACHE STRING "Name of the verilog Top module")
+option(VERILOG_TOP "Top" "Name of the verilog Top module")
 
-option(VERILOG_TOP_SOURCES "top.v" CACHE STRING "List of verilog top source files")
+option(VERILOG_TOP_SOURCES "top.v" "List of verilog top source files")
 
-option(VERILATOR_OPTIONS "" CACHE STRING "Additional verilator compilation options")
+option(VERILATOR_OPTIONS "" "Additional verilator compilation options")
 
 #------------------------------------------------------------------
 # VERILATOR SETUP
@@ -45,6 +45,6 @@ endif()
 #------------------------------------------------------------------
 # ADD THE SUBDIRECTORIES
 #------------------------------------------------------------------
-add_subdirectory(verilater-sst-element)
+add_subdirectory(verilator-sst-element)
 
 # EOF

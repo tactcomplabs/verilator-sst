@@ -60,6 +60,18 @@ public:
   /// VerliatorSSTBase: clock tick function
   virtual bool clock(SST::Cycle_t cycle) = 0;
 
+  /// VerilatorSSTBase: retrieve the number of configured ports
+  virtual unsigned getNumPorts() = 0;
+
+  /// VerilatorSSTBase: retrieve a vector of all the port names
+  virtual const std::vector<std::string> getPortsNames() = 0;
+
+  /// VerilatorSSTBase: retrieve the port type of the target port
+  virtual bool getPortType(std::string PortName, VPortType& Type) = 0;
+
+  /// VerilatorSSTBase: retrieve the port width of the target port
+  virtual bool getPortWidth(std::string PortName, unsigned& Width) = 0;
+
 protected:
   SST::Output *output;        ///< VerilatorSST: SST output handler
   uint32_t verbosity;         ///< VerilatorSST: verbosity parameter
@@ -110,9 +122,20 @@ public:
   /// clock tick function
   virtual bool clock(SST::Cycle_t cycle) override;
 
+  /// retrieve the number of configured ports
+  virtual unsigned getNumPorts() override;;
+
+  /// retrieve a vector of all the port names
+  virtual const std::vector<std::string> getPortsNames() override;
+
+  /// retrieve the port type of the target port
+  virtual bool getPortType(std::string PortName, VPortType& Type) override;
+
+  /// retrieve the port width of the target port
+  virtual bool getPortWidth(std::string PortName, unsigned& Width) override;
+
 private:
 
-  // --- TODO: move these to the base API
   ///< Vector of port descriptor tuples
   const std::vector<PortEntry>  Ports = {
     @VERILATOR_SST_PORT_ENTRY@

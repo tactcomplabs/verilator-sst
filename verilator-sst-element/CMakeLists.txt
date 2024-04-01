@@ -20,13 +20,18 @@
 # -----------------------------------------------------------------
 # Generate the signals from the Verilator top
 # -----------------------------------------------------------------
-execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/BuildPortDef.sh
+set(VTOP "${CMAKE_CURRENT_SOURCE_DIR}/${VERILOG_DEVICE}/VTop.h")
+execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/BuildVerilatorSrc.sh
+                        ${VERILOG_DEVICE} ${VERILOG_TOP} ${VERILOG_TOP_SOURCES}
+                OUTPUT_VARIABLE VERILATOR_OUT
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/BuildPortDef.sh ${VTOP}
                 OUTPUT_VARIABLE VERILATOR_SST_PORT_DEF
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/BuildPortEntry.sh
+execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/BuildPortEntry.sh ${VTOP}
                 OUTPUT_VARIABLE VERILATOR_SST_PORT_ENTRY
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/BuildPortMap.sh
+execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/BuildPortMap.sh ${VTOP}
                 OUTPUT_VARIABLE VERILATOR_SST_PORT_MAP
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
 
