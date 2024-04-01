@@ -19,6 +19,9 @@
 // -- SST Headers
 #include "SST.h"
 
+// -- Verilator Headers
+#include "VTop.h"
+
 namespace SST::VerilatorSST{
 
 enum class VPortType : uint8_t {

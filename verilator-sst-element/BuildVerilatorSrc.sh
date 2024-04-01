@@ -10,7 +10,9 @@ TOP=$2
 SRC=$3
 
 echo "Executing verilator: "
-echo "    verilator --cc --build --vpi -Wall --Mdir $TARGETDIR --prefix VTop --top-module $TOP $SRC"
-verilator --cc --build --vpi -Wall --Mdir $TARGETDIR --prefix VTop --top-module $TOP $SRC
+echo "    verilator --cc --vpi -Wall --Mdir $TARGETDIR --prefix VTop --top-module $TOP $SRC"
+verilator --cc --vpi -Wall --Mdir $TARGETDIR --prefix VTop --top-module $TOP $SRC
+cd $TARGETDIR
+make -f VTop.mk
 
 # EOF

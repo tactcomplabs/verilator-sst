@@ -20,11 +20,6 @@ project(verilatorSST CXX)
 # PROJECT ARGUMENTS
 #------------------------------------------------------------------
 option(VERILOG_SOURCE "../verilog" "Path to the verilog source tree")
-if(EXISTS "${VERILOG_SOURCE}")
-  message(STATUS "Found verilog source at ${VERILOG_SOURCE}")
-else()
-  message(FATAL "Could not find verilog source at ${VERILOG_SOURCE}")
-endif()
 
 option(VERILOG_DEVICE "Device" "Name of the verilog device being simulated")
 
@@ -39,13 +34,28 @@ option(VERILATOR_OPTIONS "" "Additional verilator compilation options")
 #------------------------------------------------------------------
 find_package(verilator HINTS $ENV{VERILATOR_ROOT} ${VERILATOR_ROOT})
 if (NOT verilator_FOUND)
-  message(FATAL_ERROR "Verilator was not found. Either install it, or set the VERILATOR_ROOT environment variable")
+  message(FATAL_ERROR
+          "Verilator was not found. Either install it, or set the VERILATOR_ROOT environment variable")
 endif()
+find_program(VERILATOR_BIN verilator)
+if(NOT VERILATOR_BIN)
+  message(FATAL_ERROR "No verilator binary found in path")
+endif()
+
+get_filename_component(VERILATOR_PATH ${VERILATOR_BIN} DIRECTORY)
+set(VERILATOR_INCLUDE "${VERILATOR_PATH}/../share/verilator/include")
+message(STATUS "[VERILATOR] VERILATOR_INCLUDE set to ${VERILATOR_INCLUDE}")
+
 
 #------------------------------------------------------------------
 # SST SETUP
 #------------------------------------------------------------------
 # SST Environment Derivation
+find_program(SST sst)
+find_program(SST_CONFIG sst-config)
+if(NOT SST OR NOT SST_CONFIG)
+  message(FATAL_ERROR "No SST binary or sst-config binary found in path")
+endif()
 execute_process(COMMAND sst-config --prefix
                 OUTPUT_VARIABLE SST_INSTALL_DIR
                 OUTPUT_STRIP_TRAILING_WHITESPACE
