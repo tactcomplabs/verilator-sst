@@ -10,8 +10,9 @@ verilatorSST.finalize("CounterComponent")
 
 ## equivalent to ....
 
-# clockComponent = sst.Component("CounterComponent", "basicComponent.basicVerilogCounter")
+# clockComponent = sst.Component("CounterComponent", "basicverilogcounter.BasicVerilogCounter")
 # clockComponent.addParams({
-#   "maxCount" : 4,
-#   "clockFreq"  : "1Ghz",
+#   "INPUT_WIDTH" : 16,
+#   "STOP"  : "15",
+#   "CLOCK_FREQ"  : "1Ghz",
 # }) 
