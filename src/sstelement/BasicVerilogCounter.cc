@@ -29,10 +29,14 @@ BasicVerilogCounter::BasicVerilogCounter(ComponentId_t id, Params& params)
 void BasicVerilogCounter::verilatorSetup(uint16_t stop){
   std::function<void()> myfunc = [this]() {primaryComponentOKToEndSim();};
   top = std::make_unique<VerilatorSST>(myfunc);
-  const uint8_t init_low = LOW;
+
+  Signal init_low(1,LOW);
+  Signal init_stop(8,stop);
+
   top->writePort("clk", init_low);
   top->writePort("reset_l", init_low);
-  top->writePort("stop", init_low);
+  top->writePort("stop", init_stop);
+
   std::cout << "verilatorSetup()" << std::endl;
 }
 
@@ -41,17 +45,17 @@ BasicVerilogCounter::~BasicVerilogCounter(){
 }
 
 bool BasicVerilogCounter::clock(Cycle_t cycles){
-  std::cout << "clock start" << std::endl;
   top->clockTick(1, "clk");
-  const uint8_t high = 1;
   if(top->getCurrentTick() > 5){
+    Signal high(1,HIGH);
     top->writePort("reset_l", high);
   }
- 
-  uint8_t done;
+
+  Signal done;
   top->readPort("done",done);
 
-  if(done == HIGH){
+  std::cout << +done.getUIntValue<uint8_t>() << std::endl;
+  if(done.getUIntValue<uint8_t>() == HIGH){
     top->finish();
     return true;
   }
