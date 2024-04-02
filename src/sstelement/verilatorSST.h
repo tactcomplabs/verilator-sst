@@ -1,13 +1,8 @@
 #ifndef _VERILATOR_SST_H_
 #define _VERILATOR_SST_H_
 
-#include <map>
 #include <string>
 #include <functional>
-#include <variant>
-#include <utility>
-#include <memory>
-#include <iostream>
 #include <stdexcept>
 #include "VTop.h"
 #include "verilated_vpi.h"

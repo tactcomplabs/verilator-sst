@@ -2,11 +2,12 @@
 # src/verilog/verilog.mk
 #
 
+ifeq (, $(shell which verilator))
+ $(error "No verilator in $(PATH), add `verilator` to your PATH")
+endif
+
 VERILATOR_ROOT = $(abspath $(dir $(shell which verilator))../share/verilator)
 include $(VERILATOR_ROOT)/include/verilated.mk
-ifeq (, $(shell which sst-config))
- $(error "No sst-config in $(PATH), add `sst-config` to your PATH")
-endif
 
 VM_SC = 0
 VM_TRACE = 0

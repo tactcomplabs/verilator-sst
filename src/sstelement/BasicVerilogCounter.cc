@@ -36,8 +36,6 @@ void BasicVerilogCounter::verilatorSetup(uint16_t stop){
   top->writePort("clk", init_low);
   top->writePort("reset_l", init_low);
   top->writePort("stop", init_stop);
-
-  std::cout << "verilatorSetup()" << std::endl;
 }
 
 BasicVerilogCounter::~BasicVerilogCounter(){
@@ -54,7 +52,6 @@ bool BasicVerilogCounter::clock(Cycle_t cycles){
   Signal done;
   top->readPort("done",done);
 
-  std::cout << +done.getUIntValue<uint8_t>() << std::endl;
   if(done.getUIntValue<uint8_t>() == HIGH){
     top->finish();
     return true;

@@ -1,23 +1,24 @@
+#ifndef VL_DEBUG
+#define VL_DEBUG 0
+#endif
+
 #include "verilatorSST.h"
-#include <iostream>
-#include <stdexcept>
 
 using namespace SST::VerilatorSST;
 
 VerilatorSST::VerilatorSST(std::function<void()> finalCallback) : 
     finalCallback(finalCallback)  {
-    std::cout << "VerilatorSST() start" << std::endl;
     contextp = std::make_unique<VerilatedContext>();
-    std::cout << "VerilatorSST() contextp init" << std::endl;
-    contextp->debug(1);
+    contextp->debug(VL_DEBUG);
     contextp->randReset(2);
     contextp->traceEverOn(true);
     const char* empty {};
     contextp->commandArgs(0, &empty);
 
     top = std::make_unique<VTop>(contextp.get(), "");
+    #if VL_DEBUG
     contextp->internalsDump();
-    std::cout << "VerilatorSST() finish" << std::endl;
+    #endif
 }
 
 VerilatorSST::~VerilatorSST() {
@@ -29,7 +30,9 @@ void VerilatorSST::readPort(std::string portName, Signal & val) {
 
     vpiHandle vh1 = vpi_handle_by_name(name, NULL);;
     if (!vh1){
-        throw std::runtime_error("Port not found");
+        std::string errorMessage = __PRETTY_FUNCTION__;
+        errorMessage.append(" port not found");
+        throw std::runtime_error(errorMessage);
     }
 
     vpi_get_value(vh1, &val);
@@ -41,7 +44,9 @@ void VerilatorSST::writePort(std::string portName, Signal & val){
     
     vpiHandle vh1 = vpi_handle_by_name(name, NULL);
     if (!vh1){
-        throw std::runtime_error("Port not found");
+        std::string errorMessage = __PRETTY_FUNCTION__;
+        errorMessage.append(" port not found");
+        throw std::runtime_error(errorMessage);
     }
 
     s_vpi_time vpi_time_s;

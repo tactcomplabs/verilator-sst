@@ -8,6 +8,12 @@ export SRC_DIR = $(abspath $(CURDIR))
 export BUILD_DIR = $(abspath ../build)
 export INSTALL_DIR = $(abspath ../install)
 
+DEBUG ?=
+DEBUG_FLAGS =
+ifdef DEBUG
+DEBUG_FLAGS = -O0 -g -DVL_DEBUG=1
+endif
+
 include $(abspath $(CURDIR)/verilog/verilog.mk)
 include $(abspath $(CURDIR)/sstelement/sstelement.mk)
 
@@ -21,7 +27,7 @@ $(VERILOG_BUILD_HEADERS): $(VERILOG_SRC_SOURCES)
 	--exe \
 	--vpi \
 	--public-flat-rw \
-	-CFLAGS "$(SST_CXXFLAGS) -DVL_DEBUG=1" \
+	-CFLAGS "-fPIC $(DEBUG_FLAGS)" \
 	-LDFLAGS "$(SST_LDFLAGS)" \
 	-j $(NPROC) \
 	$(VERILOG_MACROS) \
@@ -34,11 +40,11 @@ $(VERILOG_BUILD_HEADERS): $(VERILOG_SRC_SOURCES)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/sstelement/%.cc $(VERILOG_BUILD_HEADERS)
 	mkdir -p $(dir $@)
-	$(SST_CXX) $(OPTIMIZE_FLAGS) $(SST_CXXFLAGS) $(VERILATOR_CPPFLAGS) $(SST_LDFLAGS) $(VERILATOR_LDFLAGS) -c $< -o $@
+	$(SST_CXX) $(DEBUG_FLAGS) $(SST_CXXFLAGS) $(VERILATOR_CPPFLAGS) $(SST_LDFLAGS) $(VERILATOR_LDFLAGS) -c $< -o $@
 
 $(SSTELEMENT_BUILD_LIB): $(SSTELEMENT_BUILD_OBJS) 
 	mkdir -p $(dir $@)
-	$(SST_CXX) $(OPTIMIZE_FLAGS) $(SST_CXXFLAGS) $(VERILATOR_CPPFLAGS) $(SST_LDFLAGS) $(VERILATOR_LDFLAGS) -o $@ $(BUILD_DIR)/*.o
+	$(SST_CXX) $(DEBUG_FLAGS) $(SST_CXXFLAGS) $(VERILATOR_CPPFLAGS) $(SST_LDFLAGS) $(VERILATOR_LDFLAGS) -o $@ $(BUILD_DIR)/*.o
 
 $(SSTELEMENT_INSTALL_HEADERS): $(SSTELEMENT_SRC_HEADERS)
 	install -d $(dir $@)
