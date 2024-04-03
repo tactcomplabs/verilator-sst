@@ -6,8 +6,7 @@
 
 using namespace SST::VerilatorSST;
 
-VerilatorSST::VerilatorSST(std::function<void()> finalCallback) : 
-    finalCallback(finalCallback)  {
+VerilatorSST::VerilatorSST(){
     contextp = std::make_unique<VerilatedContext>();
     contextp->debug(VL_DEBUG);
     contextp->randReset(2);
@@ -21,10 +20,7 @@ VerilatorSST::VerilatorSST(std::function<void()> finalCallback) :
     #endif
 }
 
-VerilatorSST::~VerilatorSST() {
-}
-
-void VerilatorSST::readPort(std::string portName, Signal & val) {
+void VerilatorSST::readPort(std::string portName, Signal & val){
     char *name = new char[portName.length() + 1];
     strcpy(name,portName.c_str());
 
@@ -76,5 +72,4 @@ uint64_t VerilatorSST::getCurrentTick(){
 
 void VerilatorSST::finish(){
     top->final();
-    finalCallback();
 }

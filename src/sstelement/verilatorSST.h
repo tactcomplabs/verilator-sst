@@ -15,11 +15,9 @@ class VerilatorSST {
     std::unique_ptr<VerilatedContext> contextp;
     std::unique_ptr<VTop> top;
 
-    std::function<void()> finalCallback;
-
     public:
-    VerilatorSST(std::function<void()>);
-    ~VerilatorSST();
+    VerilatorSST();
+    ~VerilatorSST(){};
     void writePort(std::string portName, Signal & val);
     void readPort(std::string portName, Signal & val);
     void clockTick(uint64_t add, std::string port);
