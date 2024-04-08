@@ -3,7 +3,6 @@
 #endif
 
 #include "verilatorSST.h"
-#include <iostream>
 using namespace SST::VerilatorSST;
 
 VerilatorSST::VerilatorSST(){
@@ -23,7 +22,6 @@ VerilatorSST::VerilatorSST(){
 }
 
 void VerilatorSST::readPort(std::string portName, Signal & val){
-    std::cout << portName << std::endl;
     char *name = new char[portName.length() + 1];
     strcpy(name,portName.c_str());
 
