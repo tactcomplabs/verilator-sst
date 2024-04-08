@@ -17,16 +17,20 @@ Signal::Signal(uint16_t nBits, uint64_t init_val) : Signal(nBits){
 
     uint64_t nBytes = calculateNumBytes(nBits);
     for(uint64_t i = 0; i < nBytes; i++){
-        PLI_BYTE8 d = static_cast<PLI_BYTE8>((masked_val >> (i*8)) & 255);
-        value.str[nBytes - i - 1] = d;
+        uint8_t byte = (masked_val >> (i*8)) & 255;
+        PLI_BYTE8 castSafeByte = static_cast<PLI_BYTE8>(byte);
+        value.str[nBytes - i - 1] = castSafeByte;
     }
     value.str[nBytes] = '\0';
 }
 
+Signal::Signal(const Signal& other) : Signal(other.nBits){
+    uint16_t nBytes = calculateNumBytes(other.nBits);
+    std::copy(other.value.str,other.value.str + (nBytes+1),value.str);
+}
+
 void Signal::safe_size(uint16_t nBytes){
-    if (nBytes > maxStrSize){
-        std::runtime_error("void Signal::safe_size(uint64_t nBytes): nBytes exceeds maximum represented value");
-    }
+    assert(nBytes <= maxStrSize);
 }
 
 uint16_t Signal::getNumBits(){
