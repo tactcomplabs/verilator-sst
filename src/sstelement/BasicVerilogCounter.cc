@@ -2,8 +2,6 @@
 // _BasicVerilogCounter_cc_
 //
 
-#include <memory>
-#include <sst/core/sst_config.h>
 #include "BasicVerilogCounter.h"
 
 #define LOW 0
@@ -26,6 +24,10 @@ BasicVerilogCounter::BasicVerilogCounter(ComponentId_t id, Params& params)
   out->output("Counter set to stop=%u\n", stop);
 }
 
+BasicVerilogCounter::~BasicVerilogCounter(){
+  delete out;
+}
+
 void BasicVerilogCounter::verilatorSetup(uint16_t stop){
   top = std::make_unique<VerilatorSST>();
 
@@ -35,10 +37,10 @@ void BasicVerilogCounter::verilatorSetup(uint16_t stop){
   top->writePort("clk", init_low);
   top->writePort("reset_l", init_low);
   top->writePort("stop", init_stop);
-}
 
-BasicVerilogCounter::~BasicVerilogCounter(){
-  delete out;
+  Signal reset_delay(1,HIGH);
+  top->writePortAtTick("reset_l",reset_delay,5);
+  top->tick(1);
 }
 
 bool BasicVerilogCounter::testBenchPass(){
@@ -59,11 +61,6 @@ bool BasicVerilogCounter::clock(Cycle_t cycles){
     return true;
   }
 
-  top->clockTick(1, "clk");
-  if(top->getCurrentTick() > 5){
-    Signal high(1,HIGH);
-    top->writePort("reset_l", high);
-  }
-
+  top->tickClockPeriod("clk");
   return false;
 }

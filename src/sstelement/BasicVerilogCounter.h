@@ -5,6 +5,9 @@
 #ifndef _BASIC_VERILOG_COUNTER_H_
 #define _BASIC_VERILOG_COUNTER_H_
 
+#include <memory>
+#include <cassert>
+#include <sst/core/sst_config.h>
 #include <sst/core/component.h>
 #include "verilatorSST.h"
 
