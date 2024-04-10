@@ -2,9 +2,9 @@ export SRC_DIR = $(abspath $(CURDIR))
 export BUILD_DIR = $(abspath ../build)
 export INSTALL_DIR = $(abspath ../install)
 
-include $(abspath $(CURDIR)/verilatorsst/verilatorsst.mk)
-include $(abspath /Users/mjeje/verilator-sst/src/BasicVerilogUartMem/BasicVerilogUartMem.mk)
-include $(abspath /Users/mjeje/verilator-sst/src/BasicVerilogCounter/BasicVerilogCounter.mk)
+include $(abspath $(SRC_DIR)/verilatorsst/verilatorsst.mk)
+include $(abspath $(SRC_DIR)/BasicVerilogUartMem/BasicVerilogUartMem.mk)
+include $(abspath $(SRC_DIR)/BasicVerilogCounter/BasicVerilogCounter.mk)
 
 ifdef DEBUG
 DEBUG_FLAGS = -O0 -g -DVL_DEBUG=1
