@@ -1,6 +1,7 @@
 #ifndef _SIGNAL_VALUE_H_
 #define _SIGNAL_VALUE_H_
 
+#include <type_traits>
 #include <algorithm>
 #include <cassert>
 #include "vpi_user.h"

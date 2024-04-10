@@ -13,8 +13,8 @@ endif
 SST_CXX = $(shell sst-config --CXX)
 SST_CXXFLAGS = $(shell sst-config --ELEMENT_CXXFLAGS)
 SST_LDFLAGS = $(shell sst-config --ELEMENT_LDFLAGS)
-export BUILD_COMMAND = $(SST_CXX) $(DEBUG_FLAGS) -I$(VERILATORSST_SRC_DIR) -I$(BUILD_DIR) $(SST_CXXFLAGS) $(SST_LDFLAGS) $(VERILATOR_CPPFLAGS)
-export VERILOG_BUILD_COMMAND = verilator --cc --build --exe --vpi --public-flat-rw -CFLAGS "-fPIC $(DEBUG_FLAGS)" -LDFLAGS "$(SST_LDFLAGS)" $(VERILOG_MACROS) -Wall -Mdir $(BUILD_DIR) --prefix V$(basename $(notdir $@)) --top-module $(basename $(notdir $@)) -I$(dir $<) $<
+export BUILD_COMMAND = $(SST_CXX) -I$(VERILATORSST_SRC_DIR) -I$(BUILD_DIR) $(SST_CXXFLAGS) $(SST_LDFLAGS) $(VERILATOR_CPPFLAGS) -std=c++17 $(DEBUG_FLAGS)
+export VERILOG_BUILD_COMMAND = verilator --cc --build --exe --vpi --public-flat-rw -CFLAGS "-fPIC -std=c++17 $(DEBUG_FLAGS)" -LDFLAGS "$(SST_LDFLAGS)" $(VERILOG_MACROS) -Wall -Mdir $(BUILD_DIR) --prefix V$(basename $(notdir $@)) --top-module $(basename $(notdir $@)) -I$(dir $<) $<
 
 .DEFAULT_GOAL := register
 .PHONY: register verify clean
