@@ -29,7 +29,7 @@ BasicVerilogCounter::~BasicVerilogCounter(){
 }
 
 void BasicVerilogCounter::verilatorSetup(uint16_t stop){
-  top = std::make_unique<VerilatorSST>();
+  top = std::make_unique<VerilatorSST<VCounter>>();
 
   Signal init_low(1,LOW);
   Signal init_stop(8,stop);

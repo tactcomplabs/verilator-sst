@@ -8,6 +8,8 @@
 
 namespace SST::VerilatorSST {
 const int maxStrSize = VL_VALUE_STRING_MAX_WORDS * VL_EDATASIZE;
+const int maxSignalSize = maxStrSize*8;
+const uint64_t maxSignalInit = UINT64_MAX;
 
 class Signal : public t_vpi_value {
     private:
@@ -24,9 +26,28 @@ class Signal : public t_vpi_value {
 
     uint16_t getNumBits();
     uint16_t getNumBytes();
+    bool getSingleBit();
 
     template<typename T>
     T getUIntValue() {
+        static_assert(std::is_unsigned_v<T> == true);
+        const uint16_t nBytesStored = getNumBytes();
+
+        assert(sizeof(T) >= nBytesStored);
+
+        T ret = 0;
+        for(uint16_t i = 0; i<nBytesStored; i++){
+            PLI_BYTE8 byte = value.str[nBytesStored-1-i];
+            uint8_t castSafeByte = static_cast<uint8_t>(byte);
+            uint8_t padSafeByte = (castSafeByte == ' ') ? 0 : castSafeByte; //TODO https://github.com/verilator/verilator/issues/5036
+            ret |= castSafeByte << (i*8);
+        }
+
+        return ret;
+    }
+
+    template<typename T>
+    T getVectorValue() {
         static_assert(std::is_unsigned_v<T> == true);
         const uint16_t nBytesStored = getNumBytes();
 

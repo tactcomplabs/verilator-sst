@@ -3,27 +3,29 @@
 #endif
 
 #include "verilatorSST.h"
-#include <iostream>
+
 using namespace SST::VerilatorSST;
 
-VerilatorSST::VerilatorSST(){
+template <class T>
+VerilatorSST<T>::VerilatorSST(){
+    static_assert(std::is_base_of_v<VerilatedModel,T>);
     contextp = std::make_unique<VerilatedContext>();
     contextp->debug(VL_DEBUG);
     contextp->randReset(2);
     contextp->traceEverOn(true);
     const char* empty {};
     contextp->commandArgs(0, &empty);
-    top = std::make_unique<VTop>(contextp.get(), "");
+    top = std::make_unique<T>(contextp.get(), "");
 
     signalQueue = std::make_unique<std::vector<SignalQueueEntry>>();
-
+    
     #if VL_DEBUG
     contextp->internalsDump();
     #endif
 }
 
-void VerilatorSST::readPort(std::string portName, Signal & val){
-    std::cout << portName << std::endl;
+template <class T>
+void VerilatorSST<T>::readPort(std::string portName, Signal & val){
     char *name = new char[portName.length() + 1];
     strcpy(name,portName.c_str());
 
@@ -33,7 +35,8 @@ void VerilatorSST::readPort(std::string portName, Signal & val){
     vpi_get_value(vh1, &val);
 }
 
-void VerilatorSST::writePort(std::string portName, Signal & val){
+template <class T>
+void VerilatorSST<T>::writePort(std::string portName, Signal & val){
     char *name = new char[portName.length() + 1];
     strcpy(name, portName.c_str());
     
@@ -47,7 +50,8 @@ void VerilatorSST::writePort(std::string portName, Signal & val){
     vpi_put_value(vh1,&val,&vpi_time_s,vpiInertialDelay);
 }
 
-void VerilatorSST::writePortAtTick(std::string portName, Signal & signal, uint64_t writeTick){
+template <class T>
+void VerilatorSST<T>::writePortAtTick(std::string portName, Signal & signal, uint64_t writeTick){
     assert(writeTick > getCurrentTick());
 
     SignalQueueEntry entry{portName, writeTick, signal};
@@ -67,7 +71,8 @@ void VerilatorSST::writePortAtTick(std::string portName, Signal & signal, uint64
     signalQueue->insert(signalQueue->begin() + i, entry);
 }
 
-void VerilatorSST::pollSignalQueue(){
+template <class T>
+void VerilatorSST<T>::pollSignalQueue(){
     while(signalQueue->empty() != true){
         if(signalQueue->back().writeTick > getCurrentTick()){
             break;
@@ -78,7 +83,8 @@ void VerilatorSST::pollSignalQueue(){
     } 
 }
 
-void VerilatorSST::tick(uint64_t elapse){
+template <class T>
+void VerilatorSST<T>::tick(uint64_t elapse){
     for(uint64_t i = 0; i < elapse; i++){
         pollSignalQueue();
         contextp->timeInc(1);
@@ -86,7 +92,8 @@ void VerilatorSST::tick(uint64_t elapse){
     }
 }
 
-void VerilatorSST::tickClockPeriod(std::string clockPort){
+template <class T>
+void VerilatorSST<T>::tickClockPeriod(std::string clockPort){
     for(auto i = 0; i < 2; i++){
         Signal clk;
         readPort(clockPort, clk);
@@ -101,10 +108,12 @@ void VerilatorSST::tickClockPeriod(std::string clockPort){
     }
 }
 
-uint64_t VerilatorSST::getCurrentTick(){
+template <class T>
+uint64_t VerilatorSST<T>::getCurrentTick(){
     return contextp->time();
 }
 
-void VerilatorSST::finish(){
+template <class T>
+void VerilatorSST<T>::finish(){
     top->final();
 }

@@ -23,7 +23,7 @@ class VerilatorSSTBuildDescription:
 def create_component(name, element_type):
     # todo sanitize user input
     global verilator_components
-    ps = subprocess.Popen(['sst-info', element_type], stdout=subprocess.PIPE)
+    ps = subprocess.Popen(['sst-info', f'verilatorsst.{element_type}'], stdout=subprocess.PIPE)
     
     element_header_path = subprocess.check_output(
         ['awk', '/using file: [^ ]*/{print $NF}'], stdin=ps.stdout).decode('utf-8')
@@ -112,7 +112,7 @@ def compileComponent(component):
                                'clean'], stderr=subprocess.STDOUT)
     assert ret_code == 0
     ret_code = subprocess.call(
-        ['make', f'VERILOG_MACROS={component.macros_verilog}', '-C', component.src_dir_path], stderr=subprocess.STDOUT)
+        ['make', f'VERILOG_MACROS={component.macros_verilog}', f'COMPONENT={component.element_type}', '-C', component.src_dir_path], stderr=subprocess.STDOUT)
     assert ret_code == 0
 
 
@@ -121,6 +121,6 @@ def finalize(name):
 
     smart_compile(component)
 
-    sstComponent = sst.Component(name, component.element_type)
+    sstComponent = sst.Component(name, f'verilatorsst.{component.element_type}')
     sstComponent = sstComponent.addParams(
         {pair[0]: pair[1] for pair in component.macros_sst})

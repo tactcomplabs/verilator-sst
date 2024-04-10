@@ -5,7 +5,7 @@
 // `endif
 
 /* verilator lint_off DECLFILENAME */
-module Top
+module Counter
    #(parameter INPUT_WIDTH=`INPUT_WIDTH)
   (
    // Declare some signals so we can see how I/O works

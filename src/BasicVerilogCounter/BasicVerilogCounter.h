@@ -10,6 +10,8 @@
 #include <sst/core/sst_config.h>
 #include <sst/core/component.h>
 #include "verilatorSST.h"
+#include "verilatorSST.cc"
+#include "VCounter.h"
 
 namespace SST::VerilatorSST {
 
@@ -20,7 +22,7 @@ public:
   // Register the component with the SST element library
   SST_ELI_REGISTER_COMPONENT(
     BasicVerilogCounter,                               // Component class
-    "basicverilogcounter",                         // Component library
+    "verilatorsst",                         // Component library
     "BasicVerilogCounter",                             // Component name
     SST_ELI_ELEMENT_VERSION(1,0,0),           // Version of the component
     "BasicVerilogCounter: simple clocked component",   // Description of the component
@@ -57,8 +59,7 @@ private:
 
   // Params
   SST::Output* out;       // SST Output object for printing, messaging, etc
-
-  std::unique_ptr<VerilatorSST> top;
+  std::unique_ptr<VerilatorSST<VCounter>> top;
   bool testBenchPass();
   void verilatorSetup(uint16_t stop);
 };  // class basicClocks
