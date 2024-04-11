@@ -34,9 +34,67 @@ VerilatorSSTBase::~VerilatorSSTBase(){
 VerilatorSST@VERILOG_DEVICE@::VerilatorSST@VERILOG_DEVICE@(ComponentId_t id,
                                                            const Params& params)
   : VerilatorSSTBase("@VERILOG_DEVICE@", id, params){
+
+  clockPort = params.find<std::string>("clockPort", "NullPort");
+  if( !isNamedPort(clockPort) ){
+    output->fatal(CALL_INFO, -1, "Could not find clock port with name=%s\n",
+                  clockPort.c_str());
+  }
+
+  // attempt to build the reset value tables
+  initResetValues(params);
 }
 
 VerilatorSST@VERILOG_DEVICE@::~VerilatorSST@VERILOG_DEVICE@(){
+}
+
+void VerilatorSST@VERILOG_DEVICE@::splitStr(const std::string& s,
+                                            char c,
+                                            std::vector<std::string>& v){
+  std::string::size_type i = 0;
+  std::string::size_type j = s.find(c);
+  v.clear();
+
+  if( (j==std::string::npos) && (s.length() > 0) ){
+    v.push_back(s);
+    return ;
+  }
+
+  while (j != std::string::npos) {
+    v.push_back(s.substr(i, j-i));
+    i = ++j;
+    j = s.find(c, j);
+    if (j == std::string::npos)
+      v.push_back(s.substr(i, s.length()));
+  }
+}
+
+void VerilatorSST@VERILOG_DEVICE@::initResetValues(const Params& params){
+  std::vector<std::string> optList;
+  params.find_array("resetVals", optList);
+
+  for( unsigned i=0; i<optList.size(); i++ ){
+    std::vector<std::string> vstr;
+    std::string s = optList[i];
+    splitStr(s, ':', vstr);
+
+    if( vstr.size() != 2 ){
+      output->fatal(CALL_INFO, -1,
+                    "Error in reading reset value from parameter list:%s\n",
+                    s.c_str() );
+    }
+
+    if( !isNamedPort(vstr[0]) ){
+      output->fatal(CALL_INFO, -1,
+                    "Error in reading reset value: %s is not a named port\n",
+                    vstr[0].c_str());
+    }
+
+    UnitAlgebra ua;
+    ua.init(vstr[1]);
+
+    ResetVals.push_back(std::make_pair(vstr[0],ua.getValue().toUnsignedLong()));
+  }
 }
 
 void VerilatorSST@VERILOG_DEVICE@::init(unsigned int phase){
@@ -49,6 +107,17 @@ void VerilatorSST@VERILOG_DEVICE@::finish(){
 }
 
 bool VerilatorSST@VERILOG_DEVICE@::clock(SST::Cycle_t cycle){
+  return false;
+}
+
+bool VerilatorSST@VERILOG_DEVICE@::isNamedPort(std::string PortName){
+
+  for( unsigned i=0; i<Ports.size(); i++ ){
+    if( std::get<V_NAME>(Ports[i]) == PortName ){
+      return true;
+    }
+  }
+
   return false;
 }
 
