@@ -35,29 +35,61 @@ void BasicVerilogUartMem::verilatorSetup(){
 	top->writePort("clk",init_low);
 	top->writePort("rst_l",init_low);
 	top->writePort("RX",init_high);
-	top->writePortAtTick("rst_l",init_high,2);
+	top->writePortAtTick("rst_l",init_high,10);
 	top->tick(1);
+	driver = std::vector<TestBenchCommand> {
+		{true,1},//put mem[0] 7
+		{true,0},
+		{true,7},
+		{true,1},//put mem[1] 6
+		{true,1},
+		{true,6},
+		{true,1},//put mem[2] 5
+		{true,2},
+		{true,5},
+		{true,1},//put mem[3] 4
+		{true,3},
+		{true,4},
+		{true,1},//put mem[4] 3
+		{true,4},
+		{true,3},
+		{true,1},//put mem[5] 2
+		{true,5},
+		{true,2},
+		{true,1},//put mem[6] 1
+		{true,6},
+		{true,1},
+		{true,1},//put mem[7] 7
+		{true,7},
+		{true,7}
+		};
 }
 
 void BasicVerilogUartMem::compareMemDebug(uint16_t data, uint16_t addr){
 	int bitLength = (1 << addrWidth)*dataWidth;
 	Signal memDebug(bitLength);
 	top->readPort("mem_debug",memDebug);
-	uint16_t * val = memDebug.getUIntVector<uint16_t>(4);
+	// uint16_t * val = memDebug.getUIntVector<uint16_t>(3);
 	for(int i = 0;i<16;i++){
-		std::cout << "memDebug["<<i<<"]="<<+val[i]<<std::endl;
+		std::cout << "memDebug["<<i<<"]="<<+static_cast<uint8_t>(memDebug.value.str[i])<<std::endl;
 	}
+	/*
+	111 110 101 100 011 010 001 111
+	111 110 101 100 011 010 001 111
+	111000000000000000000111
+	11100000 00000000 00000111
+	*/
 };
 
 bool BasicVerilogUartMem::stateMachine(){
 	bool ret = false;
 	
 	if(opState == IDLE){
-		if(cmdCtr >= cmdsSize){
+		std::cout <<driver.size()<<std::endl;
+		if(cmdCtr >= driver.size()){
 			compareMemDebug(1,1);
 			top->finish();
-			primaryComponentOKToEndSim();
-			ret = true;
+			return true;
 		}
 		std::cout << "debug" <<std::endl;
 		Signal rx;
@@ -161,11 +193,13 @@ bool BasicVerilogUartMem::stateMachine(){
 }
 
 bool BasicVerilogUartMem::clock(Cycle_t cycles){
-	bool ret = false;
 	if(top->getCurrentTick() > 5){
-		ret = stateMachine();
+		if(stateMachine()){
+			primaryComponentOKToEndSim();
+			return true;
+		}
 	}
 
 	top->tickClockPeriod("clk");
-	return ret;
+	return false;
 }

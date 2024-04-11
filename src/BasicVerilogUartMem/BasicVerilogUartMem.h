@@ -33,22 +33,8 @@ class BasicVerilogUartMem : public SST::Component{
         uint16_t txBuf = 0;
         uint16_t bitCtr = 0;
         
-        TestBenchCommand driver[12] = {
-            {true,1},//put mem[0] 7
-            {true,0},
-            {true,7},
-            {true,0},//get mem[0]
-            {true,0},
-            {false,7},
-            {true,1},//put mem[15] 7
-            {true,15},
-            {true,7},
-            {true,0},//get mem[15]
-            {true,15},
-            {false,7}
-            };
+        std::vector<TestBenchCommand> driver;
         uint16_t cmdCtr = 0;
-        uint16_t cmdsSize = 12;
         uint16_t timeout = 0;
 
     public:

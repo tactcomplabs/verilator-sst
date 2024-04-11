@@ -26,99 +26,142 @@ VerilatorSST<T>::VerilatorSST(){
 }
 
 template <class T>
+uint8_t VerilatorSST<T>::maskShiftL(uint8_t data, uint8_t mask, int shift){
+    auto dataMasked = data & mask;
+    auto dataMaskedShifted = shift > 0 ? dataMasked << shift : dataMasked >> (0-shift);
+    std::cout << "dataMasked=" <<+dataMasked << std::endl; 
+    std::cout << "dataMaskedShifted=" <<+dataMaskedShifted << std::endl; 
+    return dataMaskedShifted;
+}
+
+template <class T>
+void VerilatorSST<T>::writeHelper(uint8_t word, uint16_t wordSizeBits, int bitStart, PLI_BYTE8 * storage){
+    auto storageByteIdx = bitStart / 8;
+    auto localBitStart = bitStart - (storageByteIdx*8);
+    auto shift = (8-localBitStart)-wordSizeBits;
+    uint8_t mask = (1 << wordSizeBits)-1;
+    storage[storageByteIdx] &= ~(maskShiftL(  -1, mask, shift));
+    storage[storageByteIdx] |= maskShiftL(word, mask, shift);
+
+    
+    std::cout << "word=" <<+word << std::endl;                
+    std::cout << "wordSizeBits=" << +wordSizeBits<< std::endl;
+    std::cout << "bitStart=" << bitStart << std::endl;
+    std::cout << "storageByteIdx=" << storageByteIdx<< std::endl;
+    std::cout << "localBitStart=" << localBitStart<< std::endl;
+    std::cout << "shift=" << shift << std::endl;
+    std::cout << "mask=" << +mask << std::endl;
+    std::cout << "storage[" << storageByteIdx << "]=" << +static_cast<uint8_t>(storage[storageByteIdx]) << std::endl << std::endl;
+    
+    if(shift < 0){
+        auto cutoffWordSizeBits = (wordSizeBits-(8-localBitStart));
+        auto cutoffBitStart = bitStart + (wordSizeBits-cutoffWordSizeBits);
+        std::cout << "cutoffWordSizeBits=" << cutoffWordSizeBits << std::endl << std::endl;
+        writeHelper(word, cutoffWordSizeBits, cutoffBitStart, storage);
+    }
+}
+
+template <class T>
 void VerilatorSST<T>::readPort(std::string portName, Signal & val){
     char *name = new char[portName.length() + 1];
     strcpy(name,portName.c_str());
 
     vpiHandle vh1 = vpi_handle_by_name(name, NULL);
     assert(vh1);
+    auto nBits = vpi_get(vpiSize, vh1);
+    assert(nBits == val.getNumBits());
 
     PLI_INT32 vpiSizeVal = vpi_get(vpiSize, vh1);
     PLI_INT32 vpiTypeVal = vpi_get(vpiType, vh1);
 
     std::cout << "portName=" << portName << " vpiTypeVal=" << vpiTypeVal << std::endl;
-
     std::cout << "val.getNumBytes()=" <<val.getNumBytes()<<std::endl;
     std::cout << "vpiSizeVal=" <<vpiSizeVal<<std::endl;
-    // auto wordSizeBytes = val.getNumBytes() / vpiSizeVal;
 
+    if(vpiTypeVal != vpiMemory){
+        assert(val.getNumBits() >= vpiSizeVal);
+        vpi_get_value(vh1, &val);
+    }
     if(vpiTypeVal == vpiMemory){
         vpiHandle iter = vpi_iterate(vpiMemoryWord,vh1);
         assert(iter);
-        int i= 0;
-        int bitStart = 0;
+        auto bitStart=0;
+        auto firstWordSizeBits = 0;
+
         while(auto wordHandle = vpi_scan(iter)){
             t_vpi_value word{vpiIntVal};
             vpi_get_value(wordHandle, &word);
             PLI_INT32 wordSizeBits = vpi_get(vpiSize, wordHandle);
-            std::cout << "wordSizeBits=" <<wordSizeBits<<std::endl;
-            auto bitStart = i*wordSizeBits;
-            // auto bitEnd = bitStart+wordSizeBits-1;
-            std::cout << "bitStart=" <<bitStart<<std::endl;
-            auto byteArrayIdx = bitStart / 8;
-            std::cout << "byteArrayIdx=" <<byteArrayIdx<<std::endl;
-            // bool misaligned = bitEnd / 8 != byteArrayIdx;
-            // assert(!misaligned);
-            auto localBitStart = bitStart - byteArrayIdx*8;
-            std::cout << "localBitStart=" <<localBitStart<<std::endl;
-            auto shift = 8-localBitStart-wordSizeBits;
-            std::cout << "shift=" <<shift<<std::endl;
-            assert(shift >= 0 && "word size is not a factor of 8");
-            uint8_t mask = (((1<<wordSizeBits)-1) << (8-wordSizeBits)) >> localBitStart;
-            std::cout << "mask=" <<+mask<<std::endl;
-            if(shift < 0 ){
-                //todo
-            }else{
-                uint8_t wordShifted = word.value.integer << shift;
-                std::cout << "word.value.integer=" <<+word.value.integer<<std::endl;
-                uint8_t wordMasked = wordShifted & mask;
-                std::cout << "wordMasked=" <<+wordMasked<<std::endl;
-                val.value.str[byteArrayIdx] &= ~mask;
-                val.value.str[byteArrayIdx] |= wordMasked;
-                std::cout << "val.value.str[byteArrayIdx]=" <<+val.value.str[byteArrayIdx]<<std::endl;
+
+            if(bitStart == 0){
+                assert(wordSizeBits*vpiSizeVal >= val.getNumBits());
+                firstWordSizeBits = wordSizeBits;
             }
-            
+            assert(firstWordSizeBits == wordSizeBits);
 
-            //word0 = 00000101
-            //word1 = 00000001
-            //word2 = 00000110
-            //word4 = 00000001
-            //data =  10100110
-
-
-            //00000000
-            //11100000
-            //00000011 1
-            //11111111 
-
-            //i=0
-            //wordSizeBits = 3
-            //bitstart = i*wordSizeBits
-            //byteArrayIdx = bitstart // 8
-            //bitend = (i+1)*wordSizeBits-1
-            //misaligned = bitend // 8 != byteArrayIdx
-            //fail for now
-            //localBitStart = bitStart - byteArrayIdx*8
-
-            //mask = (1<<wordSizeBits)-1 << 
-            //localBitStart = 0; bitStart = 0 -0 byteArrayIdx*8
-            //localBitStart = 3; bitStart = 3 -0
-            //localBitStart = 6; bitStart = 6 -0
-            //localBitStart = 1; bitStart = 9 -8
-            //localBitStart = 4; bitStart = 12 -8
-            //localBitStart = 7; bitStart = 15 -8
-            //localBitStart = 2; bitStart = 18 -16
-            //localBitStart = 5; bitStart = 21 -16
-            //localBitStart = 8; bitStart = 24 -16
-            //bitstart = 0, byt
+            writeHelper(word.value.integer, wordSizeBits, bitStart, val.value.str);
             vpi_free_object(wordHandle);
-            i++;
+            bitStart += wordSizeBits;
         }
-    }else {
-        assert(val.getNumBits() >= vpiSizeVal);
-        vpi_get_value(vh1, &val);
     }
+
+    /*
+    word0 101
+    word1 111
+    word2 101
+    word3 011
+    Storage {101}{111}{10 1}0000000
+
+    wordSizeBits = 3
+    bitstart=0
+    for(word)
+    ...
+
+    wordSizeBits = 3
+    while(word)
+        word = //{101} on 3rd iteration
+
+        f(word,wordSizeBits,&bitStart,&storage)
+            bitstart += wordSizeBits //6
+            byteArrayIdx = bitStart / 8 //0
+            localbitstart = bitStart - byteArrayIdx*8 //6
+            shift = 8-(localBitStart-wordSizeBits) // -1
+            mask = (((1<<wordSizeBits)-1) << (8-wordSizeBits)) >> localBitStart //0000 00011
+            mask = (1-wordSizeBits)-1 //            0000 0111
+            
+            wordMasked = word & mask //             0000 0101
+            wordShifted = word << shift             0000 0010
+            storage[0] &= ~(mask << shift)//        1011 1100
+            storage[0] |= wordShifted //            1011 1110
+
+            if(shift < 0)
+                WordSizeBits = (wordSizeBits-(8-localBitStart)) // 1
+                f(word,wordSizeBits,&bitStart,&storage)
+                    BitStart += WordSizeBits //9
+                    ByteArrayIdx = BitStart / 8 //1
+                    LocalBitStart= BitStart-ByteArrayIdx*8 //0
+                    Shift = 8-LocalBitStart-WordSizeBits //7
+                    Mask = (1-WordSizeBits)-1 //             0000 0001
+                    WordMasked = Word & Mask //         0000 0001
+                    WordShifted = WordMasked << Shift //1000 0000
+                    storage[1] &= ~(Mask << Shift) //       0000 0000
+                    storage[1] &= ~(Mask << Shift) //       1000 0000
+
+
+    word=011
+    wordSizeBits=3
+    bitStart += wordSizeBits
     
+    word     =    01010101
+    wordMask =    00000111
+    wordMasked =  00000101
+    wordShifted = 00010100 = wordMasked <<shift
+
+    storage =     10101010
+    storageMask = 00011100 = wordMask << shift
+    rdy_storage = 10100010 = storage &= ~storageMask
+    good_storage = 10110110 
+*/
 }
 
 template <class T>
@@ -171,6 +214,7 @@ void VerilatorSST<T>::pollSignalQueue(){
 
 template <class T>
 void VerilatorSST<T>::tick(uint64_t elapse){
+    assert(!isFinished);
     for(uint64_t i = 0; i < elapse; i++){
         pollSignalQueue();
         contextp->timeInc(1);
@@ -202,4 +246,5 @@ uint64_t VerilatorSST<T>::getCurrentTick(){
 template <class T>
 void VerilatorSST<T>::finish(){
     top->final();
+    isFinished = true;
 }

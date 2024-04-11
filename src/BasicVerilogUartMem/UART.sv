@@ -54,13 +54,16 @@ UART_rx #(.ADDR_WIDTH(ADDR_WIDTH), .BAUD_PERIOD(BAUD_PERIOD)) iRX(
     .rx_done(rx_done),
     .clr_rx_done(clr_rx_done));
 
+
+wire [DATA_WIDTH-1:0] rdata;
+assign tx_data = {{ADDR_WIDTH-DATA_WIDTH{1'bx}}, rdata};
 RAM #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH)) ram (
     .clk(clk),
     .rst_l(rst_l),
     .wr(wr),
     .addr(write_addr),
     .wdata(rx_data[DATA_WIDTH-1:0]),
-    .rdata(tx_data),
+    .rdata(rdata),
     .mem_debug(mem_debug));
 
 typedef enum reg [2:0] {IDLE, GET_ADDR, GET_DATA, PUT_ADDR, PUT_DATA} wrapper_state_t;
@@ -140,7 +143,7 @@ always_comb begin
 end
 
 initial begin
-    if (ADDR_WIDTH >= DATA_WIDTH) begin
+    if (ADDR_WIDTH < DATA_WIDTH) begin
         $display("ADDR_WIDTH must be larger than or equal to DATA_WIDTH");
         $finish;
     end
