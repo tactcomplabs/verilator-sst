@@ -68,8 +68,6 @@ void VerilatorSST<T>::readPort(std::string portName, Signal & val){
 
     vpiHandle vh1 = vpi_handle_by_name(name, NULL);
     assert(vh1);
-    auto nBits = vpi_get(vpiSize, vh1);
-    assert(nBits == val.getNumBits());
 
     PLI_INT32 vpiSizeVal = vpi_get(vpiSize, vh1);
     PLI_INT32 vpiTypeVal = vpi_get(vpiType, vh1);
@@ -79,7 +77,7 @@ void VerilatorSST<T>::readPort(std::string portName, Signal & val){
     std::cout << "vpiSizeVal=" <<vpiSizeVal<<std::endl;
 
     if(vpiTypeVal != vpiMemory){
-        assert(val.getNumBits() >= vpiSizeVal);
+        assert(val.getNumBits() == vpiSizeVal);
         vpi_get_value(vh1, &val);
     }
     if(vpiTypeVal == vpiMemory){
