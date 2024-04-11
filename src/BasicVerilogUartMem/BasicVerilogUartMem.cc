@@ -40,11 +40,13 @@ void BasicVerilogUartMem::verilatorSetup(){
 }
 
 void BasicVerilogUartMem::compareMemDebug(uint16_t data, uint16_t addr){
-	int bitLength = (1 << addrWidth) * dataWidth;
+	int bitLength = (1 << addrWidth)*dataWidth;
 	Signal memDebug(bitLength);
 	top->readPort("mem_debug",memDebug);
-	uint64_t val = memDebug.getUIntValue<uint64_t>();
-	std::cout << "memDebug=" <<val;
+	uint16_t * val = memDebug.getUIntVector<uint16_t>(4);
+	for(int i = 0;i<16;i++){
+		std::cout << "memDebug["<<i<<"]="<<+val[i]<<std::endl;
+	}
 };
 
 bool BasicVerilogUartMem::stateMachine(){
@@ -52,6 +54,7 @@ bool BasicVerilogUartMem::stateMachine(){
 	
 	if(opState == IDLE){
 		if(cmdCtr >= cmdsSize){
+			compareMemDebug(1,1);
 			top->finish();
 			primaryComponentOKToEndSim();
 			ret = true;
@@ -59,7 +62,7 @@ bool BasicVerilogUartMem::stateMachine(){
 		std::cout << "debug" <<std::endl;
 		Signal rx;
 		top->readPort("TX",rx);
-		if((rx.getUIntValue<uint8_t>() & 1) == LOW){
+		if((rx.getUIntScalar<uint8_t>() & 1) == LOW){
 			rxBuf = 0;
 			baudCtr = baudPeriod/2;
 			timeout = 0;
@@ -89,7 +92,6 @@ bool BasicVerilogUartMem::stateMachine(){
 			if(driver[cmdCtr].data != maskedRxBuf){
 				out->output("sst: bad value data=%u maskedRxBuf=%u rxBuf=%u",driver[cmdCtr].data,maskedRxBuf,rxBuf);
 			}
-			compareMemDebug(1,1);
 			bitCtr = 0;
 			baudCtr = 0;
 			cmdCtr++;
@@ -100,7 +102,7 @@ bool BasicVerilogUartMem::stateMachine(){
 		if(!allBitsRead && doRead){
 			Signal rx;
 			top->readPort("TX",rx);
-			int bit = (rx.getUIntValue<uint8_t>() & 1);
+			int bit = (rx.getUIntScalar<uint8_t>() & 1);
 			rxBuf |= (bit & 1) << bitCtr;
 			out->output("sst: received %u from UART rxBuf=%u bitCtr=%u\n",bit,rxBuf,bitCtr);
 			bitCtr++;

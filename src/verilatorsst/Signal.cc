@@ -1,4 +1,5 @@
 #include "Signal.h"
+#include <bitset>
 
 using namespace SST::VerilatorSST;
 

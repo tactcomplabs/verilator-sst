@@ -6,6 +6,7 @@
 #include <cassert>
 #include "vpi_user.h"
 #include "verilatedos.h"
+#include <iostream>
 
 namespace SST::VerilatorSST {
 const int maxStrSize = VL_VALUE_STRING_MAX_WORDS * VL_EDATASIZE;
@@ -30,7 +31,7 @@ class Signal : public t_vpi_value {
     bool getSingleBit();
 
     template<typename T>
-    T getUIntValue() {
+    T getUIntScalar() {
         static_assert(std::is_unsigned_v<T> == true);
         const uint16_t nBytesStored = getNumBytes();
 
@@ -38,30 +39,44 @@ class Signal : public t_vpi_value {
 
         T ret = 0;
         for(uint16_t i = 0; i<nBytesStored; i++){
-            PLI_BYTE8 byte = value.str[nBytesStored-1-i];
+            PLI_BYTE8 byte = value.str[i];
             uint8_t castSafeByte = static_cast<uint8_t>(byte);
             uint8_t padSafeByte = (castSafeByte == ' ') ? 0 : castSafeByte; //TODO https://github.com/verilator/verilator/issues/5036
-            ret |= castSafeByte << (i*8);
+            ret |= padSafeByte << (i*8);
         }
-
         return ret;
     }
 
     template<typename T>
-    T getVectorValue() {
+    T* getUIntVector(int wordSizeBits) {
         static_assert(std::is_unsigned_v<T> == true);
-        const uint16_t nBytesStored = getNumBytes();
+        assert(wordSizeBits != 0);
+        assert(sizeof(T)*8 >= wordSizeBits);
+        assert((nBits % wordSizeBits) == 0);
 
-        assert(sizeof(T) >= nBytesStored);
+        auto vectorSize = nBits / wordSizeBits;
+        assert(vectorSize > 0);
+        
+        T* ret = new T[vectorSize]();
 
-        T ret = 0;
-        for(uint16_t i = 0; i<nBytesStored; i++){
-            PLI_BYTE8 byte = value.str[nBytesStored-1-i];
+        int i= 0;
+        int bitStart = 0;
+        for(uint16_t i = 0; i<vectorSize; i++){
+            auto bitStart = i*wordSizeBits;
+            auto byteArrayIdx = bitStart / 8;
+            auto localBitStart = bitStart - byteArrayIdx*8;
+            auto shift = 8-localBitStart-wordSizeBits;
+            assert(shift >= 0 && "word size is not a factor of 8");
+            uint8_t mask = (((1<<wordSizeBits)-1) << (8-wordSizeBits)) >> localBitStart;
+
+            PLI_BYTE8 byte = value.str[byteArrayIdx];
             uint8_t castSafeByte = static_cast<uint8_t>(byte);
-            uint8_t padSafeByte = (castSafeByte == ' ') ? 0 : castSafeByte; //TODO https://github.com/verilator/verilator/issues/5036
-            ret |= castSafeByte << (i*8);
-        }
+            uint8_t padSafeByte = (castSafeByte == ' ') ? 0 : castSafeByte;
 
+            uint8_t wordMasked = padSafeByte & mask;
+            uint8_t wordAligned = wordMasked >> shift;
+            ret[i] = static_cast<T>(wordAligned);
+        }
         return ret;
     }
 };

@@ -47,7 +47,7 @@ bool BasicVerilogCounter::testBenchPass(){
   Signal done;
   top->readPort("done", done);
 
-  bool pass = done.getUIntValue<uint8_t>() == HIGH;
+  bool pass = done.getUIntScalar<uint8_t>() == HIGH;
   if(pass){
     top->finish();
     primaryComponentOKToEndSim();
