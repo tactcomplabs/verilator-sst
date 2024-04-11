@@ -115,6 +115,9 @@ public:
   /// VerilatorSSTBase: retrieve the port width of the target port
   virtual bool getPortWidth(std::string PortName, unsigned& Width) = 0;
 
+  /// VerilatorSSTBase: retrieve the port reset value of the target port
+  virtual bool getResetVal(std::string PortName, uint64_t& Val) = 0;
+
 protected:
   SST::Output *output;        ///< VerilatorSST: SST output handler
   uint32_t verbosity;         ///< VerilatorSST: verbosity parameter
@@ -135,6 +138,7 @@ public:
 
   // Set up parameters accesible from the python configuration
   SST_ELI_DOCUMENT_PARAMS(
+    { "clockFreq",  "Sets the clock frequency",                   "1GHz"},
     { "clockPort",  "Sets the internal verilog clock port",       "clock"},
     { "resetVals",  "Initial reset values for each labeled port", "port:Val"},
   )
@@ -183,6 +187,9 @@ public:
 
   /// retrieve the port width of the target port
   virtual bool getPortWidth(std::string PortName, unsigned& Width) override;
+
+  /// retrieve the port reset value of the target port
+  virtual bool getResetVal(std::string PortName, uint64_t& Val) override;
 
 private:
 

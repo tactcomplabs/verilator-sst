@@ -35,6 +35,8 @@ VerilatorSST@VERILOG_DEVICE@::VerilatorSST@VERILOG_DEVICE@(ComponentId_t id,
                                                            const Params& params)
   : VerilatorSSTBase("@VERILOG_DEVICE@", id, params){
 
+  const std::string clockFreq = params.find<std::string>("clockFreq", "1GHz");
+
   clockPort = params.find<std::string>("clockPort", "NullPort");
   if( !isNamedPort(clockPort) ){
     output->fatal(CALL_INFO, -1, "Could not find clock port with name=%s\n",
@@ -43,6 +45,10 @@ VerilatorSST@VERILOG_DEVICE@::VerilatorSST@VERILOG_DEVICE@(ComponentId_t id,
 
   // attempt to build the reset value tables
   initResetValues(params);
+
+  registerClock(clockFreq,
+                new Clock::Handler<VerilatorSST@VERILOG_DEVICE@>(this,
+                                                                 &VerilatorSST@VERILOG_DEVICE@::clock));
 }
 
 VerilatorSST@VERILOG_DEVICE@::~VerilatorSST@VERILOG_DEVICE@(){
@@ -164,6 +170,28 @@ bool VerilatorSST@VERILOG_DEVICE@::getPortWidth(std::string PortName,
   Width = std::get<V_WIDTH>(Ports[Idx]);
   return true;
 }
+
+bool VerilatorSST@VERILOG_DEVICE@::getResetVal(std::string PortName,
+                                               uint64_t& Val){
+  unsigned Idx = 0;
+  try{
+    Idx = PortMap.at(PortName);
+  }catch(const std::out_of_range& oor){
+    output->fatal(CALL_INFO, -1, "Could not find port with name=%s\n",
+                  PortName.c_str());
+    return false;
+  }
+
+  for( unsigned i=0; i<ResetVals.size(); i++ ){
+    if( ResetVals[i].first == PortName ){
+      Val = ResetVals[i].second;
+      return true;
+    }
+  }
+
+  return false;
+}
+
 
 } // namespace SST::VerilatorSST
 
