@@ -23,8 +23,6 @@ class VerilatorSST {
     std::unique_ptr<std::vector<SignalQueueEntry>> signalQueue;
     
     void pollSignalQueue(); 
-    uint8_t maskShiftL(uint8_t data, uint8_t mask, int shift);
-    void readHelper(uint8_t word, uint16_t wordSizeBits, int & bitStart, PLI_BYTE8 * storage);
     bool isFinished = false;
 
     public:
@@ -33,7 +31,7 @@ class VerilatorSST {
     
     void writePort(std::string portName, Signal & val);
     void writePortAtTick(std::string portName, Signal & signal, uint64_t tick);
-    void readPort(std::string portName, Signal & val);
+    Signal readPort(std::string portName);
 
     void tick(uint64_t elapse);
     void tickClockPeriod(std::string clockPort);

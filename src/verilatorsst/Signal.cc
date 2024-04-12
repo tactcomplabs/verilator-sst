@@ -3,13 +3,16 @@
 
 using namespace SST::VerilatorSST;
 
+uint16_t calculateNumBytes(uint16_t nBits){
+    const uint16_t ret = ((nBits/8) + (nBits % 8 != 0));
+    return ret;
+}
+
 Signal::Signal(uint16_t nBits) : nBits(nBits){
     uint16_t nBytes = calculateNumBytes(nBits);
-    safe_size(nBytes);
+    assert(nBytes <= maxStrSize);
 
-    format = vpiStringVal;
-    PLI_BYTE8 * buf = new PLI_BYTE8[nBytes+1];
-    value.str = buf;
+    storage = new PLI_BYTE8[nBytes+1];
 }
 
 Signal::Signal(uint16_t nBits, uint64_t init_val) : Signal(nBits){
@@ -17,30 +20,27 @@ Signal::Signal(uint16_t nBits, uint64_t init_val) : Signal(nBits){
     uint64_t mask = (static_cast<uint64_t>(1) << 32) - 1;
     uint64_t masked_val = init_val & mask;
     uint64_t nBytes = calculateNumBytes(nBits);
+
     for(uint64_t i = 0; i < nBytes; i++){
         uint8_t byte = (masked_val >> (i*8)) & 255;
         PLI_BYTE8 castSafeByte = static_cast<PLI_BYTE8>(byte);
-        value.str[nBytes - i - 1] = castSafeByte;
+        storage[nBytes - i - 1] = castSafeByte;
     }
-    value.str[nBytes] = '\0';
+    storage[nBytes] = '\0';
 }
 
 Signal::Signal(const Signal& other) : Signal(other.nBits){
     uint16_t nBytes = calculateNumBytes(other.nBits);
-    std::copy(other.value.str,other.value.str + (nBytes+1),value.str);
+    std::memcpy(storage, other.storage, nBytes + 1);
 }
 
-void Signal::safe_size(uint16_t nBytes){
-    assert(nBytes <= maxStrSize);
+Signal::Signal(uint16_t nBits, PLI_BYTE8 * init_val) : Signal(nBits){
+    auto nBytes = getNumBytes();
+    std::memcpy(storage, init_val, nBytes + 1);
 }
 
 uint16_t Signal::getNumBits(){
     return nBits;
-}
-
-uint16_t Signal::calculateNumBytes(uint16_t nBits){
-    const uint16_t ret = ((nBits/8) + (nBits % 8 != 0));
-    return ret;
 }
 
 uint16_t Signal::getNumBytes(){
@@ -49,7 +49,7 @@ uint16_t Signal::getNumBytes(){
 }
 
 template<typename T>
-T Signal::getUIntScalarHelper(uint16_t nBytes, PLI_BYTE8 * storage){
+T getUIntScalarHelper(uint16_t nBytes, PLI_BYTE8 * storage){
     T ret = 0;
     auto sizeT = sizeof(T);
     for(uint16_t i = 0; i<nBytes; i++){
@@ -67,7 +67,7 @@ T Signal::getUIntScalar() {
     const uint16_t nBytesStored = getNumBytes();
     assert(sizeof(T) >= nBytesStored);
 
-    T ret = getUIntScalarHelper<T>(nBytesStored,value.str);
+    T ret = getUIntScalarHelper<T>(nBytesStored,storage);
     return ret;
 }
 
@@ -84,7 +84,7 @@ void getUintVectorHelper(T & ret, uint16_t wordSizeBits, int & bitStart, PLI_BYT
     auto shift = (8-localBitStart)-wordSizeBits;
     uint8_t mask = (1 << wordSizeBits)-1;
     
-    uint8_t word = shiftRMask<T>(storage[storageByteIdx], mask, shift);
+    uint8_t word = shiftRMask(storage[storageByteIdx], mask, shift);
     ret |= static_cast<uint8_t>(word);//todo ret > 8
     
     if(shift < 0){
@@ -109,11 +109,19 @@ T* Signal::getUIntVector(int wordSizeBits) {
 
     auto bitStart = 0;
     for(auto i = 0; i<vectorSize; i++){
-        getUintVectorHelper<T>(ret[i], wordSizeBits, bitStart, value.str);
+        getUintVectorHelper<T>(ret[i], wordSizeBits, bitStart, storage);
     }
     return ret;
 }
 
+t_vpi_value Signal::getVpiValue(){
+    auto nBytes = getNumBytes();
+    PLI_BYTE8 * buf = new PLI_BYTE8[nBytes+1];
+    std::memcpy(buf,storage,nBytes+1);
+
+    t_vpi_value ret = {vpiStringVal, buf};
+    return ret;
+}
 
 /*
     0:

@@ -25,8 +25,7 @@ VerilatorSST<T>::VerilatorSST(){
     #endif
 }
 
-template <class T>
-uint8_t VerilatorSST<T>::maskShiftL(uint8_t data, uint8_t mask, int shift){
+uint8_t maskShiftL(uint8_t data, uint8_t mask, int shift){
     auto dataMasked = data & mask;
     auto dataMaskedShifted = shift > 0 ? dataMasked << shift : dataMasked >> (0-shift);
     std::cout << "dataMasked=" <<+dataMasked << std::endl; 
@@ -34,8 +33,7 @@ uint8_t VerilatorSST<T>::maskShiftL(uint8_t data, uint8_t mask, int shift){
     return dataMaskedShifted;
 }
 
-template <class T>
-void VerilatorSST<T>::readHelper(uint8_t word, uint16_t wordSizeBits, int & bitStart, PLI_BYTE8 * storage){
+void readHelper(uint8_t word, uint16_t wordSizeBits, int & bitStart, PLI_BYTE8 * storage){
     auto storageByteIdx = bitStart / 8;
     auto localBitStart = bitStart - (storageByteIdx*8);
     auto shift = (8-localBitStart)-wordSizeBits;
@@ -63,29 +61,32 @@ void VerilatorSST<T>::readHelper(uint8_t word, uint16_t wordSizeBits, int & bitS
 }
 
 template <class T>
-void VerilatorSST<T>::readPort(std::string portName, Signal & val){
+Signal VerilatorSST<T>::readPort(std::string portName){
     char *name = new char[portName.length() + 1];
     strcpy(name,portName.c_str());
 
     vpiHandle vh1 = vpi_handle_by_name(name, NULL);
     assert(vh1);
 
-    PLI_INT32 vpiSizeVal = vpi_get(vpiSize, vh1);
-    PLI_INT32 vpiTypeVal = vpi_get(vpiType, vh1);
+    auto vpiSizeVal = vpi_get(vpiSize, vh1);
+    auto vpiTypeVal = vpi_get(vpiType, vh1);
 
     std::cout << "portName=" << portName << " vpiTypeVal=" << vpiTypeVal << std::endl;
-    std::cout << "val.getNumBytes()=" <<val.getNumBytes()<<std::endl;
-    std::cout << "vpiSizeVal=" <<vpiSizeVal<<std::endl;
 
     if(vpiTypeVal != vpiMemory){
-        assert(val.getNumBits() == vpiSizeVal);
+        t_vpi_value val{vpiStringVal};
         vpi_get_value(vh1, &val);
+
+        Signal ret(vpiSizeVal,val.value.str);
+        return ret;
     }
     if(vpiTypeVal == vpiMemory){
         vpiHandle iter = vpi_iterate(vpiMemoryWord,vh1);
         assert(iter);
+
         auto bitStart=0;
         auto firstWordSizeBits = 0;
+        PLI_BYTE8 * buf;
 
         while(auto wordHandle = vpi_scan(iter)){
             t_vpi_value word{vpiIntVal};
@@ -93,15 +94,103 @@ void VerilatorSST<T>::readPort(std::string portName, Signal & val){
             PLI_INT32 wordSizeBits = vpi_get(vpiSize, wordHandle);
 
             if(bitStart == 0){
-                assert(wordSizeBits*vpiSizeVal >= val.getNumBits());
                 firstWordSizeBits = wordSizeBits;
+                buf = new PLI_BYTE8[firstWordSizeBits*vpiSizeVal];
             }
             assert(firstWordSizeBits == wordSizeBits);
 
-            readHelper(word.value.integer, wordSizeBits, bitStart, val.value.str);
+            readHelper(word.value.integer, wordSizeBits, bitStart, buf);
             vpi_free_object(wordHandle);
         }
+        Signal ret(firstWordSizeBits*vpiSizeVal, buf);
+        return ret;
     }
+}
+
+template <class T>
+void VerilatorSST<T>::writePort(std::string portName, Signal & signal){
+    char *name = new char[portName.length() + 1];
+    strcpy(name, portName.c_str());
+    
+    vpiHandle vh1 = vpi_handle_by_name(name, NULL);
+    assert(vh1);
+
+    s_vpi_time vpi_time_s;
+    vpi_time_s.type = vpiSimTime;
+    vpi_time_s.high = 0;
+    vpi_time_s.low = 0;
+    t_vpi_value val = signal.getVpiValue();
+    vpi_put_value(vh1,&val,&vpi_time_s,vpiInertialDelay);
+}
+
+template <class T>
+void VerilatorSST<T>::writePortAtTick(std::string portName, Signal & signal, uint64_t writeTick){
+    assert(writeTick > getCurrentTick());
+
+    SignalQueueEntry entry{portName, writeTick, signal};
+
+    if (signalQueue->empty()){
+        signalQueue->push_back(entry);
+        return;
+    }
+
+    auto i = 0;
+    for(auto it : *signalQueue){
+        if(it.writeTick < writeTick){
+            break;
+        }
+        i++;
+    }
+    signalQueue->insert(signalQueue->begin() + i, entry);
+}
+
+template <class T>
+void VerilatorSST<T>::pollSignalQueue(){
+    while(signalQueue->empty() != true){
+        if(signalQueue->back().writeTick > getCurrentTick()){
+            break;
+        }
+
+        writePort(signalQueue->back().portName, signalQueue->back().signal);
+        signalQueue->pop_back();
+    } 
+}
+
+template <class T>
+void VerilatorSST<T>::tick(uint64_t elapse){
+    assert(!isFinished);
+    for(uint64_t i = 0; i < elapse; i++){
+        pollSignalQueue();
+        contextp->timeInc(1);
+        top->eval();
+    }
+}
+
+template <class T>
+void VerilatorSST<T>::tickClockPeriod(std::string clockPort){
+    for(auto i = 0; i < 2; i++){
+        Signal clk = readPort(clockPort);
+
+        uint8_t not_clk = ~clk.getUIntScalar<uint8_t>();
+        uint8_t next_clk_byte = not_clk & 1;
+
+        Signal next_clk(1, next_clk_byte);
+        writePort(clockPort, next_clk );
+
+        tick(1);
+    }
+}
+
+template <class T>
+uint64_t VerilatorSST<T>::getCurrentTick(){
+    return contextp->time();
+}
+
+template <class T>
+void VerilatorSST<T>::finish(){
+    top->final();
+    isFinished = true;
+}
 
     /*
     word0 101
@@ -160,89 +249,3 @@ void VerilatorSST<T>::readPort(std::string portName, Signal & val){
     rdy_storage = 10100010 = storage &= ~storageMask
     good_storage = 10110110 
 */
-}
-
-template <class T>
-void VerilatorSST<T>::writePort(std::string portName, Signal & val){
-    char *name = new char[portName.length() + 1];
-    strcpy(name, portName.c_str());
-    
-    vpiHandle vh1 = vpi_handle_by_name(name, NULL);
-    assert(vh1);
-
-    s_vpi_time vpi_time_s;
-    vpi_time_s.type = vpiSimTime;
-    vpi_time_s.high = 0;
-    vpi_time_s.low = 0;
-    vpi_put_value(vh1,&val,&vpi_time_s,vpiInertialDelay);
-}
-
-template <class T>
-void VerilatorSST<T>::writePortAtTick(std::string portName, Signal & signal, uint64_t writeTick){
-    assert(writeTick > getCurrentTick());
-
-    SignalQueueEntry entry{portName, writeTick, signal};
-
-    if (signalQueue->empty()){
-        signalQueue->push_back(entry);
-        return;
-    }
-
-    auto i = 0;
-    for(auto it : *signalQueue){
-        if(it.writeTick < writeTick){
-            break;
-        }
-        i++;
-    }
-    signalQueue->insert(signalQueue->begin() + i, entry);
-}
-
-template <class T>
-void VerilatorSST<T>::pollSignalQueue(){
-    while(signalQueue->empty() != true){
-        if(signalQueue->back().writeTick > getCurrentTick()){
-            break;
-        }
-
-        writePort(signalQueue->back().portName, signalQueue->back().signal);
-        signalQueue->pop_back();
-    } 
-}
-
-template <class T>
-void VerilatorSST<T>::tick(uint64_t elapse){
-    assert(!isFinished);
-    for(uint64_t i = 0; i < elapse; i++){
-        pollSignalQueue();
-        contextp->timeInc(1);
-        top->eval();
-    }
-}
-
-template <class T>
-void VerilatorSST<T>::tickClockPeriod(std::string clockPort){
-    for(auto i = 0; i < 2; i++){
-        Signal clk;
-        readPort(clockPort, clk);
-
-        uint8_t not_clk = ~clk.getUIntScalar<uint8_t>();
-        uint8_t next_clk_byte = not_clk & 1;
-
-        Signal next_clk(1, next_clk_byte);
-        writePort(clockPort, next_clk );
-
-        tick(1);
-    }
-}
-
-template <class T>
-uint64_t VerilatorSST<T>::getCurrentTick(){
-    return contextp->time();
-}
-
-template <class T>
-void VerilatorSST<T>::finish(){
-    top->final();
-    isFinished = true;
-}
