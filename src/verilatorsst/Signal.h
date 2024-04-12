@@ -31,19 +31,25 @@ class Signal : public t_vpi_value {
     bool getSingleBit();
 
     template<typename T>
+    T getUIntScalarHelper(uint16_t nBytes, PLI_BYTE8 * storage){
+        T ret = 0;
+        auto sizeT = sizeof(T);
+        for(uint16_t i = 0; i<nBytes; i++){
+            PLI_BYTE8 byte = storage[i];
+            uint8_t castSafeByte = static_cast<uint8_t>(byte);
+            uint8_t padSafeByte = (castSafeByte == ' ') ? 0 : castSafeByte; //TODO https://github.com/verilator/verilator/issues/5036
+            ret |= padSafeByte << ((sizeT-i-1)*8);
+        }
+        return ret;
+    }
+
+    template<typename T>
     T getUIntScalar() {
         static_assert(std::is_unsigned_v<T> == true);
         const uint16_t nBytesStored = getNumBytes();
-
         assert(sizeof(T) >= nBytesStored);
 
-        T ret = 0;
-        for(uint16_t i = 0; i<nBytesStored; i++){
-            PLI_BYTE8 byte = value.str[i];
-            uint8_t castSafeByte = static_cast<uint8_t>(byte);
-            uint8_t padSafeByte = (castSafeByte == ' ') ? 0 : castSafeByte; //TODO https://github.com/verilator/verilator/issues/5036
-            ret |= padSafeByte << (i*8);
-        }
+        T ret = getUIntScalarHelper<T>(nBytesStored,value.str);
         return ret;
     }
 
