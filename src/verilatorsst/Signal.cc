@@ -71,6 +71,30 @@ T Signal::getUIntScalar() {
     return ret;
 }
 
+uint8_t shiftRMask(uint8_t data, uint8_t mask, int shift){
+    auto dataShifted = shift > 0 ? data >> shift : data << (0-shift);
+    auto dataShiftedMasked = dataShifted & mask;
+    return dataShiftedMasked;
+}
+
+template<typename T>
+void getUintVectorHelper(T & ret, uint16_t wordSizeBits, int & bitStart, PLI_BYTE8 * storage){
+    auto storageByteIdx = bitStart / 8;
+    auto localBitStart = bitStart - (storageByteIdx*8);
+    auto shift = (8-localBitStart)-wordSizeBits;
+    uint8_t mask = (1 << wordSizeBits)-1;
+    
+    uint8_t word = shiftRMask<T>(storage[storageByteIdx], mask, shift);
+    ret |= static_cast<uint8_t>(word);//todo ret > 8
+    
+    if(shift < 0){
+        auto cutoffWordSizeBits = (wordSizeBits-(8-localBitStart));
+        auto cutoffBitStart = bitStart + (wordSizeBits-cutoffWordSizeBits);
+        getUintVectorHelper(ret, cutoffWordSizeBits, cutoffBitStart, storage);
+    }
+    bitStart += wordSizeBits;
+}
+
 template<typename T>
 T* Signal::getUIntVector(int wordSizeBits) {
     static_assert(std::is_unsigned_v<T> == true);
@@ -83,23 +107,53 @@ T* Signal::getUIntVector(int wordSizeBits) {
     
     T* ret = new T[vectorSize]();
 
-    int i= 0;
-    int bitStart = 0;
-    for(uint16_t i = 0; i<vectorSize; i++){
-        auto bitStart = i*wordSizeBits;
-        auto byteArrayIdx = bitStart / 8;
-        auto localBitStart = bitStart - byteArrayIdx*8;
-        auto shift = 8-localBitStart-wordSizeBits;
-        assert(shift >= 0 && "word size is not a factor of 8");
-        uint8_t mask = (((1<<wordSizeBits)-1) << (8-wordSizeBits)) >> localBitStart;
-
-        PLI_BYTE8 byte = value.str[byteArrayIdx];
-        uint8_t castSafeByte = static_cast<uint8_t>(byte);
-        uint8_t padSafeByte = (castSafeByte == ' ') ? 0 : castSafeByte;
-
-        uint8_t wordMasked = padSafeByte & mask;
-        uint8_t wordAligned = wordMasked >> shift;
-        ret[i] = static_cast<T>(wordAligned);
+    auto bitStart = 0;
+    for(auto i = 0; i<vectorSize; i++){
+        getUintVectorHelper<T>(ret[i], wordSizeBits, bitStart, value.str);
     }
     return ret;
 }
+
+
+/*
+    0:
+    ws = 3
+    idx = 0
+    bs = 0
+    ls = 0
+    shift = 5
+    mask = 111
+    storage[idx]=AAABBBCC
+    word = AAA
+    ret = AAA
+    1:
+    ws = 3
+    idx = 0
+    bs = 3
+    ls = 3
+    shift = 2
+    mask = 111
+    storage[idx]=AAABBBCC
+    word = BBB
+    ret = BBB
+    2:
+    ws = 3
+    idx = 0
+    bs = 6
+    ls = 6
+    shift = -1
+    mask = 111
+    storage[idx]=AAABBBCC
+    word = CC0
+    ret = CC0
+    2.5:
+    ws = 1
+    idx = 1
+    bs = 8
+    ls = 0
+    shift = 7
+    mask = 1
+    storage[idx]=CDDDEEEF
+    word = 00C
+    ret = CCC
+    */
