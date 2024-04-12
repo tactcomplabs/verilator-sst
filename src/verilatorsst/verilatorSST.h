@@ -22,9 +22,9 @@ class VerilatorSST {
     std::unique_ptr<T> top;
     std::unique_ptr<std::vector<SignalQueueEntry>> signalQueue;
     
-    void pollSignalQueue();
+    void pollSignalQueue(); 
     uint8_t maskShiftL(uint8_t data, uint8_t mask, int shift);
-    void readHelper(uint8_t word, uint16_t wordSizeBits, int bitStart, PLI_BYTE8 * storage);
+    void readHelper(uint8_t word, uint16_t wordSizeBits, int & bitStart, PLI_BYTE8 * storage);
     bool isFinished = false;
 
     public:

@@ -35,7 +35,7 @@ uint8_t VerilatorSST<T>::maskShiftL(uint8_t data, uint8_t mask, int shift){
 }
 
 template <class T>
-void VerilatorSST<T>::readHelper(uint8_t word, uint16_t wordSizeBits, int bitStart, PLI_BYTE8 * storage){
+void VerilatorSST<T>::readHelper(uint8_t word, uint16_t wordSizeBits, int & bitStart, PLI_BYTE8 * storage){
     auto storageByteIdx = bitStart / 8;
     auto localBitStart = bitStart - (storageByteIdx*8);
     auto shift = (8-localBitStart)-wordSizeBits;
@@ -43,7 +43,6 @@ void VerilatorSST<T>::readHelper(uint8_t word, uint16_t wordSizeBits, int bitSta
     storage[storageByteIdx] &= ~(maskShiftL(  -1, mask, shift));
     storage[storageByteIdx] |= maskShiftL(word, mask, shift);
 
-    
     std::cout << "word=" <<+word << std::endl;                
     std::cout << "wordSizeBits=" << +wordSizeBits<< std::endl;
     std::cout << "bitStart=" << bitStart << std::endl;
@@ -59,6 +58,8 @@ void VerilatorSST<T>::readHelper(uint8_t word, uint16_t wordSizeBits, int bitSta
         std::cout << "cutoffWordSizeBits=" << cutoffWordSizeBits << std::endl << std::endl;
         readHelper(word, cutoffWordSizeBits, cutoffBitStart, storage);
     }
+
+    bitStart += wordSizeBits;
 }
 
 template <class T>
@@ -99,7 +100,6 @@ void VerilatorSST<T>::readPort(std::string portName, Signal & val){
 
             readHelper(word.value.integer, wordSizeBits, bitStart, val.value.str);
             vpi_free_object(wordHandle);
-            bitStart += wordSizeBits;
         }
     }
 
