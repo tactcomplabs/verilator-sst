@@ -35,7 +35,7 @@ uint8_t VerilatorSST<T>::maskShiftL(uint8_t data, uint8_t mask, int shift){
 }
 
 template <class T>
-void VerilatorSST<T>::writeHelper(uint8_t word, uint16_t wordSizeBits, int bitStart, PLI_BYTE8 * storage){
+void VerilatorSST<T>::readHelper(uint8_t word, uint16_t wordSizeBits, int bitStart, PLI_BYTE8 * storage){
     auto storageByteIdx = bitStart / 8;
     auto localBitStart = bitStart - (storageByteIdx*8);
     auto shift = (8-localBitStart)-wordSizeBits;
@@ -57,7 +57,7 @@ void VerilatorSST<T>::writeHelper(uint8_t word, uint16_t wordSizeBits, int bitSt
         auto cutoffWordSizeBits = (wordSizeBits-(8-localBitStart));
         auto cutoffBitStart = bitStart + (wordSizeBits-cutoffWordSizeBits);
         std::cout << "cutoffWordSizeBits=" << cutoffWordSizeBits << std::endl << std::endl;
-        writeHelper(word, cutoffWordSizeBits, cutoffBitStart, storage);
+        readHelper(word, cutoffWordSizeBits, cutoffBitStart, storage);
     }
 }
 
@@ -97,7 +97,7 @@ void VerilatorSST<T>::readPort(std::string portName, Signal & val){
             }
             assert(firstWordSizeBits == wordSizeBits);
 
-            writeHelper(word.value.integer, wordSizeBits, bitStart, val.value.str);
+            readHelper(word.value.integer, wordSizeBits, bitStart, val.value.str);
             vpi_free_object(wordHandle);
             bitStart += wordSizeBits;
         }

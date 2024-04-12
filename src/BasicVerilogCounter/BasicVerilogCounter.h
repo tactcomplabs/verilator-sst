@@ -10,7 +10,6 @@
 #include <sst/core/sst_config.h>
 #include <sst/core/component.h>
 #include "verilatorSST.h"
-#include "verilatorSST.cc"
 #include "VCounter.h"
 
 namespace SST::VerilatorSST {

@@ -5,7 +5,6 @@
 #include <sst/core/sst_config.h>
 #include <sst/core/component.h>
 #include "verilatorSST.h"
-#include "verilatorSST.cc"
 #include "VUART.h"
 
 namespace SST::VerilatorSST {

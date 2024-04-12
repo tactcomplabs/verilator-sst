@@ -24,7 +24,7 @@ class VerilatorSST {
     
     void pollSignalQueue();
     uint8_t maskShiftL(uint8_t data, uint8_t mask, int shift);
-    void writeHelper(uint8_t word, uint16_t wordSizeBits, int bitStart, PLI_BYTE8 * storage);
+    void readHelper(uint8_t word, uint16_t wordSizeBits, int bitStart, PLI_BYTE8 * storage);
     bool isFinished = false;
 
     public:
@@ -42,4 +42,5 @@ class VerilatorSST {
     void finish();
 };
 }
+#include "verilatorSST.cc"
 #endif

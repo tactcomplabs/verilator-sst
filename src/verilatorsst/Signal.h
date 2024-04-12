@@ -1,5 +1,5 @@
-#ifndef _SIGNAL_VALUE_H_
-#define _SIGNAL_VALUE_H_
+#ifndef _SIGNAL_H_
+#define _SIGNAL_H_
 
 #include <type_traits>
 #include <algorithm>
@@ -19,6 +19,8 @@ class Signal : public t_vpi_value {
     void safe_size(uint16_t nBits);
     uint16_t calculateNumBytes(uint16_t nBits);
 
+    template<typename T>
+    T getUIntScalarHelper(uint16_t nBytes, PLI_BYTE8 * storage);
     public:
     Signal() : Signal(1){};
     Signal(const Signal& other);
@@ -31,60 +33,10 @@ class Signal : public t_vpi_value {
     bool getSingleBit();
 
     template<typename T>
-    T getUIntScalarHelper(uint16_t nBytes, PLI_BYTE8 * storage){
-        T ret = 0;
-        auto sizeT = sizeof(T);
-        for(uint16_t i = 0; i<nBytes; i++){
-            PLI_BYTE8 byte = storage[i];
-            uint8_t castSafeByte = static_cast<uint8_t>(byte);
-            uint8_t padSafeByte = (castSafeByte == ' ') ? 0 : castSafeByte; //TODO https://github.com/verilator/verilator/issues/5036
-            ret |= padSafeByte << ((sizeT-i-1)*8);
-        }
-        return ret;
-    }
-
+    T getUIntScalar();
     template<typename T>
-    T getUIntScalar() {
-        static_assert(std::is_unsigned_v<T> == true);
-        const uint16_t nBytesStored = getNumBytes();
-        assert(sizeof(T) >= nBytesStored);
-
-        T ret = getUIntScalarHelper<T>(nBytesStored,value.str);
-        return ret;
-    }
-
-    template<typename T>
-    T* getUIntVector(int wordSizeBits) {
-        static_assert(std::is_unsigned_v<T> == true);
-        assert(wordSizeBits != 0);
-        assert(sizeof(T)*8 >= wordSizeBits);
-        assert((nBits % wordSizeBits) == 0);
-
-        auto vectorSize = nBits / wordSizeBits;
-        assert(vectorSize > 0);
-        
-        T* ret = new T[vectorSize]();
-
-        int i= 0;
-        int bitStart = 0;
-        for(uint16_t i = 0; i<vectorSize; i++){
-            auto bitStart = i*wordSizeBits;
-            auto byteArrayIdx = bitStart / 8;
-            auto localBitStart = bitStart - byteArrayIdx*8;
-            auto shift = 8-localBitStart-wordSizeBits;
-            assert(shift >= 0 && "word size is not a factor of 8");
-            uint8_t mask = (((1<<wordSizeBits)-1) << (8-wordSizeBits)) >> localBitStart;
-
-            PLI_BYTE8 byte = value.str[byteArrayIdx];
-            uint8_t castSafeByte = static_cast<uint8_t>(byte);
-            uint8_t padSafeByte = (castSafeByte == ' ') ? 0 : castSafeByte;
-
-            uint8_t wordMasked = padSafeByte & mask;
-            uint8_t wordAligned = wordMasked >> shift;
-            ret[i] = static_cast<T>(wordAligned);
-        }
-        return ret;
-    }
+    T* getUIntVector(int wordSizeBits);
 };
 }
+#include "Signal.cc"
 #endif
