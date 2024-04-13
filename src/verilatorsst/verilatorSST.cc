@@ -73,13 +73,14 @@ Signal VerilatorSST<T>::readPort(std::string portName){
 
     std::cout << "portName=" << portName << " vpiTypeVal=" << vpiTypeVal << std::endl;
 
-    if(vpiTypeVal != vpiMemory){
+    if(vpiTypeVal == vpiReg){
         t_vpi_value val{vpiStringVal};
         vpi_get_value(vh1, &val);
 
         Signal ret(vpiSizeVal,val.value.str);
         return ret;
     }
+
     if(vpiTypeVal == vpiMemory){
         vpiHandle iter = vpi_iterate(vpiMemoryWord,vh1);
         assert(iter);
@@ -105,6 +106,9 @@ Signal VerilatorSST<T>::readPort(std::string portName){
         Signal ret(firstWordSizeBits*vpiSizeVal, buf);
         return ret;
     }
+    
+    assert(false && "unimplemented vpiType");
+    return NULL;
 }
 
 template <class T>
@@ -115,12 +119,8 @@ void VerilatorSST<T>::writePort(std::string portName, Signal & signal){
     vpiHandle vh1 = vpi_handle_by_name(name, NULL);
     assert(vh1);
 
-    s_vpi_time vpi_time_s;
-    vpi_time_s.type = vpiSimTime;
-    vpi_time_s.high = 0;
-    vpi_time_s.low = 0;
     t_vpi_value val = signal.getVpiValue();
-    vpi_put_value(vh1,&val,&vpi_time_s,vpiInertialDelay);
+    vpi_put_value(vh1,&val,NULL,NULL);
 }
 
 template <class T>
