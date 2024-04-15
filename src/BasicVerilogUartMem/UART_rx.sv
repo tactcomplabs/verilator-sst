@@ -107,8 +107,9 @@ end
 always_ff @(posedge clk, negedge rst_l) begin
 	if (~rst_l)
 		rx_done <= 1'b0;
-	else if (start | clr_rx_done)
+	else if (start | clr_rx_done) begin
 		rx_done <= 1'b0;
+	end
 	else if (set_done)
 		rx_done <= 1'b1;
 end

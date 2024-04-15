@@ -30,7 +30,7 @@ module UART #(
     input rst_l,
     input RX,
     output TX,
-    output [DATA_WIDTH-1:0] mem_debug [(2**ADDR_WIDTH)-1:0]);
+    output [DATA_WIDTH-1:0] mem_debug [0:(2**ADDR_WIDTH)-1]);
 
 wire rx_done, tx_done;
 wire [ADDR_WIDTH-1:0] tx_data, rx_data;

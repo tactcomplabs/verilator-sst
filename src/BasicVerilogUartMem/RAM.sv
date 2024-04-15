@@ -5,10 +5,10 @@ module RAM #(parameter ADDR_WIDTH, parameter DATA_WIDTH)(
     input [ADDR_WIDTH-1:0] addr,
     input [DATA_WIDTH-1:0] wdata,
     output [DATA_WIDTH-1:0] rdata,
-    output [DATA_WIDTH-1:0] mem_debug [2**ADDR_WIDTH-1:0] 
+    output [DATA_WIDTH-1:0] mem_debug [0:(2**ADDR_WIDTH)-1] 
 );
 
-reg [DATA_WIDTH-1:0] mem [(2**ADDR_WIDTH)-1:0];
+reg [DATA_WIDTH-1:0] mem [0:(2**ADDR_WIDTH)-1];
 assign mem_debug = mem;
 
 always_ff @ (posedge clk, negedge rst_l) begin
