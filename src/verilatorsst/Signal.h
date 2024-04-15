@@ -9,33 +9,40 @@
 #include <iostream>
 
 namespace SST::VerilatorSST {
-const int maxStrSize = VL_VALUE_STRING_MAX_WORDS * VL_EDATASIZE;
-const int maxSignalSize = maxStrSize*8;
-const uint64_t maxSignalInit = UINT64_MAX;
+const int SIGNAL_BYTES_MAX = VL_VALUE_STRING_MAX_WORDS * VL_EDATASIZE * 8;
+using signal_depth_t = uint64_t;
+using signal_width_t = uint32_t;
 
 class Signal {
     private:
-    uint16_t nBits;
+    signal_width_t nBits;
+    signal_depth_t depth;
 
-    public:
+    template<typename T>
+    T getUIntScalarInternal(signal_width_t nBytes, signal_depth_t offset);
+
+    public: 
     PLI_BYTE8 * storage;//todo move to private after debug
     Signal() : Signal(1){};
     Signal(const Signal& other);
-    Signal(uint16_t nBits);
-    Signal(uint16_t nBits, uint64_t init_val);
-    Signal(uint16_t nBits, PLI_BYTE8 * init_val);
+    Signal(signal_width_t nBits);
+    Signal(signal_width_t nBits, uint64_t init_val);
+    Signal(signal_width_t nBits, signal_depth_t depth, PLI_BYTE8 * init_val);
+    Signal(signal_width_t nBits, signal_depth_t depth, uint64_t * init_val);
     ~Signal(){ delete storage; };
 
-    uint16_t getNumBits();
-    uint16_t getNumBytes();
-    bool getSingleBit();
+    signal_width_t getNumBits();
+    signal_width_t getNumBytes();
+    signal_depth_t getDepth();
 
     template<typename T>
     T getUIntScalar();
     template<typename T>
-    T* getUIntVector(int wordSizeBits);
+    T* getUIntVector();
 
-    t_vpi_value getVpiValue();
+    t_vpi_value getVpiValue(signal_depth_t depth);
+
+    static signal_width_t calculateNumBytes(signal_width_t nBits);
 };
 }
 #include "Signal.cc"

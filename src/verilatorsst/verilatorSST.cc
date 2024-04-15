@@ -25,51 +25,16 @@ VerilatorSST<T>::VerilatorSST(){
     #endif
 }
 
-uint8_t maskShiftL(uint8_t data, uint8_t mask, int shift){
-    auto dataMasked = data & mask;
-    auto dataMaskedShifted = shift > 0 ? dataMasked << shift : dataMasked >> (0-shift);
-    std::cout << "dataMasked=" <<+dataMasked << std::endl; 
-    std::cout << "dataMaskedShifted=" <<+dataMaskedShifted << std::endl; 
-    return dataMaskedShifted;
-}
-
-void readHelper(uint8_t word, uint16_t wordSizeBits, int & bitStart, PLI_BYTE8 * storage){
-    auto storageByteIdx = bitStart / 8;
-    auto localBitStart = bitStart - (storageByteIdx*8);
-    auto shift = (8-localBitStart)-wordSizeBits;
-    uint8_t mask = (1 << wordSizeBits)-1;
-    storage[storageByteIdx] &= ~(maskShiftL(  -1, mask, shift));
-    storage[storageByteIdx] |= maskShiftL(word, mask, shift);
-
-    std::cout << "word=" <<+word << std::endl;                
-    std::cout << "wordSizeBits=" << +wordSizeBits<< std::endl;
-    std::cout << "bitStart=" << bitStart << std::endl;
-    std::cout << "storageByteIdx=" << storageByteIdx<< std::endl;
-    std::cout << "localBitStart=" << localBitStart<< std::endl;
-    std::cout << "shift=" << shift << std::endl;
-    std::cout << "mask=" << +mask << std::endl;
-    std::cout << "storage[" << storageByteIdx << "]=" << +static_cast<uint8_t>(storage[storageByteIdx]) << std::endl << std::endl;
-    
-    if(shift < 0){
-        auto cutoffWordSizeBits = (wordSizeBits-(8-localBitStart));
-        auto cutoffBitStart = bitStart + (wordSizeBits-cutoffWordSizeBits);
-        std::cout << "cutoffWordSizeBits=" << cutoffWordSizeBits << std::endl << std::endl;
-        readHelper(word, cutoffWordSizeBits, cutoffBitStart, storage);
-    }
-
-    bitStart += wordSizeBits;
-}
-
 template <class T>
 Signal VerilatorSST<T>::readPort(std::string portName){
     char *name = new char[portName.length() + 1];
     strcpy(name,portName.c_str());
 
     vpiHandle vh1 = vpi_handle_by_name(name, NULL);
-    assert(vh1);
+    assert(vh1 && "vpi should return a handle (port not found)");
 
-    auto vpiSizeVal = vpi_get(vpiSize, vh1);
     auto vpiTypeVal = vpi_get(vpiType, vh1);
+    auto vpiSizeVal = vpi_get(vpiSize, vh1);
 
     std::cout << "portName=" << portName << " vpiTypeVal=" << vpiTypeVal << std::endl;
 
@@ -77,33 +42,48 @@ Signal VerilatorSST<T>::readPort(std::string portName){
         t_vpi_value val{vpiStringVal};
         vpi_get_value(vh1, &val);
 
-        Signal ret(vpiSizeVal,val.value.str);
+        Signal ret(vpiSizeVal,1,val.value.str);
         return ret;
     }
 
     if(vpiTypeVal == vpiMemory){
+        for(auto i=0;i<16;i++){
+            std::cout<<"read mem_debug["<<i<<"]="<<+top->mem_debug[i]<<std::endl;
+        }
         vpiHandle iter = vpi_iterate(vpiMemoryWord,vh1);
         assert(iter);
 
-        auto bitStart=0;
+        bool first = true;
         auto firstWordSizeBits = 0;
+        auto nBytesPerWord = 0;
+        auto totalBytes = 0;
         PLI_BYTE8 * buf;
 
+        int i = 0;
         while(auto wordHandle = vpi_scan(iter)){
-            t_vpi_value word{vpiIntVal};
-            vpi_get_value(wordHandle, &word);
             PLI_INT32 wordSizeBits = vpi_get(vpiSize, wordHandle);
 
-            if(bitStart == 0){
+            if(first == true){
                 firstWordSizeBits = wordSizeBits;
-                buf = new PLI_BYTE8[firstWordSizeBits*vpiSizeVal];
+                nBytesPerWord = Signal::calculateNumBytes(firstWordSizeBits);
+                totalBytes = nBytesPerWord*vpiSizeVal;
+                buf = new PLI_BYTE8[nBytesPerWord*vpiSizeVal];
+                first = false;
             }
             assert(firstWordSizeBits == wordSizeBits);
 
-            readHelper(word.value.integer, wordSizeBits, bitStart, buf);
+            t_vpi_value word{vpiStringVal};
+            vpi_get_value(wordHandle, &word);
+            uint16_t debugWord = static_cast<uint16_t>(word.value.str[0]);
+            auto offset = (totalBytes-(nBytesPerWord*(1+i)));
+            std::cout << "debugWord=" <<debugWord<< " offset="<<offset<< " i="<<i<<std::endl;
+            std::memcpy(buf+offset,word.value.str,nBytesPerWord);
+
             vpi_free_object(wordHandle);
+            i++;
         }
-        Signal ret(firstWordSizeBits*vpiSizeVal, buf);
+
+        Signal ret(firstWordSizeBits, i, buf);
         return ret;
     }
     
@@ -117,10 +97,42 @@ void VerilatorSST<T>::writePort(std::string portName, Signal & signal){
     strcpy(name, portName.c_str());
     
     vpiHandle vh1 = vpi_handle_by_name(name, NULL);
-    assert(vh1);
+    assert(vh1 && "vpi should return a handle (port not found)");
 
-    t_vpi_value val = signal.getVpiValue();
-    vpi_put_value(vh1,&val,NULL,NULL);
+    auto vpiTypeVal = vpi_get(vpiType, vh1);
+    auto vpiSizeVal = vpi_get(vpiSize, vh1);
+
+    if(vpiTypeVal == vpiReg){
+        assert(vpiSizeVal == signal.getNumBits() && "port width must match signal width");
+        t_vpi_value val = signal.getVpiValue(0);
+        vpi_put_value(vh1,&val,NULL,0);
+        return;
+    }
+
+    if(vpiTypeVal == vpiMemory){
+        assert(vpiSizeVal == signal.getDepth() && "port depth must match signal depth");
+        vpiHandle iter = vpi_iterate(vpiMemoryWord,vh1);
+        assert(iter);
+
+        int i = 0;
+        while(auto wordHandle = vpi_scan(iter)){
+            auto wordSizeBits = vpi_get(vpiSize, wordHandle);
+            assert(wordSizeBits == signal.getNumBits() && "word width must mach signal width");
+
+            t_vpi_value val = signal.getVpiValue(i);
+            vpi_put_value(wordHandle,&val,NULL,0);
+            uint16_t debugWord = static_cast<uint16_t>(val.value.str[0]);
+            std::cout << "debugWord[0]=" <<static_cast<uint16_t>(val.value.str[0]) << " debugword[1]="<< static_cast<uint16_t>(val.value.str[1])<<std::endl;
+            vpi_free_object(wordHandle);
+            i++;
+        }
+
+        for(auto i=0;i<16;i++){
+            std::cout<<"write mem_debug["<<i<<"]="<<+top->mem_debug[i]<<std::endl;
+        }
+        return;
+    }
+    assert(false && "unimplemented vpiType");
 }
 
 template <class T>

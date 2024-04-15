@@ -3,60 +3,114 @@
 
 using namespace SST::VerilatorSST;
 
-uint16_t calculateNumBytes(uint16_t nBits){
-    const uint16_t ret = ((nBits/8) + (nBits % 8 != 0));
+signal_width_t Signal::calculateNumBytes(signal_width_t nBits){
+    assert(nBits > 0 && "nBits must be positive");
+    const signal_width_t ret = 1+((nBits-1)/8);
     return ret;
 }
 
-Signal::Signal(uint16_t nBits) : nBits(nBits){
-    uint16_t nBytes = calculateNumBytes(nBits);
-    assert(nBytes <= maxStrSize);
+Signal::Signal(signal_width_t nBits) : nBits(nBits), depth(1){
+    assert(nBits <= SIGNAL_BYTES_MAX);
 
-    storage = new PLI_BYTE8[nBytes+1];
+    signal_width_t nBytes = calculateNumBytes(nBits);
+    storage = new PLI_BYTE8[nBytes];
 }
 
-Signal::Signal(uint16_t nBits, uint64_t init_val) : Signal(nBits){
+Signal::Signal(signal_width_t nBits, uint64_t init_val) : Signal(nBits){
     assert(nBits < 64);
-    uint64_t mask = (static_cast<uint64_t>(1) << 32) - 1;
+
+    uint64_t mask = (static_cast<uint64_t>(1) << nBits) - 1;
     uint64_t masked_val = init_val & mask;
-    uint64_t nBytes = calculateNumBytes(nBits);
+    signal_width_t nBytes = calculateNumBytes(nBits);
 
     for(uint64_t i = 0; i < nBytes; i++){
         uint8_t byte = (masked_val >> (i*8)) & 255;
         PLI_BYTE8 castSafeByte = static_cast<PLI_BYTE8>(byte);
         storage[nBytes - i - 1] = castSafeByte;
     }
-    storage[nBytes] = '\0';
 }
 
 Signal::Signal(const Signal& other) : Signal(other.nBits){
-    uint16_t nBytes = calculateNumBytes(other.nBits);
-    std::memcpy(storage, other.storage, nBytes + 1);
+    signal_width_t nBytes = calculateNumBytes(other.nBits);
+    std::memcpy(storage, other.storage, nBytes);
 }
 
-Signal::Signal(uint16_t nBits, PLI_BYTE8 * init_val) : Signal(nBits){
+Signal::Signal(signal_width_t nBitsPerWord, signal_depth_t depth, PLI_BYTE8 * init_val){
+    assert(nBitsPerWord <= SIGNAL_BYTES_MAX);
+    assert(depth > 0 && "depth must be positive");
+
+    nBits = nBitsPerWord;
+    this->depth = depth;
+
     auto nBytes = getNumBytes();
-    std::memcpy(storage, init_val, nBytes + 1);
+    storage = new PLI_BYTE8[nBytes*depth];
+
+    //TODO https://github.com/verilator/verilator/issues/5036
+    // std::memcpy(storage, init_val, nBytes*depth);
+    for(auto i=0;i<(nBytes*depth);i++){
+        uint8_t castSafeByte = static_cast<uint8_t>(init_val[i]);
+        uint8_t padSafeByte = (castSafeByte == ' ') ? 0 : castSafeByte;
+        storage[i] = padSafeByte;
+    }
+    
 }
 
-uint16_t Signal::getNumBits(){
+Signal::Signal(signal_width_t nBitsPerWord, signal_depth_t depth, uint64_t * init_val){
+    std::cout<<"debug"<<std::endl;
+    assert(nBitsPerWord <= SIGNAL_BYTES_MAX);
+    assert(depth > 0 && "depth must be positive");
+
+    nBits = nBitsPerWord;
+    this->depth = depth;
+
+    auto nBytesPerWord = getNumBytes();
+    storage = new PLI_BYTE8[nBytesPerWord*depth];
+
+    for(auto i=0; i<depth; i++){
+        std::cout<<"i="<<i<<std::endl;
+        uint64_t word = init_val[i];
+        std::cout<<"i="<<i<<std::endl;
+        for(auto j=0; j<nBytesPerWord; j++){
+            uint64_t mask = (1<<nBitsPerWord)-1;
+            auto shift = (nBytesPerWord-j-1)*8;
+
+            uint64_t wordMasked = word & mask;
+            uint64_t wordMaskedShifted = wordMasked >> shift;
+            uint8_t safeByte = wordMaskedShifted & 255;
+
+            auto storageIdx = (i*nBytesPerWord) + j;
+            std::cout<<"j="<<j<<std::endl;
+            storage[storageIdx] = safeByte;
+            std::cout<<"j="<<j<<std::endl;
+        }
+        
+    }
+    std::cout<<"debug"<<std::endl;
+}
+
+signal_width_t Signal::getNumBits(){
     return nBits;
 }
 
-uint16_t Signal::getNumBytes(){
-    const uint16_t ret = calculateNumBytes(nBits);
+signal_width_t Signal::getNumBytes(){
+    signal_width_t ret = calculateNumBytes(nBits);
     return ret;
 }
 
+signal_depth_t Signal::getDepth(){
+    return depth;
+}
+
 template<typename T>
-T getUIntScalarHelper(uint16_t nBytes, PLI_BYTE8 * storage){
+T Signal::getUIntScalarInternal(signal_width_t nBytes, signal_depth_t offset){
     T ret = 0;
-    auto sizeT = sizeof(T);
-    for(uint16_t i = 0; i<nBytes; i++){
-        PLI_BYTE8 byte = storage[i];
+    for(auto i = 0; i<nBytes; i++){
+        PLI_BYTE8 byte = storage[(offset*nBytes) + i];
         uint8_t castSafeByte = static_cast<uint8_t>(byte);
-        uint8_t padSafeByte = (castSafeByte == ' ') ? 0 : castSafeByte; //TODO https://github.com/verilator/verilator/issues/5036
-        ret |= padSafeByte << ((sizeT-i-1)*8);
+        //TODO https://github.com/verilator/verilator/issues/5036
+        uint8_t padSafeByte = (castSafeByte == ' ') ? 0 : castSafeByte;
+        ret = ret << 8;
+        ret |= padSafeByte & 255;
     }
     return ret;
 }
@@ -64,104 +118,38 @@ T getUIntScalarHelper(uint16_t nBytes, PLI_BYTE8 * storage){
 template<typename T>
 T Signal::getUIntScalar() {
     static_assert(std::is_unsigned_v<T> == true);
-    const uint16_t nBytesStored = getNumBytes();
-    assert(sizeof(T) >= nBytesStored);
+    signal_width_t nBytes = getNumBytes();
+    assert(sizeof(T) >= nBytes*depth && "uint type must be larger than signal width");
 
-    T ret = getUIntScalarHelper<T>(nBytesStored,storage);
+    T ret = getUIntScalarInternal<T>(nBytes,0);
     return ret;
 }
 
-uint8_t shiftRMask(uint8_t data, uint8_t mask, int shift){
-    auto dataShifted = shift > 0 ? data >> shift : data << (0-shift);
-    auto dataShiftedMasked = dataShifted & mask;
-    return dataShiftedMasked;
-}
-
 template<typename T>
-void getUintVectorHelper(T & ret, uint16_t wordSizeBits, int & bitStart, PLI_BYTE8 * storage){
-    auto storageByteIdx = bitStart / 8;
-    auto localBitStart = bitStart - (storageByteIdx*8);
-    auto shift = (8-localBitStart)-wordSizeBits;
-    uint8_t mask = (1 << wordSizeBits)-1;
-    
-    uint8_t word = shiftRMask(storage[storageByteIdx], mask, shift);
-    ret |= static_cast<uint8_t>(word);//todo ret > 8
-    
-    if(shift < 0){
-        auto cutoffWordSizeBits = (wordSizeBits-(8-localBitStart));
-        auto cutoffBitStart = bitStart + (wordSizeBits-cutoffWordSizeBits);
-        getUintVectorHelper(ret, cutoffWordSizeBits, cutoffBitStart, storage);
-    }
-    bitStart += wordSizeBits;
-}
-
-template<typename T>
-T* Signal::getUIntVector(int wordSizeBits) {
+T* Signal::getUIntVector() {
     static_assert(std::is_unsigned_v<T> == true);
-    assert(wordSizeBits != 0);
-    assert(sizeof(T)*8 >= wordSizeBits);
-    assert((nBits % wordSizeBits) == 0);
+    assert(sizeof(T)*8 >= nBits && "uint type must be larger than word width");
 
-    auto vectorSize = nBits / wordSizeBits;
-    assert(vectorSize > 0);
+    T* ret = new T[depth]();
     
-    T* ret = new T[vectorSize]();
-
-    auto bitStart = 0;
-    for(auto i = 0; i<vectorSize; i++){
-        getUintVectorHelper<T>(ret[i], wordSizeBits, bitStart, storage);
+    auto nBytesPerWord = getNumBytes();
+    for(auto i=0;i<depth;i++){
+        ret[i] = getUIntScalarInternal<T>(nBytesPerWord,i);
     }
+
     return ret;
 }
 
-t_vpi_value Signal::getVpiValue(){
+t_vpi_value Signal::getVpiValue(signal_depth_t index){
+    assert(index < getDepth() && "index out of range");
+
     auto nBytes = getNumBytes();
+    auto offset = nBytes*(depth - (1+index));
+
     PLI_BYTE8 * buf = new PLI_BYTE8[nBytes+1];
-    std::memcpy(buf,storage,nBytes+1);
+    std::memcpy(buf,storage+offset,nBytes);
+    buf[nBytes] = '\0';
 
     t_vpi_value ret = {vpiStringVal, buf};
     return ret;
 }
-
-/*
-    0:
-    ws = 3
-    idx = 0
-    bs = 0
-    ls = 0
-    shift = 5
-    mask = 111
-    storage[idx]=AAABBBCC
-    word = AAA
-    ret = AAA
-    1:
-    ws = 3
-    idx = 0
-    bs = 3
-    ls = 3
-    shift = 2
-    mask = 111
-    storage[idx]=AAABBBCC
-    word = BBB
-    ret = BBB
-    2:
-    ws = 3
-    idx = 0
-    bs = 6
-    ls = 6
-    shift = -1
-    mask = 111
-    storage[idx]=AAABBBCC
-    word = CC0
-    ret = CC0
-    2.5:
-    ws = 1
-    idx = 1
-    bs = 8
-    ls = 0
-    shift = 7
-    mask = 1
-    storage[idx]=CDDDEEEF
-    word = 00C
-    ret = CCC
-    */
