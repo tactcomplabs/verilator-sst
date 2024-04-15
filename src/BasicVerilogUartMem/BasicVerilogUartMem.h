@@ -15,20 +15,22 @@ struct TestBenchCommand {
 
 class BasicVerilogUartMem : public SST::Component{
     private:
+        SST::Output* out;
+        std::unique_ptr<VerilatorSST<VUART>> top;
+        
         uint16_t baudPeriod;
         uint16_t addrWidth;
         uint16_t dataWidth;
 
-        uint16_t baudCtr = 0;
-        SST::Output* out;
-        std::unique_ptr<VerilatorSST<VUART>> top;
         enum OpState {IDLE, RECV, INIT_TRANSMIT, TRANSMIT};
         OpState opState = IDLE;
+        
         uint64_t rxBuf = 0;
         uint64_t txBuf = 0;
         uint16_t bitCtr = 0;
+        uint16_t baudCtr = 0;
         
-        std::vector<TestBenchCommand> driver;
+        std::vector<TestBenchCommand> driverCommands;
         uint16_t cmdCtr = 0;
         uint16_t timeout = 0;
 
@@ -50,7 +52,7 @@ class BasicVerilogUartMem : public SST::Component{
             { "CLOCK_FREQ",  "Frequency of period (with units) of the clock",          "1GHz" },
             { "ADDR_WIDTH",  "log2 of addressable memory range ",                      "8"    },
             { "DATA_WIDTH",  "data bits at each address location",                     "8"    },
-            { "BAUD_PERIOD", "num of clock periods to wait between UART reads/writes", "8"    }
+            { "BAUD_PERIOD", "num of clock periods to wait between UART reads/writes", "16"    }
         )
 
         SST_ELI_DOCUMENT_PORTS()

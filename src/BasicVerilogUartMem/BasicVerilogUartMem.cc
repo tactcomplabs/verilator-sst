@@ -40,7 +40,7 @@ void BasicVerilogUartMem::verilatorSetup(){
 	top->writePortAtTick("rst_l",init_high,10);
 	top->tick(1);
 
-	driver = std::vector<TestBenchCommand> {
+	driverCommands = std::vector<TestBenchCommand> {
 		{true,1},//put mem[0] 7
 		{true,0},
 		{true,1},
@@ -93,23 +93,23 @@ void BasicVerilogUartMem::verilatorSetup(){
 }
 
 void verifyMemory(){
-	int bitLength = (1 << addrWidth)*dataWidth;
+	auto bitLength = (1 << addrWidth)*dataWidth;
 	Signal mem_debug = top->readPort("mem_debug");
 	uint64_t * memDebugArr = mem_debug.getUIntVector<uint64_t>();
 
 	auto memDebugIdx = 0;
-	for(auto i=0;i<<driver.size();i++){
-		if(driver[i].transmit == false){
-			assert(driver[i].data = memDebugArr[memDebugIdx] && "mem_debug mismatch");
+	for(auto i=0;i<<driverCommands.size();i++){
+		if(driverCommands[i].transmit == false){
+			assert(driverCommands[i].data = memDebugArr[memDebugIdx] && "mem_debug mismatch");
 		}
 	}
 };
 
-bool BasicVerilogUartMem::uartDriver(){
+bool BasicVerilogUartMem::uartdriverCommands(){
 	bool ret = false;
 	
 	if(opState == IDLE){
-		if(cmdCtr >= driver.size()){
+		if(cmdCtr >= driverCommands.size()){
 			verifyMemory();
 			out->output("sst: all tests passed!\n");
 			top->finish();
@@ -124,8 +124,8 @@ bool BasicVerilogUartMem::uartDriver(){
 			bitCtr = 0;
 			opState = RECV;
 			out->output("sst: transition IDLE->RECEIVE cmdCtr=%u\n",cmdCtr); 
-		}else if(driver[cmdCtr].transmit){
-			txBuf = driver[cmdCtr].data | -1 << addrWidth;
+		}else if(driverCommands[cmdCtr].transmit){
+			txBuf = driverCommands[cmdCtr].data | -1 << addrWidth;
 			baudCtr = 0;
 			bitCtr = 0;
 			timeout = 0;
@@ -144,8 +144,8 @@ bool BasicVerilogUartMem::uartDriver(){
 			int mask = (1<<dataWidth)-1;
 			int maskedRxBuf = (rxBuf >> 1) & mask;
 			out->output("sst: received final %u from UART\n", +maskedRxBuf);
-			if(driver[cmdCtr].data != maskedRxBuf){
-				out->output("sst: bad value data=%u maskedRxBuf=%u rxBuf=%u",driver[cmdCtr].data,maskedRxBuf,rxBuf);
+			if(driverCommands[cmdCtr].data != maskedRxBuf){
+				out->output("sst: bad value data=%u maskedRxBuf=%u rxBuf=%u",driverCommands[cmdCtr].data,maskedRxBuf,rxBuf);
 			}
 			bitCtr = 0;
 			baudCtr = 0;
