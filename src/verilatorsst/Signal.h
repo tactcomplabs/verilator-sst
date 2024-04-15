@@ -6,10 +6,9 @@
 #include <cassert>
 #include "vpi_user.h"
 #include "verilatedos.h"
-#include <iostream>
 
 namespace SST::VerilatorSST {
-const int SIGNAL_BYTES_MAX = VL_VALUE_STRING_MAX_WORDS * VL_EDATASIZE * 8;
+const int SIGNAL_BITS_MAX = VL_VALUE_STRING_MAX_WORDS * VL_EDATASIZE * 8;
 using signal_depth_t = uint64_t;
 using signal_width_t = uint32_t;
 
@@ -17,12 +16,12 @@ class Signal {
     private:
     signal_width_t nBits;
     signal_depth_t depth;
+    PLI_BYTE8 * storage;
 
     template<typename T>
     T getUIntScalarInternal(signal_width_t nBytes, signal_depth_t offset);
 
     public: 
-    PLI_BYTE8 * storage;//todo move to private after debug
     Signal() : Signal(1){};
     Signal(const Signal& other);
     Signal(signal_width_t nBits);

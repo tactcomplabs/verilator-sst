@@ -3,7 +3,6 @@
 #endif
 
 #include "verilatorSST.h"
-#include <iostream>
 #include <cmath>
 using namespace SST::VerilatorSST;
 
@@ -36,8 +35,6 @@ Signal VerilatorSST<T>::readPort(std::string portName){
     auto vpiTypeVal = vpi_get(vpiType, vh1);
     auto vpiSizeVal = vpi_get(vpiSize, vh1);
 
-    std::cout << "portName=" << portName << " vpiTypeVal=" << vpiTypeVal << std::endl;
-
     if(vpiTypeVal == vpiReg){
         t_vpi_value val{vpiStringVal};
         vpi_get_value(vh1, &val);
@@ -47,9 +44,6 @@ Signal VerilatorSST<T>::readPort(std::string portName){
     }
 
     if(vpiTypeVal == vpiMemory){
-        for(auto i=0;i<16;i++){
-            std::cout<<"read mem_debug["<<i<<"]="<<+top->mem_debug[i]<<std::endl;
-        }
         vpiHandle iter = vpi_iterate(vpiMemoryWord,vh1);
         assert(iter);
 
@@ -74,9 +68,8 @@ Signal VerilatorSST<T>::readPort(std::string portName){
 
             t_vpi_value word{vpiStringVal};
             vpi_get_value(wordHandle, &word);
-            uint16_t debugWord = static_cast<uint16_t>(word.value.str[0]);
+
             auto offset = (totalBytes-(nBytesPerWord*(1+i)));
-            std::cout << "debugWord=" <<debugWord<< " offset="<<offset<< " i="<<i<<std::endl;
             std::memcpy(buf+offset,word.value.str,nBytesPerWord);
 
             vpi_free_object(wordHandle);
@@ -124,15 +117,11 @@ void VerilatorSST<T>::writePort(std::string portName, Signal & signal){
 
             t_vpi_value val = signal.getVpiValue(i);
             vpi_put_value(wordHandle,&val,NULL,0);
-            uint16_t debugWord = static_cast<uint16_t>(val.value.str[0]);
-            std::cout << "debugWord[0]=" <<static_cast<uint16_t>(val.value.str[0]) << " debugword[1]="<< static_cast<uint16_t>(val.value.str[1])<<std::endl;
+
             vpi_free_object(wordHandle);
             i++;
         }
 
-        for(auto i=0;i<16;i++){
-            std::cout<<"write mem_debug["<<i<<"]="<<+top->mem_debug[i]<<std::endl;
-        }
         return;
     }
     assert(false && "unsupported vpiType");
@@ -206,61 +195,3 @@ void VerilatorSST<T>::finish(){
     top->final();
     isFinished = true;
 }
-
-    /*
-    word0 101
-    word1 111
-    word2 101
-    word3 011
-    Storage {101}{111}{10 1}0000000
-
-    wordSizeBits = 3
-    bitstart=0
-    for(word)
-    ...
-
-    wordSizeBits = 3
-    while(word)
-        word = //{101} on 3rd iteration
-
-        f(word,wordSizeBits,&bitStart,&storage)
-            bitstart += wordSizeBits //6
-            byteArrayIdx = bitStart / 8 //0
-            localbitstart = bitStart - byteArrayIdx*8 //6
-            shift = 8-(localBitStart-wordSizeBits) // -1
-            mask = (((1<<wordSizeBits)-1) << (8-wordSizeBits)) >> localBitStart //0000 00011
-            mask = (1-wordSizeBits)-1 //            0000 0111
-            
-            wordMasked = word & mask //             0000 0101
-            wordShifted = word << shift             0000 0010
-            storage[0] &= ~(mask << shift)//        1011 1100
-            storage[0] |= wordShifted //            1011 1110
-
-            if(shift < 0)
-                WordSizeBits = (wordSizeBits-(8-localBitStart)) // 1
-                f(word,wordSizeBits,&bitStart,&storage)
-                    BitStart += WordSizeBits //9
-                    ByteArrayIdx = BitStart / 8 //1
-                    LocalBitStart= BitStart-ByteArrayIdx*8 //0
-                    Shift = 8-LocalBitStart-WordSizeBits //7
-                    Mask = (1-WordSizeBits)-1 //             0000 0001
-                    WordMasked = Word & Mask //         0000 0001
-                    WordShifted = WordMasked << Shift //1000 0000
-                    storage[1] &= ~(Mask << Shift) //       0000 0000
-                    storage[1] &= ~(Mask << Shift) //       1000 0000
-
-
-    word=011
-    wordSizeBits=3
-    bitStart += wordSizeBits
-    
-    word     =    01010101
-    wordMask =    00000111
-    wordMasked =  00000101
-    wordShifted = 00010100 = wordMasked <<shift
-
-    storage =     10101010
-    storageMask = 00011100 = wordMask << shift
-    rdy_storage = 10100010 = storage &= ~storageMask
-    good_storage = 10110110 
-*/

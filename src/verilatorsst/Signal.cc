@@ -10,7 +10,7 @@ signal_width_t Signal::calculateNumBytes(signal_width_t nBits){
 }
 
 Signal::Signal(signal_width_t nBits) : nBits(nBits), depth(1){
-    assert(nBits <= SIGNAL_BYTES_MAX);
+    assert(nBits <= SIGNAL_BITS_MAX);
 
     signal_width_t nBytes = calculateNumBytes(nBits);
     storage = new PLI_BYTE8[nBytes];
@@ -36,7 +36,7 @@ Signal::Signal(const Signal& other) : Signal(other.nBits){
 }
 
 Signal::Signal(signal_width_t nBitsPerWord, signal_depth_t depth, PLI_BYTE8 * init_val){
-    assert(nBitsPerWord <= SIGNAL_BYTES_MAX);
+    assert(nBitsPerWord <= SIGNAL_BITS_MAX);
     assert(depth > 0 && "depth must be positive");
 
     nBits = nBitsPerWord;
@@ -56,8 +56,7 @@ Signal::Signal(signal_width_t nBitsPerWord, signal_depth_t depth, PLI_BYTE8 * in
 }
 
 Signal::Signal(signal_width_t nBitsPerWord, signal_depth_t depth, uint64_t * init_val){
-    std::cout<<"debug"<<std::endl;
-    assert(nBitsPerWord <= SIGNAL_BYTES_MAX);
+    assert(nBitsPerWord <= SIGNAL_BITS_MAX);
     assert(depth > 0 && "depth must be positive");
 
     nBits = nBitsPerWord;
@@ -67,9 +66,8 @@ Signal::Signal(signal_width_t nBitsPerWord, signal_depth_t depth, uint64_t * ini
     storage = new PLI_BYTE8[nBytesPerWord*depth];
 
     for(auto i=0; i<depth; i++){
-        std::cout<<"i="<<i<<std::endl;
         uint64_t word = init_val[i];
-        std::cout<<"i="<<i<<std::endl;
+
         for(auto j=0; j<nBytesPerWord; j++){
             uint64_t mask = (1<<nBitsPerWord)-1;
             auto shift = (nBytesPerWord-j-1)*8;
@@ -79,13 +77,10 @@ Signal::Signal(signal_width_t nBitsPerWord, signal_depth_t depth, uint64_t * ini
             uint8_t safeByte = wordMaskedShifted & 255;
 
             auto storageIdx = (i*nBytesPerWord) + j;
-            std::cout<<"j="<<j<<std::endl;
             storage[storageIdx] = safeByte;
-            std::cout<<"j="<<j<<std::endl;
         }
         
     }
-    std::cout<<"debug"<<std::endl;
 }
 
 signal_width_t Signal::getNumBits(){
@@ -107,8 +102,8 @@ T Signal::getUIntScalarInternal(signal_width_t nBytes, signal_depth_t offset){
     for(auto i = 0; i<nBytes; i++){
         PLI_BYTE8 byte = storage[(offset*nBytes) + i];
         uint8_t castSafeByte = static_cast<uint8_t>(byte);
-        //TODO https://github.com/verilator/verilator/issues/5036
-        uint8_t padSafeByte = (castSafeByte == ' ') ? 0 : castSafeByte;
+        uint8_t padSafeByte = (castSafeByte == ' ') ? 0 : castSafeByte; //TODO https://github.com/verilator/verilator/issues/5036
+
         ret = ret << 8;
         ret |= padSafeByte & 255;
     }
