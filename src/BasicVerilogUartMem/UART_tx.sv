@@ -35,7 +35,7 @@ always_ff @(posedge clk, negedge rst_l) begin
 	end
 	else if(transmitting) begin
 		baud_cnt <= baud_cnt + 1;
-		$display("verilog:tx: increment baud time=%0t baud_cnt=%0d",$time,baud_cnt);
+		// $display("verilog:tx: increment baud time=%0t baud_cnt=%0d",$time,baud_cnt);
 	end
 end
 

@@ -41,7 +41,7 @@ always_ff @(posedge clk) begin
 	end
 	else if (dec_baud) begin
 		baud_cnt <= baud_cnt - 1;
-		$display("verilog:rx: decrement baud time=%0t baud_cnt=%0d",$time,baud_cnt);
+		// $display("verilog:rx: decrement baud time=%0t baud_cnt=%0d",$time,baud_cnt);
 	end
 end
 
