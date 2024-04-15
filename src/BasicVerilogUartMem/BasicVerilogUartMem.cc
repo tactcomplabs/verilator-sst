@@ -1,6 +1,6 @@
 #include "BasicVerilogUartMem.h"
 
-#define LOW 0
+#define LOW static_cast<uint64_t>(0)
 #define HIGH 1
 
 using namespace SST::VerilatorSST;
@@ -30,70 +30,93 @@ BasicVerilogUartMem::~BasicVerilogUartMem(){
 
 void BasicVerilogUartMem::verilatorSetup(){
 	top = std::make_unique<VerilatorSST<VUART>>();
+
 	Signal init_low(1,LOW);
 	Signal init_high(1,HIGH);
+
 	top->writePort("clk",init_low);
 	top->writePort("rst_l",init_low);
 	top->writePort("RX",init_high);
 	top->writePortAtTick("rst_l",init_high,10);
 	top->tick(1);
+
 	driver = std::vector<TestBenchCommand> {
 		{true,1},//put mem[0] 7
 		{true,0},
-		{true,7},
+		{true,1},
 		{true,1},//put mem[1] 6
 		{true,1},
-		{true,6},
+		{true,2},
 		{true,1},//put mem[2] 5
 		{true,2},
-		{true,5},
+		{true,3},
 		{true,1},//put mem[3] 4
 		{true,3},
 		{true,4},
 		{true,1},//put mem[4] 3
 		{true,4},
-		{true,3},
+		{true,5},
 		{true,1},//put mem[5] 2
 		{true,5},
-		{true,2},
+		{true,6},
 		{true,1},//put mem[6] 1
 		{true,6},
-		{true,1},
+		{true,7},
 		{true,1},//put mem[7] 7
 		{true,7},
-		{true,7}
+		{true,0},
+		{true,0},//get mem[0] 7
+		{true,0},
+		{false,1},
+		{true,0},//get mem[1] 6
+		{true,1},
+		{false,2},
+		{true,0},//get mem[2] 5
+		{true,2},
+		{false,3},
+		{true,0},//get mem[3] 4
+		{true,3},
+		{false,4},
+		{true,0},//get mem[4] 3
+		{true,4},
+		{false,5},
+		{true,0},//get mem[5] 2
+		{true,5},
+		{false,6},
+		{true,0},//get mem[6] 1
+		{true,6},
+		{false,7},
+		{true,0},//get mem[7] 7
+		{true,7},
+		{false,0}
 		};
 }
 
-void BasicVerilogUartMem::compareMemDebug(uint16_t data, uint16_t addr){
+void verifyMemory(){
 	int bitLength = (1 << addrWidth)*dataWidth;
-	Signal memDebug(bitLength);
-	top->readPort("mem_debug",memDebug);
-	// uint16_t * val = memDebug.getUIntVector<uint16_t>(3);
-	for(int i = 0;i<16;i++){
-		std::cout << "memDebug["<<i<<"]="<<+static_cast<uint8_t>(memDebug.value.str[i])<<std::endl;
+	Signal mem_debug = top->readPort("mem_debug");
+	uint64_t * memDebugArr = mem_debug.getUIntVector<uint64_t>();
+
+	auto memDebugIdx = 0;
+	for(auto i=0;i<<driver.size();i++){
+		if(driver[i].transmit == false){
+			assert(driver[i].data = memDebugArr[memDebugIdx] && "mem_debug mismatch");
+		}
 	}
-	/*
-	111 110 101 100 011 010 001 111
-	111 110 101 100 011 010 001 111
-	111000000000000000000111
-	11100000 00000000 00000111
-	*/
 };
 
-bool BasicVerilogUartMem::stateMachine(){
+bool BasicVerilogUartMem::uartDriver(){
 	bool ret = false;
 	
 	if(opState == IDLE){
-		std::cout <<driver.size()<<std::endl;
 		if(cmdCtr >= driver.size()){
-			compareMemDebug(1,1);
+			verifyMemory();
+			out->output("sst: all tests passed!\n");
 			top->finish();
 			return true;
 		}
-		std::cout << "debug" <<std::endl;
-		Signal rx;
-		top->readPort("TX",rx);
+
+		Signal rx = top->readPort("TX");
 		if((rx.getUIntScalar<uint8_t>() & 1) == LOW){
 			rxBuf = 0;
 			baudCtr = baudPeriod/2;
@@ -132,9 +155,8 @@ bool BasicVerilogUartMem::stateMachine(){
 		}
 
 		if(!allBitsRead && doRead){
-			Signal rx;
-			top->readPort("TX",rx);
-			int bit = (rx.getUIntScalar<uint8_t>() & 1);
+			Signal tx = top->readPort("TX");
+			int bit = (tx.getUIntScalar<uint8_t>() & 1);
 			rxBuf |= (bit & 1) << bitCtr;
 			out->output("sst: received %u from UART rxBuf=%u bitCtr=%u\n",bit,rxBuf,bitCtr);
 			bitCtr++;
@@ -178,7 +200,7 @@ bool BasicVerilogUartMem::stateMachine(){
 		}
 
 		if(!stopBitSent && doWrite){
-			int bit = txBuf & 1;
+			auto bit = txBuf & 1;
 			Signal tx(1, bit);
 			top->writePort("RX",tx);
 			out->output("sst: sent %u to UART time=%llu txBuf=%u bitCtr=%u stopBitSent=%u\n", bit, top->getCurrentTick(), txBuf, bitCtr,stopBitSent);
@@ -190,11 +212,11 @@ bool BasicVerilogUartMem::stateMachine(){
 	}
 
 	assert(false && "bad state");
-}
+};
 
 bool BasicVerilogUartMem::clock(Cycle_t cycles){
 	if(top->getCurrentTick() > 5){
-		if(stateMachine()){
+		if(uartDriver()){
 			primaryComponentOKToEndSim();
 			return true;
 		}
@@ -202,4 +224,4 @@ bool BasicVerilogUartMem::clock(Cycle_t cycles){
 
 	top->tickClockPeriod("clk");
 	return false;
-}
+};

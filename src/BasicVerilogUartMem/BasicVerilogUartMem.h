@@ -22,19 +22,19 @@ class BasicVerilogUartMem : public SST::Component{
         uint16_t baudCtr = 0;
         SST::Output* out;
         std::unique_ptr<VerilatorSST<VUART>> top;
-        bool clock(SST::Cycle_t cycle);
-        void verilatorSetup();
-        bool stateMachine();
-        void compareMemDebug(uint16_t data, uint16_t addr);
-        enum OpState {IDLE, RECV, INIT_TRANSMIT, TRANSMIT, TRANSMIT_STOP};
+        enum OpState {IDLE, RECV, INIT_TRANSMIT, TRANSMIT};
         OpState opState = IDLE;
-        uint16_t rxBuf = 0;
-        uint16_t txBuf = 0;
+        uint64_t rxBuf = 0;
+        uint64_t txBuf = 0;
         uint16_t bitCtr = 0;
         
         std::vector<TestBenchCommand> driver;
         uint16_t cmdCtr = 0;
         uint16_t timeout = 0;
+
+        bool clock(SST::Cycle_t cycle);
+        void verilatorSetup();
+        bool uartDriver();
 
     public:
         SST_ELI_REGISTER_COMPONENT(
