@@ -44,5 +44,5 @@ class Signal {
     static signal_width_t calculateNumBytes(signal_width_t nBits);
 };
 }
-#include "Signal.cc"
+#include "Signal.tcc"
 #endif

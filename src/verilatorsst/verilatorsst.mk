@@ -11,7 +11,7 @@ VERILATOR_LDFLAGS = $(LDFLAGS)
 
 VERILATORSST_SRC_DIR = $(abspath $(CURDIR)/verilatorsst)
 VERILATORSST_BUILD_OBJS1 := $(patsubst %.cc, %.o, $(addprefix $(BUILD_DIR)/,  $(notdir $(wildcard $(abspath $(CURDIR)/verilatorsst)/*.cc))))
-VERILATORSST_BUILD_OBJS := $(filter-out %verilatorSST.o %Signal.o, $(VERILATORSST_BUILD_OBJS1))
+VERILATORSST_BUILD_OBJS := $(filter-out %verilatorSST.o, $(VERILATORSST_BUILD_OBJS1))
 VERILATORSST_NAME = verilatorsst
 VERILATORSST_LIB = lib$(VERILATORSST_NAME).so
 VERILATORSST_BUILD_LIB = $(BUILD_DIR)/$(VERILATORSST_LIB)
