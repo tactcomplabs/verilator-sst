@@ -92,7 +92,7 @@ void BasicVerilogUartMem::verilatorSetup(){
 		};
 }
 
-void verifyMemory(){
+void BasicVerilogUartMem::verifyMemory(){
 	auto bitLength = (1 << addrWidth)*dataWidth;
 	Signal mem_debug = top->readPort("mem_debug");
 	uint64_t * memDebugArr = mem_debug.getUIntVector<uint64_t>();
@@ -105,7 +105,7 @@ void verifyMemory(){
 	}
 };
 
-bool BasicVerilogUartMem::uartdriverCommands(){
+bool BasicVerilogUartMem::uartDriver(){
 	bool ret = false;
 	
 	if(opState == IDLE){
@@ -130,7 +130,7 @@ bool BasicVerilogUartMem::uartdriverCommands(){
 			bitCtr = 0;
 			timeout = 0;
 			opState = INIT_TRANSMIT;
-			out->output("sst: transition IDLE->INIT_TRANSMIT txBuf=%u cmdCtr=%u\n",txBuf,cmdCtr);
+			out->output("sst: transition IDLE->INIT_TRANSMIT txbuf=%llu cmdCtr=%u\n",txBuf,cmdCtr);
 		}
 		return ret;
 	}
@@ -145,7 +145,7 @@ bool BasicVerilogUartMem::uartdriverCommands(){
 			int maskedRxBuf = (rxBuf >> 1) & mask;
 			out->output("sst: received final %u from UART\n", +maskedRxBuf);
 			if(driverCommands[cmdCtr].data != maskedRxBuf){
-				out->output("sst: bad value data=%u maskedRxBuf=%u rxBuf=%u",driverCommands[cmdCtr].data,maskedRxBuf,rxBuf);
+				out->output("sst: bad value data=%u maskedRxbuf=%d rxbuf=%llu",driverCommands[cmdCtr].data,maskedRxBuf,rxBuf);
 			}
 			bitCtr = 0;
 			baudCtr = 0;
@@ -158,7 +158,7 @@ bool BasicVerilogUartMem::uartdriverCommands(){
 			Signal tx = top->readPort("TX");
 			int bit = (tx.getUIntScalar<uint8_t>() & 1);
 			rxBuf |= (bit & 1) << bitCtr;
-			out->output("sst: received %u from UART rxBuf=%u bitCtr=%u\n",bit,rxBuf,bitCtr);
+			out->output("sst: received %u from UART rxbuf=%llu bitCtr=%u\n",bit,rxBuf,bitCtr);
 			bitCtr++;
 			baudCtr = 0;
 		}
@@ -203,7 +203,7 @@ bool BasicVerilogUartMem::uartdriverCommands(){
 			auto bit = txBuf & 1;
 			Signal tx(1, bit);
 			top->writePort("RX",tx);
-			out->output("sst: sent %u to UART time=%llu txBuf=%u bitCtr=%u stopBitSent=%u\n", bit, top->getCurrentTick(), txBuf, bitCtr,stopBitSent);
+			out->output("sst: sent %llu to UART time=%llu txbuf=%llu bitCtr=%u stopBitSent=%u\n", bit, top->getCurrentTick(), txBuf, bitCtr,stopBitSent);
 			txBuf = txBuf >> 1;
 			bitCtr++;
 			baudCtr = 0;

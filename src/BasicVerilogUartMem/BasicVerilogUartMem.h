@@ -37,6 +37,7 @@ class BasicVerilogUartMem : public SST::Component{
         bool clock(SST::Cycle_t cycle);
         void verilatorSetup();
         bool uartDriver();
+        void verifyMemory();
 
     public:
         SST_ELI_REGISTER_COMPONENT(
