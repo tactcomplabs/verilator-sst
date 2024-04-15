@@ -3,8 +3,9 @@
 
 #include <string>
 #include <cassert>
-#include "VTop.h"
+
 #include "verilated_vpi.h"
+#include "verilated.h"
 #include "Signal.h"
 
 namespace SST::VerilatorSST {
@@ -14,21 +15,23 @@ struct SignalQueueEntry {
     Signal signal;
 };
 
+template<typename T>
 class VerilatorSST {
     private:
     std::unique_ptr<VerilatedContext> contextp;
-    std::unique_ptr<VTop> top;
+    std::unique_ptr<T> top;
     std::unique_ptr<std::vector<SignalQueueEntry>> signalQueue;
     
-    void pollSignalQueue();
+    void pollSignalQueue(); 
+    bool isFinished = false;
 
     public:
     VerilatorSST();
     ~VerilatorSST(){};
-
+    
     void writePort(std::string portName, Signal & val);
     void writePortAtTick(std::string portName, Signal & signal, uint64_t tick);
-    void readPort(std::string portName, Signal & val);
+    Signal readPort(std::string portName);
 
     void tick(uint64_t elapse);
     void tickClockPeriod(std::string clockPort);
@@ -37,4 +40,5 @@ class VerilatorSST {
     void finish();
 };
 }
+#include "verilatorSST.cc"
 #endif

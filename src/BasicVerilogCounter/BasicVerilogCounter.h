@@ -10,6 +10,7 @@
 #include <sst/core/sst_config.h>
 #include <sst/core/component.h>
 #include "verilatorSST.h"
+#include "VCounter.h"
 
 namespace SST::VerilatorSST {
 
@@ -20,7 +21,7 @@ public:
   // Register the component with the SST element library
   SST_ELI_REGISTER_COMPONENT(
     BasicVerilogCounter,                               // Component class
-    "basicverilogcounter",                         // Component library
+    "verilatorsst",                         // Component library
     "BasicVerilogCounter",                             // Component name
     SST_ELI_ELEMENT_VERSION(1,0,0),           // Version of the component
     "BasicVerilogCounter: simple clocked component",   // Description of the component
@@ -31,7 +32,8 @@ public:
   // { "parameter_name", "description", "default value or NULL if required" }
   SST_ELI_DOCUMENT_PARAMS(
     { "CLOCK_FREQ",  "Frequency of perid (with units) of the clock", "1GHz" },
-    { "STOP", "Number of clock ticks to execute",             "20"  }
+    { "STOP", "Number of clock ticks to execute",             "20"  },
+    { "STOP_WIDTH", "Width of stop signal",             "8"  }
   )
 
   // [Optional] Document the ports: we do not define any 
@@ -51,14 +53,12 @@ public:
   ~BasicVerilogCounter();
 
 private:
-
+  SST::Output* out;       // SST Output object for printing, messaging, etc
+  std::unique_ptr<VerilatorSST<VCounter>> top;
+  uint32_t stopWidth;
+  
   // Clock handler
   bool clock(SST::Cycle_t cycle);
-
-  // Params
-  SST::Output* out;       // SST Output object for printing, messaging, etc
-
-  std::unique_ptr<VerilatorSST> top;
   bool testBenchPass();
   void verilatorSetup(uint16_t stop);
 };  // class basicClocks

@@ -1,65 +1,38 @@
-#
-# src/Makefile
-#
-
-NPROC = $(shell sysctl -n hw.physicalcpu)
-
 export SRC_DIR = $(abspath $(CURDIR))
 export BUILD_DIR = $(abspath ../build)
 export INSTALL_DIR = $(abspath ../install)
 
-DEBUG ?=
-DEBUG_FLAGS =
+include $(abspath $(SRC_DIR)/verilatorsst/verilatorsst.mk)
+include $(abspath $(SRC_DIR)/BasicVerilogUartMem/BasicVerilogUartMem.mk)
+include $(abspath $(SRC_DIR)/BasicVerilogCounter/BasicVerilogCounter.mk)
+
 ifdef DEBUG
 DEBUG_FLAGS = -O0 -g -DVL_DEBUG=1
 endif
 
-include $(abspath $(CURDIR)/verilog/verilog.mk)
-include $(abspath $(CURDIR)/sstelement/sstelement.mk)
+SST_CXX = $(shell sst-config --CXX)
+SST_CXXFLAGS = $(shell sst-config --ELEMENT_CXXFLAGS)
+SST_LDFLAGS = $(shell sst-config --ELEMENT_LDFLAGS)
+export BUILD_COMMAND = $(SST_CXX) -I$(VERILATORSST_SRC_DIR) -I$(BUILD_DIR) $(SST_CXXFLAGS) $(SST_LDFLAGS) $(VERILATOR_CPPFLAGS) -std=c++17 $(DEBUG_FLAGS)
+export VERILOG_BUILD_COMMAND = verilator --cc --build --exe --vpi --public-flat-rw -CFLAGS "-fPIC -std=c++17 $(DEBUG_FLAGS)" -LDFLAGS "$(SST_LDFLAGS)" $(VERILOG_MACROS) -Wall -Mdir $(BUILD_DIR) --prefix V$(basename $(notdir $@)) --top-module $(basename $(notdir $@)) -I$(dir $<) $<
 
 .DEFAULT_GOAL := register
 .PHONY: register verify clean
 
-$(VERILOG_BUILD_HEADERS): $(VERILOG_SRC_SOURCES)
+$(VERILATORSST_BUILD_LIB): $(VERILOG_BUILD_OBJS) $(VERILATORSST_BUILD_OBJS)  $(SSTELEMENT_BUILD_OBJS)
 	mkdir -p $(dir $@)
-	verilator \
-	--cc \
-	--exe \
-	--vpi \
-	--public-flat-rw \
-	-CFLAGS "-fPIC $(DEBUG_FLAGS)" \
-	-LDFLAGS "$(SST_LDFLAGS)" \
-	-j $(NPROC) \
-	$(VERILOG_MACROS) \
-	-Wall \
-	--prefix VTop \
-	--top-module $(TOP_MODULE) \
-	-Mdir $(BUILD_DIR) \
-	$^
-	make -C $(dir $@) -j $(NPROC) -f VTop.mk
+	$(BUILD_COMMAND) -o $@ $(BUILD_DIR)/*.o
 
-$(BUILD_DIR)/%.o: $(SRC_DIR)/sstelement/%.cc $(VERILOG_BUILD_HEADERS)
-	mkdir -p $(dir $@)
-	$(SST_CXX) $(DEBUG_FLAGS) $(SST_CXXFLAGS) $(VERILATOR_CPPFLAGS) $(SST_LDFLAGS) $(VERILATOR_LDFLAGS) -c $< -o $@
-
-$(SSTELEMENT_BUILD_LIB): $(SSTELEMENT_BUILD_OBJS) 
-	mkdir -p $(dir $@)
-	$(SST_CXX) $(DEBUG_FLAGS) $(SST_CXXFLAGS) $(VERILATOR_CPPFLAGS) $(SST_LDFLAGS) $(VERILATOR_LDFLAGS) -o $@ $(BUILD_DIR)/*.o
-
-$(SSTELEMENT_INSTALL_HEADERS): $(SSTELEMENT_SRC_HEADERS)
+$(VERILATORSST_INSTALL_LIB): $(VERILATORSST_BUILD_LIB)
 	install -d $(dir $@)
 	install -m 644 $^ $(dir $@)
 
-$(SSTELEMENT_INSTALL_LIB): $(SSTELEMENT_BUILD_LIB)
-	install -d $(dir $@)
-	install -m 644 $^ $(dir $@)
+register: $(VERILATORSST_INSTALL_LIB)
+	sst-register -u $(VERILATORSST_NAME)
+	sst-register $(VERILATORSST_NAME) $(VERILATORSST_NAME)_LIBDIR=$(INSTALL_DIR)
 
-register: $(SSTELEMENT_INSTALL_LIB)
-	sst-register -u $(SSTELEMENT_NAME)
-	sst-register $(SSTELEMENT_NAME) $(SSTELEMENT_NAME)_LIBDIR=$(INSTALL_DIR)
-
-verify: $(SSTELEMENT_INSTALL_LIB)
-	sst-info $(SSTELEMENT_NAME)
+verify: $(VERILATORSST_INSTALL_LIB)
+	sst-info $(VERILATORSST_NAME)
 
 clean:
 	rm -Rf $(BUILD_DIR)
