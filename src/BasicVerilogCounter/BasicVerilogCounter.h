@@ -32,7 +32,8 @@ public:
   // { "parameter_name", "description", "default value or NULL if required" }
   SST_ELI_DOCUMENT_PARAMS(
     { "CLOCK_FREQ",  "Frequency of perid (with units) of the clock", "1GHz" },
-    { "STOP", "Number of clock ticks to execute",             "20"  }
+    { "STOP", "Number of clock ticks to execute",             "20"  },
+    { "STOP_WIDTH", "Width of stop signal",             "8"  }
   )
 
   // [Optional] Document the ports: we do not define any 
@@ -52,13 +53,12 @@ public:
   ~BasicVerilogCounter();
 
 private:
-
-  // Clock handler
-  bool clock(SST::Cycle_t cycle);
-
-  // Params
   SST::Output* out;       // SST Output object for printing, messaging, etc
   std::unique_ptr<VerilatorSST<VCounter>> top;
+  uint32_t stopWidth;
+  
+  // Clock handler
+  bool clock(SST::Cycle_t cycle);
   bool testBenchPass();
   void verilatorSetup(uint16_t stop);
 };  // class basicClocks

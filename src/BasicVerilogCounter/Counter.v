@@ -1,37 +1,28 @@
-// `ifndef _INPUT_WIDTH
-`ifndef INPUT_WIDTH
-`define INPUT_WIDTH 8
+`ifndef STOP_WIDTH
+`define STOP_WIDTH 1
 `endif
-// `endif
 
-/* verilator lint_off DECLFILENAME */
-module Counter
-   #(parameter INPUT_WIDTH=`INPUT_WIDTH)
-  (
-   // Declare some signals so we can see how I/O works
+
+module Counter #(parameter STOP_WIDTH=`STOP_WIDTH) (
    input              clk,
    input              reset_l,
-   input [INPUT_WIDTH-1:0]       stop,
+   input [STOP_WIDTH-1:0]       stop,
    output wire        done
    );
    
-   reg [INPUT_WIDTH-1:0] ctr;
-   reg [INPUT_WIDTH-1:0] safe_stop;
-   wire [INPUT_WIDTH-1:0] next_ctr;
+   reg [STOP_WIDTH-1:0] ctr;
 
-   always_ff @ (posedge clk) begin
+   always_ff @ (posedge clk, negedge reset_l) begin
       if (!reset_l) begin
          ctr <= '0;
-         safe_stop <= stop;
       end
       else begin
-         ctr <= next_ctr;
+         ctr <= ctr + 1'b1;
          $display("verilog: counter: %0d\n", ctr);
       end
    end
    
-   assign done = (ctr == safe_stop);
-   assign next_ctr = ctr + 1'b1;
+   assign done = (ctr == stop);
 
    initial begin
       $display("verilog: model running...\n");
