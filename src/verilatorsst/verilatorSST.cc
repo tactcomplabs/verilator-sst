@@ -87,7 +87,7 @@ Signal VerilatorSST<T>::readPort(std::string portName){
         return ret;
     }
     
-    assert(false && "unimplemented vpiType");
+    assert(false && "unsupported vpiType");
     return NULL;
 }
 
@@ -101,6 +101,9 @@ void VerilatorSST<T>::writePort(std::string portName, Signal & signal){
 
     auto vpiTypeVal = vpi_get(vpiType, vh1);
     auto vpiSizeVal = vpi_get(vpiSize, vh1);
+    
+    auto vpiDirVal = vpi_get(vpiDirection,vh1);
+    assert(vpiDirVal == vpiInput && "port must be an input, inout not supported");
 
     if(vpiTypeVal == vpiReg){
         assert(vpiSizeVal == signal.getNumBits() && "port width must match signal width");
@@ -132,7 +135,7 @@ void VerilatorSST<T>::writePort(std::string portName, Signal & signal){
         }
         return;
     }
-    assert(false && "unimplemented vpiType");
+    assert(false && "unsupported vpiType");
 }
 
 template <class T>
