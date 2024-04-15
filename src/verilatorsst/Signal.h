@@ -4,6 +4,7 @@
 #include <type_traits>
 #include <algorithm>
 #include <cassert>
+#include <cstring>
 #include "vpi_user.h"
 #include "verilatedos.h"
 
