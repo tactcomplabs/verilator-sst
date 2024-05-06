@@ -1,0 +1,198 @@
+//
+// _verilatorSST_cpp_
+//
+// Copyright (C) 2017-2024 Tactical Computing Laboratories, LLC
+// All Rights Reserved
+// contact@tactcomplabs.com
+//
+// See LICENSE in the top level directory for licensing details
+//
+
+#include "verilatorSST.h"
+
+namespace SST::VerilatorSST{
+
+// ---------------------------------------------------------------
+// VerilatorSSTBase
+// ---------------------------------------------------------------
+VerilatorSSTBase::VerilatorSSTBase( std::string DerivedName,
+                                    ComponentId_t id, const Params& params )
+  : SubComponent(id), output(nullptr){
+  verbosity = params.find<uint32_t>("verbose");
+  std::string outStr = "[" + DerivedName + " @t]: ";
+  output = new SST::Output(outStr, verbosity, 0,
+                           SST::Output::STDOUT);
+}
+
+VerilatorSSTBase::~VerilatorSSTBase(){
+  delete output;
+}
+
+// ---------------------------------------------------------------
+// VerilatorSST@VERILOG_DEVICE@
+// ---------------------------------------------------------------
+VerilatorSST@VERILOG_DEVICE@::VerilatorSST@VERILOG_DEVICE@(ComponentId_t id,
+                                                           const Params& params)
+  : VerilatorSSTBase("@VERILOG_DEVICE@", id, params){
+
+  const std::string clockFreq = params.find<std::string>("clockFreq", "1GHz");
+
+  clockPort = params.find<std::string>("clockPort", "NullPort");
+  if( !isNamedPort(clockPort) ){
+    output->fatal(CALL_INFO, -1, "Could not find clock port with name=%s\n",
+                  clockPort.c_str());
+  }
+
+  // attempt to build the reset value tables
+  initResetValues(params);
+
+  registerClock(clockFreq,
+                new Clock::Handler<VerilatorSST@VERILOG_DEVICE@>(this,
+                                                                 &VerilatorSST@VERILOG_DEVICE@::clock));
+}
+
+VerilatorSST@VERILOG_DEVICE@::~VerilatorSST@VERILOG_DEVICE@(){
+}
+
+void VerilatorSST@VERILOG_DEVICE@::splitStr(const std::string& s,
+                                            char c,
+                                            std::vector<std::string>& v){
+  std::string::size_type i = 0;
+  std::string::size_type j = s.find(c);
+  v.clear();
+
+  if( (j==std::string::npos) && (s.length() > 0) ){
+    v.push_back(s);
+    return ;
+  }
+
+  while (j != std::string::npos) {
+    v.push_back(s.substr(i, j-i));
+    i = ++j;
+    j = s.find(c, j);
+    if (j == std::string::npos)
+      v.push_back(s.substr(i, s.length()));
+  }
+}
+
+void VerilatorSST@VERILOG_DEVICE@::initResetValues(const Params& params){
+  std::vector<std::string> optList;
+  params.find_array("resetVals", optList);
+
+  for( unsigned i=0; i<optList.size(); i++ ){
+    std::vector<std::string> vstr;
+    std::string s = optList[i];
+    splitStr(s, ':', vstr);
+
+    if( vstr.size() != 2 ){
+      output->fatal(CALL_INFO, -1,
+                    "Error in reading reset value from parameter list:%s\n",
+                    s.c_str() );
+    }
+
+    if( !isNamedPort(vstr[0]) ){
+      output->fatal(CALL_INFO, -1,
+                    "Error in reading reset value: %s is not a named port\n",
+                    vstr[0].c_str());
+    }
+
+    UnitAlgebra ua;
+    ua.init(vstr[1]);
+
+    ResetVals.push_back(std::make_pair(vstr[0],ua.getValue().toUnsignedLong()));
+  }
+}
+
+void VerilatorSST@VERILOG_DEVICE@::init(unsigned int phase){
+}
+
+void VerilatorSST@VERILOG_DEVICE@::setup(){
+}
+
+void VerilatorSST@VERILOG_DEVICE@::finish(){
+}
+
+bool VerilatorSST@VERILOG_DEVICE@::clock(SST::Cycle_t cycle){
+  return false;
+}
+
+bool VerilatorSST@VERILOG_DEVICE@::isNamedPort(std::string PortName){
+
+  for( unsigned i=0; i<Ports.size(); i++ ){
+    if( std::get<V_NAME>(Ports[i]) == PortName ){
+      return true;
+    }
+  }
+
+  return false;
+}
+
+unsigned VerilatorSST@VERILOG_DEVICE@::getNumPorts(){
+  return Ports.size();
+}
+
+const std::vector<std::string> VerilatorSST@VERILOG_DEVICE@::getPortsNames(){
+  std::vector<std::string> Names;
+
+  for( unsigned i=0; i<Ports.size(); i++ ){
+    Names.push_back(std::get<V_NAME>(Ports[i]));
+  }
+
+  return Names;
+}
+
+bool VerilatorSST@VERILOG_DEVICE@::getPortType(std::string PortName,
+                                               SST::VerilatorSST::VPortType& Type){
+  unsigned Idx = 0;
+  try{
+    Idx = PortMap.at(PortName);
+  }catch(const std::out_of_range& oor){
+    output->fatal(CALL_INFO, -1, "Could not find port with name=%s\n",
+                  PortName.c_str());
+    return false;
+  }
+
+  Type = std::get<V_TYPE>(Ports[Idx]);
+  return true;
+}
+
+bool VerilatorSST@VERILOG_DEVICE@::getPortWidth(std::string PortName,
+                                                unsigned& Width){
+  unsigned Idx = 0;
+  try{
+    Idx = PortMap.at(PortName);
+  }catch(const std::out_of_range& oor){
+    output->fatal(CALL_INFO, -1, "Could not find port with name=%s\n",
+                  PortName.c_str());
+    return false;
+  }
+
+  Width = std::get<V_WIDTH>(Ports[Idx]);
+  return true;
+}
+
+bool VerilatorSST@VERILOG_DEVICE@::getResetVal(std::string PortName,
+                                               uint64_t& Val){
+  unsigned Idx = 0;
+  try{
+    Idx = PortMap.at(PortName);
+  }catch(const std::out_of_range& oor){
+    output->fatal(CALL_INFO, -1, "Could not find port with name=%s\n",
+                  PortName.c_str());
+    return false;
+  }
+
+  for( unsigned i=0; i<ResetVals.size(); i++ ){
+    if( ResetVals[i].first == PortName ){
+      Val = ResetVals[i].second;
+      return true;
+    }
+  }
+
+  return false;
+}
+
+
+} // namespace SST::VerilatorSST
+
+// EOF

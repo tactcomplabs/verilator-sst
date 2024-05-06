@@ -1,0 +1,223 @@
+//
+// _verilatorSST_h_
+//
+// Copyright (C) 2017-2024 Tactical Computing Laboratories, LLC
+// All Rights Reserved
+// contact@tactcomplabs.com
+//
+// See LICENSE in the top level directory for licensing details
+//
+
+#ifndef _VERILATOR_SST_H_
+#define _VERILATOR_SST_H_
+
+// -- Standard Headers
+#include <vector>
+#include <string>
+#include <tuple>
+
+// -- SST Headers
+#include "SST.h"
+
+// -- Verilator Headers
+#include "VTop.h"
+
+namespace SST::VerilatorSST{
+
+enum class VPortType : uint8_t {
+  V_INPUT   = 0b00000000,       /// VPortType: input port
+  V_OUTPUT  = 0b00000001,       /// VPortType: output port
+};
+
+#define V_NAME  0
+#define V_TYPE  1
+#define V_WIDTH 2
+typedef std::tuple<std::string,
+                   VPortType,
+                   unsigned> PortEntry;
+
+typedef std::pair<std::string,
+                  uint64_t> PortReset;
+
+// ---------------------------------------------------------------
+// PortEvent
+// ---------------------------------------------------------------
+class PortEvent : public SST::Event{
+public:
+  /// PortEvent: default constructor
+  explicit PortEvent()
+    : Event() {
+  }
+
+  /// PortEvent: virtual clone function
+  virtual Event* clone(void) override{
+    PortEvent *pe = new PortEvent(*this);
+    return pe;
+  }
+
+private:
+  std::vector<uint8_t> Packet;  /// event packet
+
+public:
+  // PortEvent: event serializer
+  void serialize_order(SST::Core::Serialization::serializer &ser) override{
+    // we only serialize the raw packet
+    Event::serialize_order(ser);
+    ser & Packet;
+  }
+
+  // PortEvent: implements the nic serialization
+  ImplementSerializable(SST::VerilatorSST::PortEvent);
+};
+
+// ---------------------------------------------------------------
+// VerilatorSSTBase
+// ---------------------------------------------------------------
+class VerilatorSSTBase : public SST::SubComponent{
+public:
+  SST_ELI_REGISTER_SUBCOMPONENT_API(SST::VerilatorSST::VerilatorSSTBase)
+
+  SST_ELI_DOCUMENT_PARAMS(
+    { "verbose",      "Set the verbosity of output for the device", "0" },
+  )
+
+  /// VerilatorSSTBase: constructor
+  VerilatorSSTBase( std::string DerivedName,
+                    ComponentId_t id, const Params& params );
+
+  /// VerilatorSSTBase: virtual destructor
+  virtual ~VerilatorSSTBase();
+
+  /// VerilatorSSTBase: initialization function
+  virtual void init(unsigned int phase) = 0;
+
+  /// VerilatorSSTBase: setup function
+  virtual void setup() = 0;
+
+  /// VerilatorSSTBase: finish function
+  virtual void finish() = 0;
+
+  /// VerliatorSSTBase: clock tick function
+  virtual bool clock(SST::Cycle_t cycle) = 0;
+
+  /// VerilatorSSTBase: determine if the target port is valid
+  virtual bool isNamedPort(std::string PortName) = 0;
+
+  /// VerilatorSSTBase: retrieve the number of configured ports
+  virtual unsigned getNumPorts() = 0;
+
+  /// VerilatorSSTBase: retrieve a vector of all the port names
+  virtual const std::vector<std::string> getPortsNames() = 0;
+
+  /// VerilatorSSTBase: retrieve the port type of the target port
+  virtual bool getPortType(std::string PortName, VPortType& Type) = 0;
+
+  /// VerilatorSSTBase: retrieve the port width of the target port
+  virtual bool getPortWidth(std::string PortName, unsigned& Width) = 0;
+
+  /// VerilatorSSTBase: retrieve the port reset value of the target port
+  virtual bool getResetVal(std::string PortName, uint64_t& Val) = 0;
+
+protected:
+  SST::Output *output;        ///< VerilatorSST: SST output handler
+  uint32_t verbosity;         ///< VerilatorSST: verbosity parameter
+
+};  // class VerilatorSST
+
+// ---------------------------------------------------------------
+// VerilatorSST@VERILOG_DEVICE@
+// ---------------------------------------------------------------
+class VerilatorSST@VERILOG_DEVICE@ : public VerilatorSSTBase{
+public:
+  SST_ELI_REGISTER_SUBCOMPONENT(VerilatorSST@VERILOG_DEVICE@, "verilatorsst@VERILOG_DEVICE@",
+                                "VerilatorSST@VERILOG_DEVICE@",
+                                SST_ELI_ELEMENT_VERSION(1, 0, 0),
+                                "Verilator SST @VERILOG_DEVICE@ Wrapper",
+                                SST::VerilatorSST::VerilatorSSTBase
+  )
+
+  // Set up parameters accesible from the python configuration
+  SST_ELI_DOCUMENT_PARAMS(
+    { "clockFreq",  "Sets the clock frequency",                   "1GHz"},
+    { "clockPort",  "Sets the internal verilog clock port",       "clock"},
+    { "resetVals",  "Initial reset values for each labeled port", "port:Val"},
+  )
+
+  // Register any subcomponents used by this element
+  SST_ELI_DOCUMENT_SUBCOMPONENT_SLOTS()
+
+  // Register any ports used with this element
+  SST_ELI_DOCUMENT_PORTS(
+  @VERILATOR_SST_PORT_DEF@
+  )
+
+  // Add statistics
+  SST_ELI_DOCUMENT_STATISTICS()
+
+  /// default constructor
+  VerilatorSST@VERILOG_DEVICE@(ComponentId_t id, const Params& params);
+
+  /// default destructor
+  virtual ~VerilatorSST@VERILOG_DEVICE@();
+
+  /// initialization function
+  virtual void init(unsigned int phase) override;
+
+  /// setup function
+  virtual void setup() override;
+
+  /// finish function
+  virtual void finish() override;
+
+  /// clock tick function
+  virtual bool clock(SST::Cycle_t cycle) override;
+
+  /// determine if the target port is valid
+  virtual bool isNamedPort(std::string PortName) override;
+
+  /// retrieve the number of configured ports
+  virtual unsigned getNumPorts() override;
+
+  /// retrieve a vector of all the port names
+  virtual const std::vector<std::string> getPortsNames() override;
+
+  /// retrieve the port type of the target port
+  virtual bool getPortType(std::string PortName,
+                           SST::VerilatorSST::VPortType& Type) override;
+
+  /// retrieve the port width of the target port
+  virtual bool getPortWidth(std::string PortName, unsigned& Width) override;
+
+  /// retrieve the port reset value of the target port
+  virtual bool getResetVal(std::string PortName, uint64_t& Val) override;
+
+private:
+
+  // Private functions
+
+  /// Initializes the internal reset values for each port from the parameter list
+  void initResetValues(const Params& params);
+
+  /// Splits a parameter array into tokens of std::string values
+  void splitStr(const std::string& s, char c, std::vector<std::string>& v);
+
+  // Private data
+  std::string clockPort;                  ///< verilator named clock port
+
+  ///< Map of port indices to reset values
+  std::vector<PortReset> ResetVals;
+
+  ///< Vector of port descriptor tuples
+  const std::vector<PortEntry>  Ports = {
+    @VERILATOR_SST_PORT_ENTRY@
+  };
+
+  ///< Map of port names to descriptors
+  const std::map<std::string, unsigned> PortMap = {
+    @VERILATOR_SST_PORT_MAP@
+  };
+};
+
+} // namespace SST::VerilatorSST
+
+#endif // _VERILATOR_SST_H_
