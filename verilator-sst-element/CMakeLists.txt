@@ -40,8 +40,8 @@ execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/BuildPortMap.sh ${VTOP}
 # Configure the verilatorSST files
 # -----------------------------------------------------------------
 configure_file(
-  "${CMAKE_CURRENT_SOURCE_DIR}/verilatorSST.h.in"
-  "${CMAKE_CURRENT_SOURCE_DIR}/verilatorSST.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/verilatorSSTSubcomponent.h.in"
+  "${CMAKE_CURRENT_SOURCE_DIR}/verilatorSSTSubcomponent.h"
 )
 
 configure_file(

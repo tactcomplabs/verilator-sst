@@ -1,5 +1,5 @@
 //
-// _verilatorSST_h_
+// _verilatorSSTSubcomponent_h_
 //
 // Copyright (C) 2017-2024 Tactical Computing Laboratories, LLC
 // All Rights Reserved
@@ -22,8 +22,6 @@
 
 // -- Verilator Headers
 #include "VTop.h"
-#include "verilated_vpi.h"
-#include "verilated.h"
 
 // -- Component Headers
 #include "Signal.h"
