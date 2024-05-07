@@ -37,9 +37,35 @@ if (NOT verilator_FOUND)
   message(FATAL_ERROR
           "Verilator was not found. Either install it, or set the VERILATOR_ROOT environment variable")
 endif()
+
 find_program(VERILATOR_BIN verilator)
 if(NOT VERILATOR_BIN)
   message(FATAL_ERROR "No verilator binary found in path")
+endif()
+
+execute_process(COMMAND verilator --version
+                OUTPUT_VARIABLE VERILATOR_VERSION_STRING
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+string(REPLACE " " ";" VERILATOR_VERSION_LIST ${VERILATOR_VERSION_STRING})
+list(GET VERILATOR_VERSION_LIST 1 VERILATOR_VERSION)
+string(REPLACE "." ";" VERILATOR_VERSION_SUBLIST ${VERILATOR_VERSION})
+list(GET VERILATOR_VERSION_SUBLIST 0 VERILATOR_VERSION_MAJOR)
+list(GET VERILATOR_VERSION_SUBLIST 1 VERILATOR_VERSION_MINOR_TMP)
+string(REGEX REPLACE "^0+" " " VERILATOR_VERSION_MINOR ${VERILATOR_VERSION_MINOR_TMP})
+
+if(${VERILATOR_VERSION_MAJOR} GREATER_EQUAL 5)
+  if( ${VERILATOR_VERSION_MINOR} GREATER_EQUAL 22)
+    message(STATUS "[VERILATOR] Found verilator version ${VERILATOR_VERSION}")
+  else()
+    message(STATUS "[VERILATOR] Found verilator major version ${VERILATOR_VERSION_MAJOR}")
+    message(FATAL_ERROR
+      "[VERILATOR] Verilator version is insufficient, use 5.022+: ${VERILATOR_VERSION}")
+  endif()
+else()
+  message(STATUS "[VERILATOR] Found verilator major version ${VERILATOR_VERSION_MAJOR}")
+  message(FATAL_ERROR
+    "[VERILATOR] Verilator version is insufficient, use 5.022+: ${VERILATOR_VERSION}")
 endif()
 
 get_filename_component(VERILATOR_PATH ${VERILATOR_BIN} DIRECTORY)
@@ -50,7 +76,6 @@ message(STATUS "[VERILATOR] VERILATOR_INCLUDE set to ${VERILATOR_INCLUDE}")
 #------------------------------------------------------------------
 # SST SETUP
 #------------------------------------------------------------------
-# SST Environment Derivation
 find_program(SST sst)
 find_program(SST_CONFIG sst-config)
 if(NOT SST OR NOT SST_CONFIG)

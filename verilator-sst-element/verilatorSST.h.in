@@ -15,12 +15,18 @@
 #include <vector>
 #include <string>
 #include <tuple>
+#include <casset>
 
 // -- SST Headers
 #include "SST.h"
 
 // -- Verilator Headers
 #include "VTop.h"
+#include "verilated_vpi.h"
+#include "verilated.h"
+
+// -- Component Headers
+#include "Signal.h"
 
 namespace SST::VerilatorSST{
 
@@ -129,7 +135,8 @@ protected:
 // ---------------------------------------------------------------
 class VerilatorSST@VERILOG_DEVICE@ : public VerilatorSSTBase{
 public:
-  SST_ELI_REGISTER_SUBCOMPONENT(VerilatorSST@VERILOG_DEVICE@, "verilatorsst@VERILOG_DEVICE@",
+  SST_ELI_REGISTER_SUBCOMPONENT(VerilatorSST@VERILOG_DEVICE@,
+                                "verilatorsst@VERILOG_DEVICE@",
                                 "VerilatorSST@VERILOG_DEVICE@",
                                 SST_ELI_ELEMENT_VERSION(1, 0, 0),
                                 "Verilator SST @VERILOG_DEVICE@ Wrapper",
