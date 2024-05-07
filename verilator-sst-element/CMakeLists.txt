@@ -91,8 +91,12 @@ file(GLOB_RECURSE VHDRS *.h)
 # -----------------------------------------------------------------
 set(targetName "verilatorsst${VERILOG_DEVICE}")
 set(verilatorSSTSrcs
-  verilatorSST.cpp
+  verilatorSSTSubcomponent.cpp
+  verilatorSSTSubcomponent.h
+  verilatorSSTSubcomponent.cpp
   verilatorSST.h
+  Signal.cpp
+  Signal.h
 )
 
 add_library(${targetName} SHARED ${verilatorSSTSrcs})
