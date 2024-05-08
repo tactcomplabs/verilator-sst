@@ -46,6 +46,7 @@ VerilatorSST@VERILOG_DEVICE@::VerilatorSST@VERILOG_DEVICE@(ComponentId_t id,
   // attempt to build the reset value tables
   initResetValues(params);
 
+  // register the clock
   registerClock(clockFreq,
                 new Clock::Handler<VerilatorSST@VERILOG_DEVICE@>(this,
                                                                  &VerilatorSST@VERILOG_DEVICE@::clock));
@@ -192,6 +193,16 @@ bool VerilatorSST@VERILOG_DEVICE@::getResetVal(std::string PortName,
   return false;
 }
 
+void writePort(std::string portName, Signal & val){
+}
+
+void writePortAtTick(std::string portName,
+                               Signal & signal,
+                               uint64_t tick){
+}
+
+Signal readPort(std::string portName){
+}
 
 } // namespace SST::VerilatorSST
 

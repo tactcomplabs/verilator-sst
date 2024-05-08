@@ -20,11 +20,11 @@
 // -- SST Headers
 #include "SST.h"
 
-// -- Verilator Headers
-#include "VTop.h"
-
 // -- Component Headers
 #include "Signal.h"
+
+// -- Verilator Headers
+#include "VTop.h"
 
 namespace SST::VerilatorSST{
 
@@ -122,6 +122,17 @@ public:
   /// VerilatorSSTBase: retrieve the port reset value of the target port
   virtual bool getResetVal(std::string PortName, uint64_t& Val) = 0;
 
+  /// VerilatorSSTBase: write to the target port
+  virtual void writePort(std::string portName, Signal & val) = 0;
+
+  /// VerilatorSSTBase: write to the target port at the target clock cycle
+  virtual void writePortAtTick(std::string portName,
+                               Signal & signal,
+                               uint64_t tick) = 0;
+
+  /// VerilatorSSTBase: read from the target port
+  virtual Signal readPort(std::string portName) = 0;
+
 protected:
   SST::Output *output;        ///< VerilatorSST: SST output handler
   uint32_t verbosity;         ///< VerilatorSST: verbosity parameter
@@ -195,6 +206,17 @@ public:
 
   /// retrieve the port reset value of the target port
   virtual bool getResetVal(std::string PortName, uint64_t& Val) override;
+
+  /// write to the target port
+  virtual void writePort(std::string portName, Signal & val) override;
+
+  /// write to the target port at the target clock cycle
+  virtual void writePortAtTick(std::string portName,
+                               Signal & signal,
+                               uint64_t tick) override;
+
+  /// read from the target port
+  virtual Signal readPort(std::string portName) override;
 
 private:
 
