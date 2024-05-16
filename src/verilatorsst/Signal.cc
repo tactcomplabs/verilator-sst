@@ -16,13 +16,20 @@ Signal::Signal(signal_width_t nBits) : nBits(nBits), depth(1){
 }
 
 Signal::Signal(signal_width_t nBits, uint64_t init_val) : Signal(nBits){
-    assert(nBits < 64);
-
     uint64_t mask = (static_cast<uint64_t>(1) << nBits) - 1;
+    if(nBits > 64){
+        mask = -1;
+    }
+
     uint64_t masked_val = init_val & mask;
     signal_width_t nBytes = calculateNumBytes(nBits);
 
     for(uint64_t i = 0; i < nBytes; i++){
+        if(i >= 8){
+            storage[nBytes - i - 1] = static_cast<PLI_BYTE8>(0);
+            continue;
+        }
+
         uint8_t byte = (masked_val >> (i*8)) & 255;
         PLI_BYTE8 castSafeByte = static_cast<PLI_BYTE8>(byte);
         storage[nBytes - i - 1] = castSafeByte;
