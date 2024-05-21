@@ -7,7 +7,7 @@
 
 # Prevent in-source builds
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
-  message(FATAL_ERROR "DO NOT BUILD in-tree.")
+  message(FATAL_ERROR "DO NOT BUILD IN-TREE!")
 endif()
 
 # Minimum required version of CMake and project information
@@ -28,6 +28,8 @@ option(VERILOG_TOP "Top" "Name of the verilog Top module")
 option(VERILOG_TOP_SOURCES "top.v" "List of verilog top source files")
 
 option(VERILATOR_OPTIONS "" "Additional verilator compilation options")
+
+option(VERILATOR_INCLUDE "" "Sets the verilator include paht")
 
 #------------------------------------------------------------------
 # VERILATOR SETUP
@@ -69,7 +71,7 @@ else()
 endif()
 
 get_filename_component(VERILATOR_PATH ${VERILATOR_BIN} DIRECTORY)
-set(VERILATOR_INCLUDE "${VERILATOR_PATH}/../share/verilator/include")
+#set(VERILATOR_INCLUDE "${VERILATOR_PATH}/../share/verilator/include")
 message(STATUS "[VERILATOR] VERILATOR_INCLUDE set to ${VERILATOR_INCLUDE}")
 
 

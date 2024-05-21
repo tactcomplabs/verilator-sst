@@ -15,13 +15,13 @@
 #include <vector>
 #include <string>
 #include <tuple>
-#include <casset>
+#include <cassert>
 
 // -- SST Headers
 #include "SST.h"
 
 // -- Component Headers
-#include "Signal.h"
+//#include "Signal.h"
 
 // -- Verilator Headers
 #include "VTop.h"
@@ -50,7 +50,23 @@ class PortEvent : public SST::Event{
 public:
   /// PortEvent: default constructor
   explicit PortEvent()
-    : Event() {
+    : Event(), AtTick(0x00ull) {
+  }
+
+  explicit PortEvent(uint64_t Tick)
+    : Event(), AtTick(Tick) {
+  }
+
+  explicit PortEvent(std::vector<uint8_t> P)
+    : Event(), AtTick(0x00ull) {
+    std::copy(P.begin(), P.end(),
+              std::back_inserter(Packet));
+  }
+
+  explicit PortEvent(std::vector<uint8_t> P, uint64_t Tick)
+    : Event(), AtTick(Tick) {
+    std::copy(P.begin(), P.end(),
+              std::back_inserter(Packet));
   }
 
   /// PortEvent: virtual clone function
@@ -59,8 +75,24 @@ public:
     return pe;
   }
 
+  /// PortEvent: retrieve the target clock tick
+  uint64_t getAtTick() { return AtTick; }
+
+  /// PortEvent: retrieve the packet payload
+  const std::vector<uint8_t> getPacket() { return Packet; }
+
+  /// PortEvent: set the target clock tick
+  void setAtTick(uint64_t T) { AtTick = T; }
+
+  /// PortEvent: set the payload
+  void setPayload(const std::vector<uint8_t> P){
+    std::copy(P.begin(), P.end(),
+              std::back_inserter(Packet));
+  }
+
 private:
   std::vector<uint8_t> Packet;  /// event packet
+  uint64_t AtTick;              /// event at clock tick
 
 public:
   // PortEvent: event serializer
@@ -68,6 +100,7 @@ public:
     // we only serialize the raw packet
     Event::serialize_order(ser);
     ser & Packet;
+    ser & AtTick;
   }
 
   // PortEvent: implements the nic serialization
@@ -122,6 +155,7 @@ public:
   /// VerilatorSSTBase: retrieve the port reset value of the target port
   virtual bool getResetVal(std::string PortName, uint64_t& Val) = 0;
 
+#if 0
   /// VerilatorSSTBase: write to the target port
   virtual void writePort(std::string portName, Signal & val) = 0;
 
@@ -132,6 +166,7 @@ public:
 
   /// VerilatorSSTBase: read from the target port
   virtual Signal readPort(std::string portName) = 0;
+#endif
 
 protected:
   SST::Output *output;        ///< VerilatorSST: SST output handler
@@ -207,6 +242,7 @@ public:
   /// retrieve the port reset value of the target port
   virtual bool getResetVal(std::string PortName, uint64_t& Val) override;
 
+#if 0
   /// write to the target port
   virtual void writePort(std::string portName, Signal & val) override;
 
@@ -217,8 +253,13 @@ public:
 
   /// read from the target port
   virtual Signal readPort(std::string portName) override;
+#endif
 
 private:
+
+  // Private data
+  const std::unique_ptr<VerilatedContext> ContextP{new VerilatedContext};
+  const std::unique_ptr<VTop> Top{new VTop{ContextP.get()}};
 
   // Private functions
 
@@ -227,6 +268,8 @@ private:
 
   /// Splits a parameter array into tokens of std::string values
   void splitStr(const std::string& s, char c, std::vector<std::string>& v);
+
+  @VERILATOR_SST_PORT_HANDLERS@
 
   // Private data
   std::string clockPort;                  ///< verilator named clock port

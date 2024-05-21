@@ -114,6 +114,7 @@ void VerilatorSST@VERILOG_DEVICE@::finish(){
 }
 
 bool VerilatorSST@VERILOG_DEVICE@::clock(SST::Cycle_t cycle){
+  Top->eval();
   return false;
 }
 
@@ -193,6 +194,7 @@ bool VerilatorSST@VERILOG_DEVICE@::getResetVal(std::string PortName,
   return false;
 }
 
+#if 0
 void writePort(std::string portName, Signal & val){
 }
 
@@ -203,6 +205,9 @@ void writePortAtTick(std::string portName,
 
 Signal readPort(std::string portName){
 }
+#endif
+
+@VERILATOR_SST_PORT_HANDLER_IMPLS@
 
 } // namespace SST::VerilatorSST
 

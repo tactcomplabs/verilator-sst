@@ -34,6 +34,12 @@ execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/BuildPortEntry.sh ${VTOP}
 execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/BuildPortMap.sh ${VTOP}
                 OUTPUT_VARIABLE VERILATOR_SST_PORT_MAP
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/BuildPortHandlers.sh ${VTOP}
+                OUTPUT_VARIABLE VERILATOR_SST_PORT_HANDLERS
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/BuildPortHandlerImpls.sh ${VTOP} ${VERILOG_DEVICE}
+                OUTPUT_VARIABLE VERILATOR_SST_PORT_HANDLER_IMPLS
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 
 # -----------------------------------------------------------------
@@ -45,8 +51,8 @@ configure_file(
 )
 
 configure_file(
-  "${CMAKE_CURRENT_SOURCE_DIR}/verilatorSST.cpp.in"
-  "${CMAKE_CURRENT_SOURCE_DIR}/verilatorSST.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/verilatorSSTSubcomponent.cpp.in"
+  "${CMAKE_CURRENT_SOURCE_DIR}/verilatorSSTSubcomponent.cpp"
 )
 
 
@@ -94,16 +100,17 @@ set(verilatorSSTSrcs
   verilatorSSTSubcomponent.cpp
   verilatorSSTSubcomponent.h
   verilatorSSTSubcomponent.cpp
-  verilatorSST.h
-  Signal.cpp
-  Signal.h
+#  Signal.cpp
+#  Signal.h
 )
 
 add_library(${targetName} SHARED ${verilatorSSTSrcs})
 set_property(TARGET ${targetName} PROPERTY CXX_STANDARD 17)
 target_include_directories(${targetName}
                           PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/${VERILOG_DEVICE}
-                          PUBLIC ${SST_INSTALL_DIR}/include ${VERILATOR_INCLUDE})
+                          PUBLIC ${SST_INSTALL_DIR}/include
+                                 ${VERILATOR_INCLUDE}
+                                 ${VERILATOR_INCLUDE}/vltstd)
 target_link_libraries(${targetName}
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/${VERILOG_DEVICE}/VTop__ALL.a)
 
