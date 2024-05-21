@@ -39,6 +39,9 @@ if (NOT verilator_FOUND)
   message(FATAL_ERROR
           "Verilator was not found. Either install it, or set the VERILATOR_ROOT environment variable")
 endif()
+if( NOT VERILATOR_INCLUDE)
+  set(VERILATOR_INCLUDE "${VERILATOR_ROOT}/include")
+endif()
 
 find_program(VERILATOR_BIN verilator)
 if(NOT VERILATOR_BIN)

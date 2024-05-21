@@ -99,9 +99,6 @@ set(targetName "verilatorsst${VERILOG_DEVICE}")
 set(verilatorSSTSrcs
   verilatorSSTSubcomponent.cpp
   verilatorSSTSubcomponent.h
-  verilatorSSTSubcomponent.cpp
-#  Signal.cpp
-#  Signal.h
 )
 
 add_library(${targetName} SHARED ${verilatorSSTSrcs})
@@ -112,7 +109,9 @@ target_include_directories(${targetName}
                                  ${VERILATOR_INCLUDE}
                                  ${VERILATOR_INCLUDE}/vltstd)
 target_link_libraries(${targetName}
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/${VERILOG_DEVICE}/VTop__ALL.a)
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/${VERILOG_DEVICE}/libVTop.a
+          ${CMAKE_CURRENT_SOURCE_DIR}/${VERILOG_DEVICE}/libverilated.a
+)
 
 # -----------------------------------------------------------------
 # Install the source
