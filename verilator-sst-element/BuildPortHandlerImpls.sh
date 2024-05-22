@@ -20,7 +20,9 @@ for IN in $INPUTS;do
   echo "PortEvent *p = static_cast<PortEvent*>(ev);"
   echo "// handle the message"
   echo "if( p->getAtTick() != 0x00ull ){"
+  echo "writePortAtTick(\"${SIGNAME}\",p->getPacket(),p->getAtTick());"
   echo "}else{"
+  echo "writePort(\"${SIGNAME}\",p->getPacket());"
   echo "}"
   echo "delete ev;"
   echo "}"
@@ -31,9 +33,11 @@ for OUT in $OUTPUTS;do
   NOPAREN=`sed 's/.*(\(.*\))/\1/' <<< $OUT`
   SIGNAME=`echo $NOPAREN | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g"`
   echo "void VerilatorSST$Device::handle_${SIGNAME}(SST::Event* ev){"
-  echo "PortEvent *p = static_cast<PortEvent*>(ev);"
   echo "// handle the message"
+  echo "std::vector<uint8_t> Packet;"
+  echo "Packet = readPort(\"${SIGNAME}\");"
   echo "delete ev;"
+  echo "PortEvent *pe = new PortEvent(Packet);"
   echo "}"
 done;
 

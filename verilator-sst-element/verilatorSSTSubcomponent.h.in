@@ -25,6 +25,8 @@
 
 // -- Verilator Headers
 #include "VTop.h"
+#include "verilated.h"
+#include "verilated_vpi.h"
 
 namespace SST::VerilatorSST{
 
@@ -33,6 +35,18 @@ enum class VPortType : uint8_t {
   V_OUTPUT  = 0b00000001,       /// VPortType: output port
 };
 
+// ---------------------------------------------------------------
+// Macros
+// ---------------------------------------------------------------
+#ifdef _VERILATORSST_DEBUG_
+#define VL_DEBUG 1
+#else
+#define VL_DEBUG 0
+#endif
+
+// ---------------------------------------------------------------
+// Data Structures
+// ---------------------------------------------------------------
 #define V_NAME  0
 #define V_TYPE  1
 #define V_WIDTH 2
@@ -155,18 +169,17 @@ public:
   /// VerilatorSSTBase: retrieve the port reset value of the target port
   virtual bool getResetVal(std::string PortName, uint64_t& Val) = 0;
 
-#if 0
   /// VerilatorSSTBase: write to the target port
-  virtual void writePort(std::string portName, Signal & val) = 0;
+  virtual void writePort(std::string portName,
+                         std::vector<uint8_t> packet);
 
   /// VerilatorSSTBase: write to the target port at the target clock cycle
   virtual void writePortAtTick(std::string portName,
-                               Signal & signal,
+                               std::vector<uint8_t> packet,
                                uint64_t tick) = 0;
 
   /// VerilatorSSTBase: read from the target port
-  virtual Signal readPort(std::string portName) = 0;
-#endif
+  virtual std::vector<uint8_t> readPort(std::string portName) = 0;
 
 protected:
   SST::Output *output;        ///< VerilatorSST: SST output handler
@@ -242,18 +255,17 @@ public:
   /// retrieve the port reset value of the target port
   virtual bool getResetVal(std::string PortName, uint64_t& Val) override;
 
-#if 0
   /// write to the target port
-  virtual void writePort(std::string portName, Signal & val) override;
+  virtual void writePort(std::string portName,
+                         std::vector<uint8_t> packet) override;
 
   /// write to the target port at the target clock cycle
   virtual void writePortAtTick(std::string portName,
-                               Signal & signal,
+                               std::vector<uint8_t> packet,
                                uint64_t tick) override;
 
   /// read from the target port
-  virtual Signal readPort(std::string portName) override;
-#endif
+  virtual std::vector<uint8_t> readPort(std::string portName) override;
 
 private:
 

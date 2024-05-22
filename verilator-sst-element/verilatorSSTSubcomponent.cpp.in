@@ -43,6 +43,16 @@ VerilatorSST@VERILOG_DEVICE@::VerilatorSST@VERILOG_DEVICE@(ComponentId_t id,
                   clockPort.c_str());
   }
 
+  // init verilator interfaces
+  ContextP->debug(VL_DEBUG);
+  ContextP->randReset(2);
+  ContextP->traceEverOn(true);
+  const char *empty {};
+  ContextP->commandArgs(0,&empty);
+#if VL_DEBUG == 1
+  ContextP->internalsDump();
+#endif
+
   // attempt to build the reset value tables
   initResetValues(params);
 
@@ -194,18 +204,19 @@ bool VerilatorSST@VERILOG_DEVICE@::getResetVal(std::string PortName,
   return false;
 }
 
-#if 0
-void writePort(std::string portName, Signal & val){
+void VerilatorSST@VERILOG_DEVICE@::writePort(std::string portName,
+                                             std::vector<uint8_t> packet){
 }
 
-void writePortAtTick(std::string portName,
-                               Signal & signal,
-                               uint64_t tick){
+void VerilatorSST@VERILOG_DEVICE@::writePortAtTick(std::string portName,
+                                                   std::vector<uint8_t> packet,
+                                                   uint64_t tick){
 }
 
-Signal readPort(std::string portName){
+std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPort(std::string portName){
+  std::vector<uint8_t> data;
+  return data;
 }
-#endif
 
 @VERILATOR_SST_PORT_HANDLER_IMPLS@
 
