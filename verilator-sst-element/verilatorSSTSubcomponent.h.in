@@ -151,6 +151,9 @@ public:
   /// VerliatorSSTBase: clock tick function
   virtual bool clock(SST::Cycle_t cycle) = 0;
 
+  /// VerilatorSSTBase: get the current clock tick from verilator
+  virtual uint64_t getCurrentTick() = 0;
+
   /// VerilatorSSTBase: determine if the target port is valid
   virtual bool isNamedPort(std::string PortName) = 0;
 
@@ -171,7 +174,7 @@ public:
 
   /// VerilatorSSTBase: write to the target port
   virtual void writePort(std::string portName,
-                         std::vector<uint8_t> packet);
+                         std::vector<uint8_t> packet) = 0;
 
   /// VerilatorSSTBase: write to the target port at the target clock cycle
   virtual void writePortAtTick(std::string portName,
@@ -235,6 +238,9 @@ public:
 
   /// clock tick function
   virtual bool clock(SST::Cycle_t cycle) override;
+
+  /// get the current clock tick from verilator
+  virtual uint64_t getCurrentTick() override;
 
   /// determine if the target port is valid
   virtual bool isNamedPort(std::string PortName) override;

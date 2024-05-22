@@ -49,6 +49,7 @@ VerilatorSST@VERILOG_DEVICE@::VerilatorSST@VERILOG_DEVICE@(ComponentId_t id,
   ContextP->traceEverOn(true);
   const char *empty {};
   ContextP->commandArgs(0,&empty);
+  ContextP->threads(1);
 #if VL_DEBUG == 1
   ContextP->internalsDump();
 #endif
@@ -121,9 +122,11 @@ void VerilatorSST@VERILOG_DEVICE@::setup(){
 }
 
 void VerilatorSST@VERILOG_DEVICE@::finish(){
+  Top->final();
 }
 
 bool VerilatorSST@VERILOG_DEVICE@::clock(SST::Cycle_t cycle){
+  ContextP->timeInc(1);
   Top->eval();
   return false;
 }
@@ -204,17 +207,63 @@ bool VerilatorSST@VERILOG_DEVICE@::getResetVal(std::string PortName,
   return false;
 }
 
-void VerilatorSST@VERILOG_DEVICE@::writePort(std::string portName,
-                                             std::vector<uint8_t> packet){
+uint64_t VerilatorSST@VERILOG_DEVICE@::getCurrentTick(){
+  return ContextP->time();
 }
 
-void VerilatorSST@VERILOG_DEVICE@::writePortAtTick(std::string portName,
-                                                   std::vector<uint8_t> packet,
-                                                   uint64_t tick){
+void VerilatorSST@VERILOG_DEVICE@::writePort(std::string PortName,
+                                             std::vector<uint8_t> Packet){
+  // sanity check
+  if( !isNamedPort(PortName) ){
+    output->fatal(CALL_INFO, -1, "Could not find port with name=%s\n",
+                  PortName.c_str());
+  }
+
+  // retrieve the port info from verilator
+  char *name = new char[PortName.length() + 1];
+  strcpy(name, PortName.c_str());
+
+  vpiHandle vh1 = vpi_handle_by_name(name, NULL);
+  if( !vh1 ){
+    output->fatal(CALL_INFO, -1,
+                  "vpi_handle_by_name failed to return a handle for port=%s\n",
+                  name);
+  }
+
+  auto vpiTypeVal = vpi_get(vpiType, vh1);
+  auto vpiSizeVal = vpi_get(vpiSize, vh1);
+  auto vpiDirVal = vpi_get(vpiDirection,vh1);
+
+  if( !vpiDirVal ){
+    output->fatal(CALL_INFO, -1,
+                  "port must be an input port; port=%s\n",
+                  name);
+  }
+
+  // attempt to write the value
+
+  // clean up the memory
+  delete name;
 }
 
-std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPort(std::string portName){
+void VerilatorSST@VERILOG_DEVICE@::writePortAtTick(std::string PortName,
+                                                   std::vector<uint8_t> Packet,
+                                                   uint64_t Tick){
+  // sanity check
+  if( !isNamedPort(PortName) ){
+    output->fatal(CALL_INFO, -1, "Could not find port with name=%s\n",
+                  PortName.c_str());
+  }
+}
+
+std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPort(std::string PortName){
   std::vector<uint8_t> data;
+
+  // sanity check
+  if( !isNamedPort(PortName) ){
+    output->fatal(CALL_INFO, -1, "Could not find port with name=%s\n",
+                  PortName.c_str());
+  }
   return data;
 }
 
