@@ -4,8 +4,8 @@
 
 #include "BasicVerilogCounter.h"
 
-#define LOW 0
-#define HIGH 1
+#define LOW (uint64_t) 0
+#define HIGH (uint64_t) 1
 
 using namespace SST::VerilatorSST;
 
