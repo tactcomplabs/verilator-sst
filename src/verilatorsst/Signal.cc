@@ -16,6 +16,7 @@ Signal::Signal(signal_width_t nBits) : nBits(nBits), depth(1){
 }
 
 Signal::Signal(signal_width_t nBits, uint64_t init_val) : Signal(nBits){
+
     uint64_t mask = (static_cast<uint64_t>(1) << nBits) - 1;
     if(nBits > 64){
         mask = -1;
@@ -87,6 +88,54 @@ Signal::Signal(signal_width_t nBitsPerWord, signal_depth_t depth, uint64_t * ini
         }
         
     }
+}
+
+// use this for signals wider than 64 bits
+Signal::Signal(signal_width_t nBits, uint64_t * init_val){
+    assert(nBits <= SIGNAL_BITS_MAX);
+
+    this->nBits = nBits;
+    this->depth = 1;
+    uint32_t wordsNeeded = nBits/64; // integer div will round down
+
+    auto nBytes = getNumBytes();
+    storage = new PLI_BYTE8[nBytes];
+
+    uint64_t word;
+
+    // last word (MSB) may not be full (remainder word)
+    uint8_t remBits = (nBits % 64);
+    uint32_t nBytesThisWord = (remBits/8) + ((remBits % 8 == 0) ? 0 : 1); //include or exclude partial byte
+    word = init_val[0];
+    for (int j=0; j<nBytesThisWord; j++) {
+            uint64_t mask = ((1UL<<(nBits % 64)) - 1);
+            auto shift = (nBytesThisWord-j-1)*8;
+
+            uint64_t wordMasked = word & mask;
+            uint64_t wordMaskedShifted = wordMasked >> shift;
+            uint8_t safeByte = wordMaskedShifted & 255;
+
+            auto storageIdx = j;
+            storage[storageIdx] = safeByte;
+    }
+    // bias the following for loop by 1 based on if there was a partial word or not
+    int fullBias = (nBytesThisWord == 0) ? 0 : 1;
+    // fill all the full words
+    for(int i=fullBias; i<wordsNeeded+fullBias; i++){
+        word = init_val[i];
+        for(int j=0; j<8; j++){
+            uint64_t mask = ((uint64_t)(-1)); //TODO: check -1 conversion works
+            uint8_t shift = (8-j-1)*8;
+
+            uint64_t wordMasked = word & mask;
+            uint64_t wordMaskedShifted = wordMasked >> shift;
+            uint8_t safeByte = wordMaskedShifted & 255;
+
+            auto storageIdx = ((i-fullBias)*8+nBytesThisWord) + j;
+            storage[storageIdx] = safeByte;
+        }
+    }
+
 }
 
 signal_width_t Signal::getNumBits(){

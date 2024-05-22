@@ -29,6 +29,7 @@ class Signal {
     Signal(signal_width_t nBits, uint64_t init_val);
     Signal(signal_width_t nBits, signal_depth_t depth, PLI_BYTE8 * init_val);
     Signal(signal_width_t nBits, signal_depth_t depth, uint64_t * init_val);
+    Signal(signal_width_t nBits, uint64_t * init_val);
     ~Signal(){ delete storage; };
 
     signal_width_t getNumBits();
@@ -39,6 +40,8 @@ class Signal {
     T getUIntScalar();
     template<typename T>
     T* getUIntVector();
+    template<typename T>
+    T* getUIntWide();
 
     t_vpi_value getVpiValue(signal_depth_t depth);
 

@@ -5,6 +5,7 @@ export INSTALL_DIR = $(abspath ../install)
 include $(abspath $(SRC_DIR)/verilatorsst/verilatorsst.mk)
 include $(abspath $(SRC_DIR)/BasicVerilogUartMem/BasicVerilogUartMem.mk)
 include $(abspath $(SRC_DIR)/BasicVerilogCounter/BasicVerilogCounter.mk)
+include $(abspath $(SRC_DIR)/BigVerilogAccum/BigVerilogAccum.mk)
 
 ifdef DEBUG
 DEBUG_FLAGS = -O0 -g -DVL_DEBUG=1

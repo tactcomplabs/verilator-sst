@@ -39,4 +39,23 @@ namespace SST::VerilatorSST{
 
         return ret;
     }
+
+    // wide accessor; returns signal values >128 bits wide as vector of uint64_t
+    // TODO: tweak this so when returning a signal with a partial word, the extra 0 bits don't go to LSB
+    template<typename T>
+    T* Signal::getUIntWide() {
+        static_assert(std::is_unsigned_v<T> == true);
+
+        int fullBias = (nBits % (sizeof(T) * 8)) == 0 ? 0 : 1;
+        int depthNeeded = (nBits / (sizeof(T)*8)) + fullBias;
+        T* ret = new T[depthNeeded]();
+        
+        //auto nBytes = getNumBytes();
+        for(auto i=0;i<depthNeeded;i++){
+            ret[i] = getUIntScalarInternal<T>(8,i);
+        }
+
+        return ret;
+    }
+
 }
