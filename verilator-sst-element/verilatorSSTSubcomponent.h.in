@@ -47,15 +47,26 @@ enum class VPortType : uint8_t {
 // ---------------------------------------------------------------
 // Data Structures
 // ---------------------------------------------------------------
-#define V_NAME  0
-#define V_TYPE  1
-#define V_WIDTH 2
+typedef void (*DirectWriteFunc)(std::string,std::vector<uint8_t>);
+typedef void (*DirectWriteAtTickFunc)(std::string,std::vector<uint8_t>,uint64_t);
+typedef std::vector<uint8_t> (*DirectReadFunc)(std::string);
+
+#define V_NAME            0
+#define V_TYPE            1
+#define V_WIDTH           2
+#define V_WRITEFUNC       3
+#define V_WRITEFUNCATTICK 4
+#define V_READFUNC        5
 typedef std::tuple<std::string,
                    VPortType,
-                   unsigned> PortEntry;
+                   unsigned,
+                   DirectWriteFunc,
+                   DirectWriteAtTickFunc,
+                   DirectReadFunc> PortEntry;
 
 typedef std::pair<std::string,
                   uint64_t> PortReset;
+
 
 // ---------------------------------------------------------------
 // PortEvent
@@ -205,6 +216,7 @@ public:
 
   // Set up parameters accesible from the python configuration
   SST_ELI_DOCUMENT_PARAMS(
+    { "useVPI",     "Is Verilator VPI used",                      "false"},
     { "clockFreq",  "Sets the clock frequency",                   "1GHz"},
     { "clockPort",  "Sets the internal verilog clock port",       "clock"},
     { "resetVals",  "Initial reset values for each labeled port", "port:Val"},
@@ -276,6 +288,7 @@ public:
 private:
 
   // Private data
+  bool UseVPI;          ///< Is the verilator VPI interface used?
   const std::unique_ptr<VerilatedContext> ContextP{new VerilatedContext};
   const std::unique_ptr<VTop> Top{new VTop{ContextP.get()}};
 
@@ -286,6 +299,15 @@ private:
 
   /// Splits a parameter array into tokens of std::string values
   void splitStr(const std::string& s, char c, std::vector<std::string>& v);
+
+  /// VPI Read of Port
+  std::vector<uint8_t> readPortVPI(std::string PortName);
+
+  /// VPI Write of Port
+  void writePortVPI(std::string PortName,
+                    std::vector<uint8_t> Packet);
+
+  @VERILATOR_SST_PORT_IO_HANDLERS@
 
   @VERILATOR_SST_PORT_HANDLERS@
 
