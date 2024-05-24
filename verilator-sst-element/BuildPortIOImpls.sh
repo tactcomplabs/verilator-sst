@@ -20,6 +20,8 @@ build_write () {
   if [ $WIDTH -lt 9 ]; then
     # less than a 8 bits
     echo "// less than 8 bit"
+    echo "SignalHelper S($WIDTH);"
+    echo "T->$SIGNAME = (Packet[0] & S.getMask<uint8_t>());"
   elif [ $WIDTH -lt 33 ]; then
     # less than 32 bits
     echo "// less than 32 bits"
@@ -40,10 +42,10 @@ for IN in $INPUTS;do
   ENDBIT=$(($ENDBIT + 1))
   WIDTH=$(($ENDBIT - $STARTBIT))
 
-  echo "void VerilatorSST$Device::DirectWrite${SIGNAME}(std::string Port,std::vector<uint8_t> Packet){"
+  echo "void VerilatorSST$Device::DirectWrite${SIGNAME}(VTop *T,std::string Port,std::vector<uint8_t> Packet){"
   build_write $SIGNAME $WIDTH
   echo "}"
-  echo "void VerilatorSST$Device::DirectWriteAtTick${SIGNAME}(std::string Port,std::vector<uint8_t> Packet,uint64_t Tick){"
+  echo "void VerilatorSST$Device::DirectWriteAtTick${SIGNAME}(VTop *T,std::string Port,std::vector<uint8_t> Packet,uint64_t Tick){"
   echo "}"
   echo "std::vector<uint8_t> VerilatorSST$Device::DirectRead${SIGNAME}(std::string Port){"
   echo "std::vector<uint8_t> d;"
@@ -55,9 +57,9 @@ done;
 for OUT in $OUTPUTS;do
   NOPAREN=`sed 's/.*(\(.*\))/\1/' <<< $OUT`
   SIGNAME=`echo $NOPAREN | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g"`
-  echo "void VerilatorSST$Device::DirectWrite${SIGNAME}(std::string Port,std::vector<uint8_t> Packet){"
+  echo "void VerilatorSST$Device::DirectWrite${SIGNAME}(VTop *T,std::string Port,std::vector<uint8_t> Packet){"
   echo "}"
-  echo "void VerilatorSST$Device::DirectWriteAtTick${SIGNAME}(std::string Port,std::vector<uint8_t> Packet,uint64_t Tick){"
+  echo "void VerilatorSST$Device::DirectWriteAtTick${SIGNAME}(VTop *T,std::string Port,std::vector<uint8_t> Packet,uint64_t Tick){"
   echo "}"
   echo "std::vector<uint8_t> VerilatorSST$Device::DirectRead${SIGNAME}(std::string Port){"
   echo "std::vector<uint8_t> d;"

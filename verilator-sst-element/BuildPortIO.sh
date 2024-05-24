@@ -15,8 +15,8 @@ OUTPUTS=`cat $Top | grep VL_OUT`
 for IN in $INPUTS;do
   NOPAREN=`sed 's/.*(\(.*\))/\1/' <<< $IN`
   SIGNAME=`echo $NOPAREN | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g"`
-  echo "static void DirectWrite$SIGNAME(std::string,std::vector<uint8_t>);"
-  echo "static void DirectWriteAtTick$SIGNAME(std::string,std::vector<uint8_t>,uint64_t);"
+  echo "static void DirectWrite$SIGNAME(VTop *,std::string,std::vector<uint8_t>);"
+  echo "static void DirectWriteAtTick$SIGNAME(VTop *,std::string,std::vector<uint8_t>,uint64_t);"
   echo "static std::vector<uint8_t> DirectRead$SIGNAME(std::string);"
 done;
 
@@ -24,8 +24,8 @@ done;
 for OUT in $OUTPUTS;do
   NOPAREN=`sed 's/.*(\(.*\))/\1/' <<< $OUT`
   SIGNAME=`echo $NOPAREN | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g"`
-  echo "static void DirectWrite$SIGNAME(std::string,std::vector<uint8_t>);"
-  echo "static void DirectWriteAtTick$SIGNAME(std::string,std::vector<uint8_t>,uint64_t);"
+  echo "static void DirectWrite$SIGNAME(VTop *,std::string,std::vector<uint8_t>);"
+  echo "static void DirectWriteAtTick$SIGNAME(VTop *,std::string,std::vector<uint8_t>,uint64_t);"
   echo "static std::vector<uint8_t> DirectRead$SIGNAME(std::string);"
 done;
 

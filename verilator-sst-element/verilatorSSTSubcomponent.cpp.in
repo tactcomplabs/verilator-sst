@@ -45,6 +45,8 @@ VerilatorSST@VERILOG_DEVICE@::VerilatorSST@VERILOG_DEVICE@(ComponentId_t id,
   }
 
   // init verilator interfaces
+  ContextP = new VerilatedContext();
+  Top = new VTop();
   ContextP->debug(VL_DEBUG);
   ContextP->randReset(2);
   ContextP->traceEverOn(true);
@@ -65,6 +67,8 @@ VerilatorSST@VERILOG_DEVICE@::VerilatorSST@VERILOG_DEVICE@(ComponentId_t id,
 }
 
 VerilatorSST@VERILOG_DEVICE@::~VerilatorSST@VERILOG_DEVICE@(){
+  delete Top;
+  delete ContextP;
 }
 
 void VerilatorSST@VERILOG_DEVICE@::splitStr(const std::string& s,
@@ -86,15 +90,6 @@ void VerilatorSST@VERILOG_DEVICE@::splitStr(const std::string& s,
     if (j == std::string::npos)
       v.push_back(s.substr(i, s.length()));
   }
-}
-
-template<typename T>
-T VerilatorSST@VERILOG_DEVICE@::getMask(unsigned NumBits){
-  T ret = 0x00;
-  for( unsigned i=0; i<NumBits; i++ ){
-    ret |= (1<<i);
-  }
-  return ret;
 }
 
 void VerilatorSST@VERILOG_DEVICE@::initResetValues(const Params& params){
@@ -244,7 +239,7 @@ void VerilatorSST@VERILOG_DEVICE@::writePort(std::string PortName,
   }else{
     unsigned Idx = PortMap.at(PortName);
     DirectWriteFunc Func = std::get<V_WRITEFUNC>(Ports[Idx]);
-    (*Func)(PortName,Packet);
+    (*Func)(Top,PortName,Packet);
   }
 }
 
@@ -263,7 +258,7 @@ void VerilatorSST@VERILOG_DEVICE@::writePortAtTick(std::string PortName,
   }else{
     unsigned Idx = PortMap.at(PortName);
     DirectWriteAtTickFunc Func = std::get<V_WRITEFUNCATTICK>(Ports[Idx]);
-    (*Func)(PortName,Packet,Tick);
+    (*Func)(Top,PortName,Packet,Tick);
   }
 }
 

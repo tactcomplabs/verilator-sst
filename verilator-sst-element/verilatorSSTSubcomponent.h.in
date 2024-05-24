@@ -47,8 +47,8 @@ enum class VPortType : uint8_t {
 // ---------------------------------------------------------------
 // Data Structures
 // ---------------------------------------------------------------
-typedef void (*DirectWriteFunc)(std::string,std::vector<uint8_t>);
-typedef void (*DirectWriteAtTickFunc)(std::string,std::vector<uint8_t>,uint64_t);
+typedef void (*DirectWriteFunc)(VTop*,std::string,std::vector<uint8_t>);
+typedef void (*DirectWriteAtTickFunc)(VTop*,std::string,std::vector<uint8_t>,uint64_t);
 typedef std::vector<uint8_t> (*DirectReadFunc)(std::string);
 
 #define V_NAME            0
@@ -130,6 +130,41 @@ public:
 
   // PortEvent: implements the nic serialization
   ImplementSerializable(SST::VerilatorSST::PortEvent);
+};
+
+// ---------------------------------------------------------------
+// SignalHelper
+// ---------------------------------------------------------------
+class SignalHelper{
+private:
+  unsigned Width; ///< signal width
+
+public:
+
+  /// SignalHelper Constructor
+  SignalHelper() : Width(1){};
+
+  /// SignalHelper Overloaded Constructor
+  SignalHelper(unsigned W) : Width(W){};
+
+  /// SignalHelper destructor
+  ~SignalHelper() {}
+
+  /// retrieve the width
+  unsigned getWidth() { return Width; }
+
+  /// set the width
+  void setWidth(unsigned W) { Width = W; }
+
+  /// template class to generate scalar masks
+  template<typename T>
+  T getMask(){
+    T ret = 0x00;
+    for( unsigned i=0; i<Width; i++ ){
+      ret |= (1<<i);
+    }
+    return ret;
+  }
 };
 
 // ---------------------------------------------------------------
@@ -289,8 +324,8 @@ private:
 
   // Private data
   bool UseVPI;          ///< Is the verilator VPI interface used?
-  const std::unique_ptr<VerilatedContext> ContextP{new VerilatedContext};
-  const std::unique_ptr<VTop> Top{new VTop{ContextP.get()}};
+  VerilatedContext *ContextP;       ///< verilated context
+  VTop *Top;                        ///< top module
 
   // Private functions
 
@@ -299,10 +334,6 @@ private:
 
   /// Splits a parameter array into tokens of std::string values
   void splitStr(const std::string& s, char c, std::vector<std::string>& v);
-
-  /// template class to generate scalar masks
-  template<typename T>
-  T getMask(unsigned NumBits);
 
   /// VPI Read of Port
   std::vector<uint8_t> readPortVPI(std::string PortName);
