@@ -300,6 +300,10 @@ private:
   /// Splits a parameter array into tokens of std::string values
   void splitStr(const std::string& s, char c, std::vector<std::string>& v);
 
+  /// template class to generate scalar masks
+  template<typename T>
+  T getMask(unsigned NumBits);
+
   /// VPI Read of Port
   std::vector<uint8_t> readPortVPI(std::string PortName);
 

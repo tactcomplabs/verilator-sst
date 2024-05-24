@@ -88,6 +88,15 @@ void VerilatorSST@VERILOG_DEVICE@::splitStr(const std::string& s,
   }
 }
 
+template<typename T>
+T VerilatorSST@VERILOG_DEVICE@::getMask(unsigned NumBits){
+  T ret = 0x00;
+  for( unsigned i=0; i<NumBits; i++ ){
+    ret |= (1<<i);
+  }
+  return ret;
+}
+
 void VerilatorSST@VERILOG_DEVICE@::initResetValues(const Params& params){
   std::vector<std::string> optList;
   params.find_array("resetVals", optList);

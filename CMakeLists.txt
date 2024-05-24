@@ -74,7 +74,6 @@ else()
 endif()
 
 get_filename_component(VERILATOR_PATH ${VERILATOR_BIN} DIRECTORY)
-#set(VERILATOR_INCLUDE "${VERILATOR_PATH}/../share/verilator/include")
 message(STATUS "[VERILATOR] VERILATOR_INCLUDE set to ${VERILATOR_INCLUDE}")
 
 

@@ -47,7 +47,6 @@ execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/BuildPortHandlerImpls.sh ${V
                 OUTPUT_VARIABLE VERILATOR_SST_PORT_HANDLER_IMPLS
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-
 # -----------------------------------------------------------------
 # Configure the verilatorSST files
 # -----------------------------------------------------------------
@@ -60,6 +59,16 @@ configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/verilatorSSTSubcomponent.cpp.in"
   "${CMAKE_CURRENT_SOURCE_DIR}/verilatorSSTSubcomponent.cpp"
 )
+
+# -----------------------------------------------------------------
+# Format the source files
+# -----------------------------------------------------------------
+find_program(CLANG_FORMAT "clang-format")
+if( CLANG_FORMAT )
+  message(STATUS "[CLANG-FORMAT] Executing clang-format on generated source files")
+  execute_process(COMMAND ${CLANG_FORMAT} -i --assume-filename=${CMAKE_CURRENT_SOURCE_DIR}/.clang-format ${CMAKE_CURRENT_SOURCE_DIR}/verilatorSSTSubcomponent.cpp)
+  execute_process(COMMAND ${CLANG_FORMAT} -i --assume-filename=${CMAKE_CURRENT_SOURCE_DIR}/.clang-format ${CMAKE_CURRENT_SOURCE_DIR}/verilatorSSTSubcomponent.h)
+endif()
 
 
 # -----------------------------------------------------------------
