@@ -46,13 +46,13 @@ VerilatorSST@VERILOG_DEVICE@::VerilatorSST@VERILOG_DEVICE@(ComponentId_t id,
 
   // init verilator interfaces
   ContextP = new VerilatedContext();
+  ContextP->threads(1);
   Top = new VTop();
   ContextP->debug(VL_DEBUG);
   ContextP->randReset(2);
   ContextP->traceEverOn(true);
   const char *empty {};
   ContextP->commandArgs(0,&empty);
-  ContextP->threads(1);
 #if VL_DEBUG == 1
   ContextP->internalsDump();
 #endif

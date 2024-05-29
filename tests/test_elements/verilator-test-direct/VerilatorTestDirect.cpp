@@ -49,7 +49,7 @@ void VerilatorTestDirect::init( unsigned int phase ){
   model->init(phase);
 }
 
-std::vector<uint8_t> generateData(unsigned Width){
+std::vector<uint8_t> VerilatorTestDirect::generateData(unsigned Width){
   std::vector<uint8_t> data;
 
   // determine the number of uint8_t's
