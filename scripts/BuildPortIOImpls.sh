@@ -24,10 +24,33 @@ build_write () {
     echo "T->$SIGNAME = (Packet[0] & S.getMask<uint8_t>());"
   elif [ $WIDTH -lt 33 ]; then
     # less than 32 bits
+    # Will need to decide byte order between packets <-> verilator
+    J=0
+    BITJ=0
     echo "// less than 32 bits"
+    echo "SignalHelper S($WIDTH);"
+    echo "uint32_t tmp = 0;"
+    until ((BITJ >= $WIDTH))
+    do
+      echo "tmp = (tmp<<8) + (((uint32_t)Packet[$J]) & 255);"
+      J=$((J+1))
+      BITJ=$((J*8))
+    done
+    echo "T->$SIGNAME = (tmp & S.getMask<uint32_t>());"
   elif [ $WIDTH -lt 65 ]; then
     # less than 64 bits
     echo "// less than 64 bits"
+    J=0
+    BITJ=0
+    echo "SignalHelper S($WIDTH);"
+    echo "uint64_t tmp = 0;"
+    until ((BITJ >= $WIDTH))
+    do
+      echo "tmp = (tmp<<8) + (((uint64_t)Packet[$J]) & 255);"
+      J=$((J+1))
+      BITJ=$((J*8))
+    done
+    echo "T->$SIGNAME = (tmp & S.getMask<uint64_t>());"
   else
     # > 64 bits
     echo "// greater than 64 bits"
