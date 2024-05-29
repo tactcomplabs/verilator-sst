@@ -1,5 +1,5 @@
 `ifndef ACCUM_WIDTH
-`define ACCUM_WIDTH 124
+`define ACCUM_WIDTH 48  //124
 `endif
 
 
@@ -23,13 +23,13 @@ module Accum #(parameter ACCUM_WIDTH=`ACCUM_WIDTH) (
       else if (en && !doner) begin
          accumulator <= accumulator + add;
          doner <= 1'b1;
-         $display("verilog: accumulator: %x,%x\n", accumulator[ACCUM_WIDTH-1:64], accumulator[63:0]);
-         $display("verilog: add: %x,%x\n", add[ACCUM_WIDTH-1:64], add[63:0]);
+         //$display("verilog: accumulator: %x,%x\n", accumulator[ACCUM_WIDTH-1:64], accumulator[63:0]);
+         //$display("verilog: add: %x,%x\n", add[ACCUM_WIDTH-1:64], add[63:0]);
       end
-      else if (en && doner) begin
-         $display("verilog: accumulator: %x,%x\n", accumulator[ACCUM_WIDTH-1:64], accumulator[63:0]);
-         $display("verilog: add: %x,%x\n", add[ACCUM_WIDTH-1:64], add[63:0]);
-      end
+      //else if (en && doner) begin
+         //$display("verilog: accumulator: %x,%x\n", accumulator[ACCUM_WIDTH-1:64], accumulator[63:0]);
+         //$display("verilog: add: %x,%x\n", add[ACCUM_WIDTH-1:64], add[63:0]);
+      //end
    end
    
    assign accum = accumulator;
