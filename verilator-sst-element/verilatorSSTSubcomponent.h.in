@@ -49,7 +49,7 @@ enum class VPortType : uint8_t {
 // ---------------------------------------------------------------
 typedef void (*DirectWriteFunc)(VTop*,std::string,std::vector<uint8_t>);
 typedef void (*DirectWriteAtTickFunc)(VTop*,std::string,std::vector<uint8_t>,uint64_t);
-typedef std::vector<uint8_t> (*DirectReadFunc)(std::string);
+typedef std::vector<uint8_t> (*DirectReadFunc)(VTop*,std::string);
 
 #define V_NAME            0
 #define V_TYPE            1

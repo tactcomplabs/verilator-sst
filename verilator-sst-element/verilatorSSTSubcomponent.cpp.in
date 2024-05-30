@@ -277,7 +277,7 @@ std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPort(std::string PortName
   }else{
     unsigned Idx = PortMap.at(PortName);
     DirectReadFunc Func = std::get<V_READFUNC>(Ports[Idx]);
-    data = (*Func)(PortName);
+    data = (*Func)(Top, PortName);
   }
 
   return data;
