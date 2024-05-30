@@ -34,3 +34,6 @@
 # Directories
 build/
 install/
+
+# Verilator build files
+VTop*
