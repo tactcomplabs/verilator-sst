@@ -5,7 +5,7 @@
 #include <sst/core/sst_config.h>
 #include <sst/core/component.h>
 #include "verilatorSST.h"
-#include "VUART.h"
+#include "VTop.h"
 
 namespace SST::VerilatorSST {
 struct TestBenchCommand {
@@ -16,7 +16,7 @@ struct TestBenchCommand {
 class BasicVerilogUartMem : public SST::Component{
     private:
         SST::Output* out;
-        std::unique_ptr<VerilatorSST<VUART>> top;
+        std::unique_ptr<VerilatorSST<VTop>> top;
         
         uint16_t baudPeriod;
         uint16_t addrWidth;

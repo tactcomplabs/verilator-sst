@@ -43,7 +43,7 @@ BigVerilogAccum::~BigVerilogAccum(){
 }
 
 void BigVerilogAccum::verilatorSetup(uint64_t * add){
-  top = std::make_unique<VerilatorSST<VAccum>>();
+  top = std::make_unique<VerilatorSST<VTop>>();
 
   Signal init_low(1,LOW);
   //Signal init_add(accumWidth, *add); 

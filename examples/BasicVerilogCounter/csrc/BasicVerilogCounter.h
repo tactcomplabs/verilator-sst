@@ -10,7 +10,7 @@
 #include <sst/core/sst_config.h>
 #include <sst/core/component.h>
 #include "verilatorSST.h"
-#include "VCounter.h"
+#include "VTop.h"
 
 namespace SST::VerilatorSST {
 
@@ -54,7 +54,7 @@ public:
 
 private:
   SST::Output* out;       // SST Output object for printing, messaging, etc
-  std::unique_ptr<VerilatorSST<VCounter>> top;
+  std::unique_ptr<VerilatorSST<VTop>> top;
   uint32_t stopWidth;
   
   // Clock handler

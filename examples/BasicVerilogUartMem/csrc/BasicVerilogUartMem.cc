@@ -29,7 +29,7 @@ BasicVerilogUartMem::~BasicVerilogUartMem(){
 }
 
 void BasicVerilogUartMem::verilatorSetup(){
-	top = std::make_unique<VerilatorSST<VUART>>();
+	top = std::make_unique<VerilatorSST<VTop>>();
 
 	Signal init_low(1,LOW);
 	Signal init_high(1,HIGH);
