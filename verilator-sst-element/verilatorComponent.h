@@ -1,5 +1,5 @@
 //
-// _VerilatorTestDirect_h_
+// _VerilatorComponent_h_
 //
 // Copyright (C) 2017-2024 Tactical Computing Laboratories, LLC
 // All Rights Reserved
@@ -8,8 +8,8 @@
 // See LICENSE in the top level directory for licensing details
 //
 
-#ifndef _VERILATOR_TEST_DIRECT_H_
-#define _VERILATOR_TEST_DIRECT_H_
+#ifndef _VERILATOR_COMPONENT_H_
+#define _VERILATOR_COMPONENT_H_
 
 // -- Standard Headers
 #include <list>
@@ -32,40 +32,40 @@
 
 namespace SST::VerilatorSST {
 
-class VerilatorTestDirect : public SST::Component {
+class VerilatorComponent : public SST::Component {
 public:
-  /// VerilatorTestDirect: constuctor
-  VerilatorTestDirect(SST::ComponentId_t id, const SST::Params& params);
+  /// VerilatorComponent: constuctor
+  VerilatorComponent(SST::ComponentId_t id, const SST::Params& params);
 
-  /// VerilatorTestDirect: destructor
-  ~VerilatorTestDirect();
+  /// VerilatorComponent: destructor
+  ~VerilatorComponent();
 
-  /// VerilatorTestDirect: setup function
+  /// VerilatorComponent: setup function
   void setup();
 
-  /// VerilatorTestDirect: finish function
+  /// VerilatorComponent: finish function
   void finish();
 
-  /// VerilatorTestDirect: init function
+  /// VerilatorComponent: init function
   void init( unsigned int phase );
 
-  /// VerilatorTestDirect: clock function
+  /// VerilatorComponent: clock function
   bool clock(SST::Cycle_t currentCycle );
 
   // -------------------------------------------------------
-  // VerilatorTestDirect Component Registration Data
+  // VerilatorComponent Component Registration Data
   // -------------------------------------------------------
   SST_ELI_REGISTER_COMPONENT(
-    VerilatorTestDirect,  // component class
-    "verilatortestdirect",// component library
-    "VerilatorTestDirect",// component name
+    VerilatorComponent,  // component class
+    "verilatorcomponent",// component library
+    "VerilatorComponent",// component name
     SST_ELI_ELEMENT_VERSION( 1, 0, 0 ),
-    "VerilatorSST Direct API Test Component",
+    "VerilatorSST Component Shell",
     COMPONENT_CATEGORY_UNCATEGORIZED
   )
 
   // -------------------------------------------------------
-  // VerilatorTestDirect Component Parameter Data
+  // VerilatorComponent Component Parameter Data
   // -------------------------------------------------------
   // clang-format off
   SST_ELI_DOCUMENT_PARAMS(
@@ -75,31 +75,29 @@ public:
   )
 
   // -------------------------------------------------------
-  // VerilatorTestDirect Port Parameter Data
+  // VerilatorComponent Port Parameter Data
   // -------------------------------------------------------
   SST_ELI_DOCUMENT_PORTS(
   )
 
   // -------------------------------------------------------
-  // VerilatorTestDirect SubComponent Parameter Data
+  // VerilatorComponent SubComponent Parameter Data
   // -------------------------------------------------------
   SST_ELI_DOCUMENT_SUBCOMPONENT_SLOTS(
     {"model", "Verilator Subcomponent Model",   "SST::VerilatorSST::VerilatorSSTBase"},
   )
+
 private:
-  SST::Output    output;                          ///< VerilatorTestDirect: SST output
+  SST::Output    output;                          ///< VerilatorComponent: SST output
 
-  uint64_t NumCycles;                             ///< VerilatorTestDirect: number of cycles to execute
+  uint64_t NumCycles;                             ///< VerilatorComponent: number of cycles to execute
 
-  SST::VerilatorSST::VerilatorSSTBase *model;     ///< VerilatorTestDirect: subcomponent model
+  SST::VerilatorSST::VerilatorSSTBase *model;     ///< VerilatorComponent: subcomponent model
 
-  /// generate random input data
-  std::vector<uint8_t> generateData(unsigned Width);
-
-};  // class VerilatorTestDirect
+};  // class VerilatorComponent
 
 };  // namespace SST::VerilatorSST
 
-#endif  // _VERILATOR_TEST_DIRECT_H_
+#endif  // _VERILATOR_COMPONENT_H_
 
 // EOF

@@ -14,7 +14,7 @@ import sst
 top = sst.Component("top0", "verilatortestdirect.VerilatorTestDirect")
 top.addParams({
   "verbose" : 1,
-  "clock" : "1GHz",
+  "clockFreq" : "1GHz",
   "numCycles" : 5000
 })
 

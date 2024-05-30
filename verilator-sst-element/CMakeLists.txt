@@ -119,7 +119,8 @@ set(verilatorSSTSrcs
 add_library(${targetName} SHARED ${verilatorSSTSrcs})
 set_property(TARGET ${targetName} PROPERTY CXX_STANDARD 17)
 target_include_directories(${targetName}
-                          PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/${VERILOG_DEVICE}
+                          PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+                                  ${CMAKE_CURRENT_SOURCE_DIR}/${VERILOG_DEVICE}
                           PUBLIC ${SST_INSTALL_DIR}/include
                                  ${VERILATOR_INCLUDE}
                                  ${VERILATOR_INCLUDE}/vltstd)
@@ -128,11 +129,27 @@ target_link_libraries(${targetName}
           ${CMAKE_CURRENT_SOURCE_DIR}/${VERILOG_DEVICE}/libverilated.a
 )
 
+set(verilatorCompSrcs
+  verilatorComponent.cpp
+  verilatorComponent.h
+)
+add_library(verilatorcomponent SHARED ${verilatorCompSrcs})
+set_property(TARGET verilatorcomponent PROPERTY CXX_STANDARD 17)
+target_include_directories(verilatorcomponent
+                          PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+                                  ${CMAKE_CURRENT_SOURCE_DIR}/${VERILOG_DEVICE}
+                          PUBLIC ${SST_INSTALL_DIR}/include
+                                 ${VERILATOR_INCLUDE}
+                                 ${VERILATOR_INCLUDE}/vltstd)
+
 # -----------------------------------------------------------------
 # Install the source
 # -----------------------------------------------------------------
 install(TARGETS ${targetName} DESTINATION ${CMAKE_CURRENT_SOURCE_DIR})
 install(CODE "execute_process(COMMAND sst-register ${targetName} ${targetName}_LIBDIR=${CMAKE_CURRENT_SOURCE_DIR})")
+
+install(TARGETS verilatorcomponent DESTINATION ${CMAKE_CURRENT_SOURCE_DIR})
+install(CODE "execute_process(COMMAND sst-register verilatorcomponent verilatorcomponent_LIBDIR=${CMAKE_CURRENT_SOURCE_DIR})")
 
 #if( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 #  install(CODE "execute_process(COMMAND_ERROR_IS_FATAL ANY COMMAND_ECHO STDERR COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/test_undefined_symbols.sh ${CMAKE_CURRENT_SOURCE_DIR}/librevcpu.dylib)")
