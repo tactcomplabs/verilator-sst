@@ -137,12 +137,12 @@ for IN in $INPUTS;do
   ENDBIT=$(($ENDBIT + 1))
   WIDTH=$(($ENDBIT - $STARTBIT))
 
-  echo "void VerilatorSST$Device::DirectWrite${SIGNAME}(VTop *T,std::string Port,std::vector<uint8_t> Packet){"
+  echo "void VerilatorSST$Device::DirectWrite${SIGNAME}(VTop *T,std::vector<uint8_t> Packet){"
   build_write $SIGNAME $WIDTH
   echo "}"
-  echo "void VerilatorSST$Device::DirectWriteAtTick${SIGNAME}(VTop *T,std::string Port,std::vector<uint8_t> Packet,uint64_t Tick){"
+  echo "void VerilatorSST$Device::DirectWriteAtTick${SIGNAME}(VTop *T,std::vector<uint8_t> Packet,uint64_t Tick){"
   echo "}"
-  echo "std::vector<uint8_t> VerilatorSST$Device::DirectRead${SIGNAME}(VTop *T,std::string Port){"
+  echo "std::vector<uint8_t> VerilatorSST$Device::DirectRead${SIGNAME}(VTop *T){"
   echo "std::vector<uint8_t> d;"
   echo "return d;"
   echo "}"
@@ -157,11 +157,11 @@ for OUT in $OUTPUTS;do
   ENDBIT=$(($ENDBIT + 1))
   WIDTH=$(($ENDBIT - $STARTBIT))
 
-  echo "void VerilatorSST$Device::DirectWrite${SIGNAME}(VTop *T,std::string Port,std::vector<uint8_t> Packet){"
+  echo "void VerilatorSST$Device::DirectWrite${SIGNAME}(VTop *T,std::vector<uint8_t> Packet){"
   echo "}"
-  echo "void VerilatorSST$Device::DirectWriteAtTick${SIGNAME}(VTop *T,std::string Port,std::vector<uint8_t> Packet,uint64_t Tick){"
+  echo "void VerilatorSST$Device::DirectWriteAtTick${SIGNAME}(VTop *T,std::vector<uint8_t> Packet,uint64_t Tick){"
   echo "}"
-  echo "std::vector<uint8_t> VerilatorSST$Device::DirectRead${SIGNAME}(VTop *T,std::string Port){"
+  echo "std::vector<uint8_t> VerilatorSST$Device::DirectRead${SIGNAME}(VTop *T){"
   echo "std::vector<uint8_t> d;"
   build_read $SIGNAME $WIDTH
   echo "return d;"

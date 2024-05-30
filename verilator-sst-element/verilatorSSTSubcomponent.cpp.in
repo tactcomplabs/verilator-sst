@@ -239,7 +239,7 @@ void VerilatorSST@VERILOG_DEVICE@::writePort(std::string PortName,
   }else{
     unsigned Idx = PortMap.at(PortName);
     DirectWriteFunc Func = std::get<V_WRITEFUNC>(Ports[Idx]);
-    (*Func)(Top,PortName,Packet);
+    (*Func)(Top,Packet);
   }
 }
 
@@ -258,7 +258,7 @@ void VerilatorSST@VERILOG_DEVICE@::writePortAtTick(std::string PortName,
   }else{
     unsigned Idx = PortMap.at(PortName);
     DirectWriteAtTickFunc Func = std::get<V_WRITEFUNCATTICK>(Ports[Idx]);
-    (*Func)(Top,PortName,Packet,Tick);
+    (*Func)(Top,Packet,Tick);
   }
 }
 
@@ -277,7 +277,7 @@ std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPort(std::string PortName
   }else{
     unsigned Idx = PortMap.at(PortName);
     DirectReadFunc Func = std::get<V_READFUNC>(Ports[Idx]);
-    data = (*Func)(Top, PortName);
+    data = (*Func)(Top);
   }
 
   return data;
