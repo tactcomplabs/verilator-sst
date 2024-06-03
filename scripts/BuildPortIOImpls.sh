@@ -60,7 +60,7 @@ build_write () {
     echo "T->$SIGNAME = (tmp & S.getMask<uint64_t>());"
   else
     # > 64 bits
-    # Verilator splits these into struct VlWide which is m_storage[T_Words] of EData (uint32_t)
+    # Verilator splits these into struct VlWide which is m_storage[T_Words] of EData (uint32_t). Can be indexed directly
     echo "// greater than 64 bits"
     J=0
     BITJ=0
@@ -90,7 +90,7 @@ build_write () {
       J=$((J-1))
     done
     # Full words don't need masking
-    echo "T->$SIGNAME.m_storage[i] = tmp;"
+    echo "T->$SIGNAME[i] = tmp;"
     echo "}"
     if ((REMWIDTH != 0)); then
       # Case where there is a partial word
@@ -103,7 +103,7 @@ build_write () {
         echo "tmp = (tmp<<8) + (((uint32_t)Packet[$INDEX]) & 255);"
         J=$((J-1))
       done
-      echo "T->$SIGNAME.m_storage[$WORDS] = (tmp & S.getMask<uint32_t>());"
+      echo "T->$SIGNAME[$WORDS] = (tmp & S.getMask<uint32_t>());"
     fi
     # TODO: may have to change order of word assignment
   fi
@@ -158,7 +158,7 @@ build_read () {
     until ((LOOPI == 4))
     do
       SHIFTBIT=$((LOOPI * 8))
-      echo "tmp = (T->$SIGNAME.m_storage[i] >> $SHIFTBIT) & 255;"
+      echo "tmp = (T->$SIGNAME[i] >> $SHIFTBIT) & 255;"
       echo "d.push_back(tmp);"
       LOOPI=$((LOOPI + 1))
     done
@@ -169,7 +169,7 @@ build_read () {
       LOOPI=0
       until ((LOOPI == PARTALIGWIDTH))
       do
-        echo "tmp = (T->$SIGNAME.m_storage[$WORDS] >> $LOOPI) & 255;"
+        echo "tmp = (T->$SIGNAME[$WORDS] >> $LOOPI) & 255;"
         echo "d.push_back(tmp);"
         LOOPI=$((LOOPI + 8))
       done
