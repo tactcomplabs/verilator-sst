@@ -65,19 +65,17 @@ build_write () {
     J=0
     BITJ=0
     REMWIDTH=$((WIDTH % 32))
-    WORDS=$((WIDTH / 32 + 1))
+    WORDS=$((WIDTH / 32))
     REMBITS=$((REMWIDTH % 8))
     if ((REMWIDTH == 0)); then
       # Width is word-aligned; no partial word
       REMBYTES=0
-      elif ((REMBITS == 0)); then
+    elif ((REMBITS == 0)); then
       # Width is byte-aligned but not word aligned; partial word
       REMBYTES=$((REMWIDTH / 8))
-      WORDS=$((WIDTH / 32))
-      else
+    else
       # Width is not aligned; partial word with padding
       REMBYTES=$((REMWIDTH / 8 + 1))
-      WORDS=$((WIDTH / 32))
     fi
     # Generate word-wise for loop
     echo "for (int i=0; i<$WORDS; i++) {"
