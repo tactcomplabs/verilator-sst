@@ -165,7 +165,7 @@ build_read () {
     echo "}"
     if ((REMBITS != 0)); then
       # Read out partial word
-      PARTALIGWIDTH=$((ALIGWIDTH - WORDS * 32))
+      PARTALIGWIDTH=$((ALIGWIDTH - (WORDS-1) * 32))
       LOOPI=0
       until ((LOOPI == PARTALIGWIDTH))
       do
