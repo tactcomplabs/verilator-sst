@@ -15,6 +15,7 @@
 #include <vector>
 #include <string>
 #include <tuple>
+#include <list>
 #include <cassert>
 
 // -- SST Headers
@@ -331,9 +332,12 @@ private:
   bool UseVPI;          ///< Is the verilator VPI interface used?
   VerilatedContext *ContextP;       ///< verilated context
   VTop *Top;                        ///< top module
-  std::vector<QueueEntry> WriteQueue; ///< port write queue
+  std::list<QueueEntry> WriteQueue; ///< port write queue
 
   // Private functions
+
+  /// Check for write packets in the queue that need to be performed this tick
+  void pollWriteQueue();
 
   /// Initializes the internal reset values for each port from the parameter list
   void initResetValues(const Params& params);

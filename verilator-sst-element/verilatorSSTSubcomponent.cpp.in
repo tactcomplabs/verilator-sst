@@ -92,6 +92,22 @@ void VerilatorSST@VERILOG_DEVICE@::splitStr(const std::string& s,
   }
 }
 
+void VerilatorSST@VERILOG_DEVICE@::pollWriteQueue(){
+  uint64_t currTick = getCurrentTick();
+  for (auto it=WriteQueue.begin(); it!=WriteQueue.end();) {
+    auto ele = *it;
+    if (ele.AtTick == currTick) {
+      printf("VerilatorSST subcomponent: writing port %s with %x at tick %lld\n", ele.portName.data(), ele.Packet[0], currTick);
+      unsigned Idx = PortMap.at(ele.portName);
+      DirectWriteFunc Func = std::get<V_WRITEFUNC>(Ports[Idx]);
+      (*Func)(Top,ele.Packet);
+      it = WriteQueue.erase(it);
+    } else {
+      it++;
+    }
+  }
+}
+
 void VerilatorSST@VERILOG_DEVICE@::initResetValues(const Params& params){
   std::vector<std::string> optList;
   params.find_array("resetVals", optList);
@@ -131,6 +147,7 @@ void VerilatorSST@VERILOG_DEVICE@::finish(){
 }
 
 bool VerilatorSST@VERILOG_DEVICE@::clock(SST::Cycle_t cycle){
+  pollWriteQueue();
   ContextP->timeInc(1);
   Top->eval();
   return false;
@@ -256,7 +273,8 @@ void VerilatorSST@VERILOG_DEVICE@::writePortAtTick(std::string PortName,
   if( UseVPI ){
     writePortVPI(PortName, Packet);
   }else{
-    WriteQueue.emplace_back(PortName, Tick, Packet);
+    // Tick is used as a delay/offset, not a definite tick value
+    WriteQueue.emplace_back(PortName, Tick+getCurrentTick(), Packet);
   }
 }
 
