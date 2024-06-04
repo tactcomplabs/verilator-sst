@@ -186,8 +186,6 @@ for IN in $INPUTS;do
   echo "void VerilatorSST$Device::DirectWrite${SIGNAME}(VTop *T,std::vector<uint8_t> Packet){"
   build_write $SIGNAME $WIDTH
   echo "}"
-  echo "void VerilatorSST$Device::DirectWriteAtTick${SIGNAME}(VTop *T,std::vector<uint8_t> Packet,uint64_t Tick){"
-  echo "}"
   echo "std::vector<uint8_t> VerilatorSST$Device::DirectRead${SIGNAME}(VTop *T){"
   echo "std::vector<uint8_t> d;"
   echo "return d;"
@@ -205,16 +203,12 @@ for OUT in $OUTPUTS;do
 
   echo "void VerilatorSST$Device::DirectWrite${SIGNAME}(VTop *T,std::vector<uint8_t> Packet){"
   echo "}"
-  echo "void VerilatorSST$Device::DirectWriteAtTick${SIGNAME}(VTop *T,std::vector<uint8_t> Packet,uint64_t Tick){"
-  echo "}"
   echo "std::vector<uint8_t> VerilatorSST$Device::DirectRead${SIGNAME}(VTop *T){"
   echo "std::vector<uint8_t> d;"
   build_read $SIGNAME $WIDTH
   echo "return d;"
   echo "}"
 done;
-
-# TODO: remove std::string params from direct read/write functions
 
 
 # -- EOF

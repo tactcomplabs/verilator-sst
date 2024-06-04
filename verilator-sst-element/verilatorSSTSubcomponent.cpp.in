@@ -256,9 +256,7 @@ void VerilatorSST@VERILOG_DEVICE@::writePortAtTick(std::string PortName,
   if( UseVPI ){
     writePortVPI(PortName, Packet);
   }else{
-    unsigned Idx = PortMap.at(PortName);
-    DirectWriteAtTickFunc Func = std::get<V_WRITEFUNCATTICK>(Ports[Idx]);
-    (*Func)(Top,Packet,Tick);
+    WriteQueue.emplace_back(PortName, Tick, Packet);
   }
 }
 

@@ -48,24 +48,29 @@ enum class VPortType : uint8_t {
 // Data Structures
 // ---------------------------------------------------------------
 typedef void (*DirectWriteFunc)(VTop*,std::vector<uint8_t>);
-typedef void (*DirectWriteAtTickFunc)(VTop*,std::vector<uint8_t>,uint64_t);
 typedef std::vector<uint8_t> (*DirectReadFunc)(VTop*);
 
 #define V_NAME            0
 #define V_TYPE            1
 #define V_WIDTH           2
 #define V_WRITEFUNC       3
-#define V_WRITEFUNCATTICK 4
-#define V_READFUNC        5
+#define V_READFUNC        4
 typedef std::tuple<std::string,
                    VPortType,
                    unsigned,
                    DirectWriteFunc,
-                   DirectWriteAtTickFunc,
                    DirectReadFunc> PortEntry;
 
 typedef std::pair<std::string,
                   uint64_t> PortReset;
+
+struct QueueEntry {
+  std::string portName;
+  uint64_t AtTick;
+  std::vector<uint8_t> Packet;
+  QueueEntry(std::string portName, uint64_t AtTick, std::vector<uint8_t> Packet)
+      : portName(portName), AtTick(AtTick), Packet(Packet) { }
+};
 
 
 // ---------------------------------------------------------------
@@ -326,6 +331,7 @@ private:
   bool UseVPI;          ///< Is the verilator VPI interface used?
   VerilatedContext *ContextP;       ///< verilated context
   VTop *Top;                        ///< top module
+  std::vector<QueueEntry> WriteQueue; ///< port write queue
 
   // Private functions
 
