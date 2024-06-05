@@ -94,7 +94,7 @@ private:
   SST::VerilatorSST::VerilatorSSTBase *model;     ///< VerilatorTestDirect: subcomponent model
 
   /// generate random input data
-  std::vector<uint8_t> generateData(unsigned Width);
+  std::vector<uint8_t> generateData(unsigned Width, unsigned Depth);
 
 };  // class VerilatorTestDirect
 

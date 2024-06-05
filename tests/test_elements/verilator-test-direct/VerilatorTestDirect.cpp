@@ -49,26 +49,28 @@ void VerilatorTestDirect::init( unsigned int phase ){
   model->init(phase);
 }
 
-std::vector<uint8_t> VerilatorTestDirect::generateData(unsigned Width){
+std::vector<uint8_t> VerilatorTestDirect::generateData(unsigned Width, unsigned Depth){
   std::vector<uint8_t> data;
 
   // determine the number of uint8_t's
   unsigned NumVals = (Width/8) + ((Width%8) > 0);
   unsigned CurrentBits = 0;
 
-  // build the NumVals-1 values
-  for( unsigned i=0; i<NumVals-1; i++ ){
-    data.push_back( (uint8_t)(rand()&0b11111111) );
-    CurrentBits += 8;
-  }
-
-  uint8_t val= 0x0;
-  for( unsigned i=0; i<(Width-CurrentBits); i++ ){
-    if( (rand()%2) == 0 ){
-      val |= (1<<i);
+  for (unsigned j = 0; j < Depth; j++) {
+    // build the NumVals-1 values
+    for (unsigned i = 0; i < NumVals - 1; i++) {
+      data.push_back((uint8_t)(rand() & 0b11111111));
+      CurrentBits += 8;
     }
+    // build remaining bits
+    uint8_t val = 0x0;
+    for (unsigned i = 0; i < (Width - CurrentBits); i++) {
+      if ((rand() % 2) == 0) {
+        val |= (1 << i);
+      }
+    }
+    data.push_back(val);
   }
-  data.push_back(val);
 
   return data;
 }
