@@ -84,10 +84,15 @@ bool VerilatorTestDirect::clock(SST::Cycle_t currentCycle){
   // build a new set of wire payloads
   std::vector<std::string> Ports = model->getPortsNames();
   unsigned Width;
+  unsigned Depth;
   SST::VerilatorSST::VPortType Type;
   for( auto i : Ports ){
     if( !model->getPortWidth(i, Width) ){
       output.fatal(CALL_INFO, -1, "Could not retrieve width of port=%s\n",
+                   i.c_str());
+    }
+    if( !model->getPortDepth(i, Depth) ){
+      output.fatal(CALL_INFO, -1, "Could not retrieve depth of port=%s\n",
                    i.c_str());
     }
     if( !model->getPortType(i, Type) ){
@@ -98,7 +103,7 @@ bool VerilatorTestDirect::clock(SST::Cycle_t currentCycle){
     std::vector<uint8_t> data;
     if( Type == SST::VerilatorSST::VPortType::V_INPUT ){
       // write to the port
-      data = generateData(Width);
+      data = generateData(Width, Depth);
       model->writePort(i,data);
     }else{
       // read from the port
