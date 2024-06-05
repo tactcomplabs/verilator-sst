@@ -223,6 +223,9 @@ public:
   /// VerilatorSSTBase: retrieve the port width of the target port
   virtual bool getPortWidth(std::string PortName, unsigned& Width) = 0;
 
+  /// VerilatorSSTBase: retrieve the port depth of the target port
+  virtual bool getPortDepth(std::string PortName, unsigned& Depth) = 0;
+
   /// VerilatorSSTBase: retrieve the port reset value of the target port
   virtual bool getResetVal(std::string PortName, uint64_t& Val) = 0;
 
@@ -312,6 +315,9 @@ public:
 
   /// retrieve the port width of the target port
   virtual bool getPortWidth(std::string PortName, unsigned& Width) override;
+
+  /// retrieve the port depth of the target port
+  virtual bool getPortDepth(std::string PortName, unsigned& Depth) override;
 
   /// retrieve the port reset value of the target port
   virtual bool getResetVal(std::string PortName, uint64_t& Val) override;

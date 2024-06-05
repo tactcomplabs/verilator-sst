@@ -208,6 +208,21 @@ bool VerilatorSST@VERILOG_DEVICE@::getPortWidth(std::string PortName,
   return true;
 }
 
+bool VerilatorSST@VERILOG_DEVICE@::getPortDepth(std::string PortName,
+                                                unsigned& Depth){
+  unsigned Idx = 0;
+  try{
+    Idx = PortMap.at(PortName);
+  }catch(const std::out_of_range& oor){
+    output->fatal(CALL_INFO, -1, "Could not find port with name=%s\n",
+                  PortName.c_str());
+    return false;
+  }
+
+  Depth = std::get<V_DEPTH>(Ports[Idx]);
+  return true;
+}
+
 bool VerilatorSST@VERILOG_DEVICE@::getResetVal(std::string PortName,
                                                uint64_t& Val){
   unsigned Idx = 0;
