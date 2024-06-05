@@ -16,6 +16,7 @@ OUTPUTS=`cat $Top | grep VL_OUT`
 build_write () {
   SIGNAME=$1
   WIDTH=$2
+  DEPTH=$3
 
   if [ $WIDTH -lt 9 ]; then
     # less than a 8 bits
@@ -110,6 +111,7 @@ build_write () {
 build_read () {
   SIGNAME=$1
   WIDTH=$2
+  DEPTH=$3
   #Width aligned to an upper byte boundary
   REMBITS=$((WIDTH % 8))
   ALIGWIDTH=$((WIDTH + (8 - REMBITS)))
@@ -120,7 +122,13 @@ build_read () {
   if [ $WIDTH -lt 9 ]; then
     # less than a 8 bits
     echo "// less than 8 bit"
-    echo "d.push_back(T->$SIGNAME);"
+    if (( $DEPTH > 1 )); then
+      echo "for (int i=0; i<$DEPTH; i++) {"
+      echo "d.push_back(T->$SIGNAME[i]);"
+      echo "}"
+    else
+      echo "d.push_back(T->$SIGNAME);"
+    fi
   elif [ $WIDTH -lt 33 ]; then
     echo "// less than 32 bit"
     echo "uint8_t tmp = 0;"
@@ -190,7 +198,7 @@ for IN in $INPUTS;do
   WIDTH=$(($ENDBIT - $STARTBIT))
 
   echo "void VerilatorSST$Device::DirectWrite${SIGNAME}(VTop *T,std::vector<uint8_t> Packet){"
-  build_write $SIGNAME $WIDTH
+  build_write $SIGNAME $WIDTH $DEPTH
   echo "}"
   echo "std::vector<uint8_t> VerilatorSST$Device::DirectRead${SIGNAME}(VTop *T){"
   echo "std::vector<uint8_t> d;"
@@ -217,7 +225,7 @@ for OUT in $OUTPUTS;do
   echo "}"
   echo "std::vector<uint8_t> VerilatorSST$Device::DirectRead${SIGNAME}(VTop *T){"
   echo "std::vector<uint8_t> d;"
-  build_read $SIGNAME $WIDTH
+  build_read $SIGNAME $WIDTH $DEPTH
   echo "return d;"
   echo "}"
 done;
