@@ -28,8 +28,7 @@ for IN in $INPUTS;do
   ENDBIT=$(($ENDBIT + 1))
   WIDTH=$(($ENDBIT - $STARTBIT))
 
-  #echo "{\"$SIGNAME\", SST::VerilatorSST::VPortType::V_INPUT, $WIDTH, $DEPTH, SST::VerilatorSST::VerilatorSST$Device::DirectWrite$SIGNAME, SST::VerilatorSST::VerilatorSST$Device::DirectRead$SIGNAME },"
-  echo "{\"$SIGNAME\", SST::VerilatorSST::VPortType::V_INPUT, $WIDTH, SST::VerilatorSST::VerilatorSST$Device::DirectWrite$SIGNAME, SST::VerilatorSST::VerilatorSST$Device::DirectRead$SIGNAME },"
+  echo "{\"$SIGNAME\", SST::VerilatorSST::VPortType::V_INPUT, $WIDTH, $DEPTH, SST::VerilatorSST::VerilatorSST$Device::DirectWrite$SIGNAME, SST::VerilatorSST::VerilatorSST$Device::DirectRead$SIGNAME },"
 done;
 
 #-- Generate all the output signals
@@ -47,8 +46,7 @@ for OUT in $OUTPUTS;do
   ENDBIT=$(($ENDBIT + 1))
   WIDTH=$(($ENDBIT - $STARTBIT))
 
-  #echo "{\"$SIGNAME\", SST::VerilatorSST::VPortType::V_OUTPUT, $WIDTH, $DEPTH, SST::VerilatorSST::VerilatorSST$Device::DirectWrite$SIGNAME, SST::VerilatorSST::VerilatorSST$Device::DirectRead$SIGNAME },"
-  echo "{\"$SIGNAME\", SST::VerilatorSST::VPortType::V_OUTPUT, $WIDTH, SST::VerilatorSST::VerilatorSST$Device::DirectWrite$SIGNAME, SST::VerilatorSST::VerilatorSST$Device::DirectRead$SIGNAME },"
+  echo "{\"$SIGNAME\", SST::VerilatorSST::VPortType::V_OUTPUT, $WIDTH, $DEPTH, SST::VerilatorSST::VerilatorSST$Device::DirectWrite$SIGNAME, SST::VerilatorSST::VerilatorSST$Device::DirectRead$SIGNAME },"
 done;
 
 

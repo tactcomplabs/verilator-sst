@@ -54,11 +54,13 @@ typedef std::vector<uint8_t> (*DirectReadFunc)(VTop*);
 #define V_NAME            0
 #define V_TYPE            1
 #define V_WIDTH           2
-#define V_WRITEFUNC       3
-#define V_READFUNC        4
+#define V_DEPTH           3
+#define V_WRITEFUNC       4
+#define V_READFUNC        5
 typedef std::tuple<std::string,
                    VPortType,
-                   unsigned,
+                   unsigned, //width
+                   unsigned, //depth
                    DirectWriteFunc,
                    DirectReadFunc> PortEntry;
 
