@@ -15,7 +15,9 @@ OUTPUTS=`cat $Top | grep VL_OUT`
 
 for IN in $INPUTS;do
   NOPAREN=`sed 's/.*(\(.*\))/\1/' <<< $IN`
-  SIGNAME=`echo $NOPAREN | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g"`
+  NOPAREN2=`echo $NOPAREN | sed 's/)//'`
+  REMDEPTH=`echo $NOPAREN2 | sed 's/\[[0-9]*\]//'`
+  SIGNAME=`echo $REMDEPTH | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g"`
   echo "void VerilatorSST$Device::handle_${SIGNAME}(SST::Event* ev){"
   echo "PortEvent *p = static_cast<PortEvent*>(ev);"
   echo "// handle the message"
@@ -31,7 +33,9 @@ done;
 #-- Generate all the output signals
 for OUT in $OUTPUTS;do
   NOPAREN=`sed 's/.*(\(.*\))/\1/' <<< $OUT`
-  SIGNAME=`echo $NOPAREN | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g"`
+  NOPAREN2=`echo $NOPAREN | sed 's/)//'`
+  REMDEPTH=`echo $NOPAREN2 | sed 's/\[[0-9]*\]//'`
+  SIGNAME=`echo $REMDEPTH | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g"`
   echo "void VerilatorSST$Device::handle_${SIGNAME}(SST::Event* ev){"
   echo "// handle the message"
   echo "std::vector<uint8_t> Packet;"
