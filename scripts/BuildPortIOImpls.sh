@@ -70,7 +70,7 @@ build_write () {
       PADBYTE=1
     fi
     BYTES=$((WIDTH / 8 + PADBYTE - 1))
-    CONSTBYTES=$((WIDTH / 8 + PADBYTE - 1))
+    CONSTBYTES=$((WIDTH / 8 + PADBYTE))
     echo "SignalHelper S($WIDTH);"
     if (( $DEPTH > 1 )); then
       echo "for (int i=0; i<$DEPTH; i++) {"
@@ -110,31 +110,62 @@ build_write () {
       # Width is not aligned; partial word with padding
       REMBYTES=$((REMWIDTH / 8 + 1))
     fi
-    # Generate word-wise for loop
-    echo "for (int i=0; i<$WORDS; i++) {"
-    echo "uint32_t tmp = 0;"
-    J=3
-    # Generate for loop body: same process as <32 bits example
-    until ((J < 0))
-    do
-      echo "tmp = (tmp<<8) + (((uint32_t)Packet[i*4+$J]) & 255);"
-      J=$((J-1))
-    done
-    # Full words don't need masking
-    echo "T->$SIGNAME[i] = tmp;"
-    echo "}"
-    if ((REMWIDTH != 0)); then
-      # Case where there is a partial word
-      echo "SignalHelper S($REMWIDTH);"
+    if (( DEPTH > 1 )); then
+      echo "for (int j=0; j<$DEPTH; j++) {"
+      # Generate word-wise for loop
+      echo "for (int i=0; i<$WORDS; i++) {"
       echo "uint32_t tmp = 0;"
-      J=$((REMBYTES - 1))
+      J=3
+      # Generate for loop body: same process as <32 bits example
       until ((J < 0))
       do
-        INDEX=$((WORDS * 4 + J))
-        echo "tmp = (tmp<<8) + (((uint32_t)Packet[$INDEX]) & 255);"
+        echo "tmp = (tmp<<8) + (((uint32_t)Packet[j*($WORDS*4+$REMBYTES)+i*4+$J]) & 255);"
         J=$((J-1))
       done
-      echo "T->$SIGNAME[$WORDS] = (tmp & S.getMask<uint32_t>());"
+      # Full words don't need masking
+      echo "T->$SIGNAME[j][i] = tmp;"
+      echo "}"
+      if ((REMWIDTH != 0)); then
+        # Case where there is a partial word
+        echo "SignalHelper S($REMWIDTH);"
+        echo "uint32_t tmp = 0;"
+        J=$((REMBYTES - 1))
+        until ((J < 0))
+        do
+          INDEX=$((WORDS * 4 + J))
+          echo "tmp = (tmp<<8) + (((uint32_t)Packet[j*($WORDS*4+$REMBYTES)+$INDEX]) & 255);"
+          J=$((J-1))
+        done
+        echo "T->$SIGNAME[j][$WORDS] = (tmp & S.getMask<uint32_t>());"
+      fi
+      echo "}"
+    else
+      # Generate word-wise for loop
+      echo "for (int i=0; i<$WORDS; i++) {"
+      echo "uint32_t tmp = 0;"
+      J=3
+      # Generate for loop body: same process as <32 bits example
+      until ((J < 0))
+      do
+        echo "tmp = (tmp<<8) + (((uint32_t)Packet[i*4+$J]) & 255);"
+        J=$((J-1))
+      done
+      # Full words don't need masking
+      echo "T->$SIGNAME[i] = tmp;"
+      echo "}"
+      if ((REMWIDTH != 0)); then
+        # Case where there is a partial word
+        echo "SignalHelper S($REMWIDTH);"
+        echo "uint32_t tmp = 0;"
+        J=$((REMBYTES - 1))
+        until ((J < 0))
+        do
+          INDEX=$((WORDS * 4 + J))
+          echo "tmp = (tmp<<8) + (((uint32_t)Packet[$INDEX]) & 255);"
+          J=$((J-1))
+        done
+        echo "T->$SIGNAME[$WORDS] = (tmp & S.getMask<uint32_t>());"
+      fi
     fi
     # TODO: may have to change order of word assignment
   fi
@@ -146,10 +177,11 @@ build_read () {
   DEPTH=$3
   #Width aligned to an upper byte boundary
   REMBITS=$((WIDTH % 8))
-  ALIGWIDTH=$((WIDTH + (8 - REMBITS)))
+  ALIGWIDTH=$((WIDTH + 8 - REMBITS))
   if ((REMBITS == 0)); then
     ALIGWIDTH=$WIDTH
   fi
+  REMBYTES=$(( (ALIGWIDTH / 8) % 4))
 
   if [ $WIDTH -lt 9 ]; then
     # less than a 8 bits
@@ -204,35 +236,71 @@ build_read () {
       done
     fi
   else
-    echo "// wider than 64 bits"
-    REMWIDTH=$((WIDTH % 32))
-    WORDS=$((WIDTH / 32 + 1))
-    if ((REMWIDTH == 0)); then
-      # Case where there is a partial word
+    if (( $DEPTH > 1 )); then
+      echo "// wider than 64 bits"
+      REMWIDTH=$((WIDTH % 32))
+      #WORDS=$((WIDTH / 32 + 1))
       WORDS=$((WIDTH / 32))
-    fi
-    echo "uint8_t tmp = 0;"
-    echo "for (int i=0; i<$WORDS; i++) {"
-    LOOPI=0
-    # Read out full words
-    until ((LOOPI == 4))
-    do
-      SHIFTBIT=$((LOOPI * 8))
-      echo "tmp = (T->$SIGNAME[i] >> $SHIFTBIT) & 255;"
-      echo "d.push_back(tmp);"
-      LOOPI=$((LOOPI + 1))
-    done
-    echo "}"
-    if ((REMBITS != 0)); then
-      # Read out partial word
-      PARTALIGWIDTH=$((ALIGWIDTH - (WORDS-1) * 32))
+      #jif ((REMWIDTH != 0)); then
+        # Case where there is a partial word
+        #WORDS=$((WIDTH / 32))
+      #fi
+      echo "for (int j=0; j<$DEPTH; j++) {"
+      echo "uint8_t tmp = 0;"
+      echo "for (int i=0; i<$WORDS; i++) {"
       LOOPI=0
-      until ((LOOPI == PARTALIGWIDTH))
+      # Read out full words
+      until ((LOOPI == 4))
       do
-        echo "tmp = (T->$SIGNAME[$WORDS] >> $LOOPI) & 255;"
+        SHIFTBIT=$((LOOPI * 8))
+        echo "tmp = (T->$SIGNAME[j][i] >> $SHIFTBIT) & 255;"
         echo "d.push_back(tmp);"
-        LOOPI=$((LOOPI + 8))
+        LOOPI=$((LOOPI + 1))
       done
+      echo "}"
+      if ((REMBYTES != 0)); then
+        # Read out partial word
+        PARTALIGWIDTH=$((REMBYTES * 8))
+        LOOPI=0
+        until ((LOOPI == PARTALIGWIDTH))
+        do
+          echo "tmp = (T->$SIGNAME[j][$WORDS] >> $LOOPI) & 255;"
+          echo "d.push_back(tmp);"
+          LOOPI=$((LOOPI + 8))
+        done
+      fi
+      echo "}"
+    else
+      echo "// wider than 64 bits"
+      REMWIDTH=$((WIDTH % 32))
+      WORDS=$((WIDTH / 32 + 1))
+      if ((REMWIDTH != 0)); then
+        # Case where there is a partial word
+        WORDS=$((WIDTH / 32))
+      fi
+      echo "uint8_t tmp = 0;"
+      echo "for (int i=0; i<$WORDS; i++) {"
+      LOOPI=0
+      # Read out full words
+      until ((LOOPI == 4))
+      do
+        SHIFTBIT=$((LOOPI * 8))
+        echo "tmp = (T->$SIGNAME[i] >> $SHIFTBIT) & 255;"
+        echo "d.push_back(tmp);"
+        LOOPI=$((LOOPI + 1))
+      done
+      echo "}"
+      if ((REMBYTES != 0)); then
+        # Read out partial word
+        PARTALIGWIDTH=$((REMBYTES * 8))
+        LOOPI=0
+        until ((LOOPI == PARTALIGWIDTH))
+        do
+          echo "tmp = (T->$SIGNAME[$WORDS] >> $LOOPI) & 255;"
+          echo "d.push_back(tmp);"
+          LOOPI=$((LOOPI + 8))
+        done
+      fi
     fi
   fi
 }
