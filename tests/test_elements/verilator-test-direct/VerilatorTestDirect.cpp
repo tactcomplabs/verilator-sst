@@ -54,10 +54,10 @@ std::vector<uint8_t> VerilatorTestDirect::generateData(unsigned Width, unsigned 
 
   // determine the number of uint8_t's
   unsigned NumVals = (Width/8) + ((Width%8) > 0);
-  unsigned CurrentBits = 0;
 
   for (unsigned j = 0; j < Depth; j++) {
     // build the NumVals-1 values
+    unsigned CurrentBits = 0;
     for (unsigned i = 0; i < NumVals - 1; i++) {
       data.push_back((uint8_t)(rand() & 0b11111111));
       CurrentBits += 8;
