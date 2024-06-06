@@ -22,7 +22,13 @@ build_write () {
     # less than a 8 bits
     echo "// less than 8 bit"
     echo "SignalHelper S($WIDTH);"
-    echo "T->$SIGNAME = (Packet[0] & S.getMask<uint8_t>());"
+    if (( $DEPTH > 1 )); then
+      echo "for (int i=0; i<$DEPTH; i++) {"
+      echo "T->$SIGNAME[i] = (Packet[i] & S.getMask<uint8_t>());"
+      echo "}"
+    else
+      echo "T->$SIGNAME = (Packet[0] & S.getMask<uint8_t>());"
+    fi
   elif [ $WIDTH -lt 33 ]; then
     # less than 32 bits
     echo "// less than 32 bits"
@@ -33,14 +39,27 @@ build_write () {
       PADBYTE=1
     fi
     BYTES=$((WIDTH / 8 + PADBYTE - 1))
+    CONSTBYTES=$((WIDTH / 8 + PADBYTE - 1))
     echo "SignalHelper S($WIDTH);"
-    echo "uint32_t tmp = 0;"
-    until ((BYTES < 0))
-    do
-      echo "tmp = (tmp<<8) + (((uint32_t)Packet[$BYTES]) & 255);"
-      BYTES=$((BYTES-1))
-    done
-    echo "T->$SIGNAME = (tmp & S.getMask<uint32_t>());"
+    if (( $DEPTH > 1 )); then
+      echo "for (int i=0; i<$DEPTH; i++) {"
+      echo "uint32_t tmp = 0;"
+      until ((BYTES < 0))
+      do
+        echo "tmp = (tmp<<8) + (((uint32_t)Packet[i*$CONSTBYTES+$BYTES]) & 255);"
+        BYTES=$((BYTES-1))
+      done
+      echo "T->$SIGNAME[i] = (tmp & S.getMask<uint32_t>());"
+      echo "}"
+    else 
+      echo "uint32_t tmp = 0;"
+      until ((BYTES < 0))
+      do
+        echo "tmp = (tmp<<8) + (((uint32_t)Packet[$BYTES]) & 255);"
+        BYTES=$((BYTES-1))
+      done
+      echo "T->$SIGNAME = (tmp & S.getMask<uint32_t>());"
+    fi
   elif [ $WIDTH -lt 65 ]; then
     # less than 64 bits
     echo "// less than 64 bits"
@@ -51,14 +70,27 @@ build_write () {
       PADBYTE=1
     fi
     BYTES=$((WIDTH / 8 + PADBYTE - 1))
+    CONSTBYTES=$((WIDTH / 8 + PADBYTE - 1))
     echo "SignalHelper S($WIDTH);"
-    echo "uint64_t tmp = 0;"
-    until ((BYTES < 0))
-    do
-      echo "tmp = (tmp<<8) + (((uint64_t)Packet[$BYTES]) & 255);"
-      BYTES=$((BYTES-1))
-    done
-    echo "T->$SIGNAME = (tmp & S.getMask<uint64_t>());"
+    if (( $DEPTH > 1 )); then
+      echo "for (int i=0; i<$DEPTH; i++) {"
+      echo "uint64_t tmp = 0;"
+      until ((BYTES < 0))
+      do
+        echo "tmp = (tmp<<8) + (((uint64_t)Packet[i*$CONSTBYTES+$BYTES]) & 255);"
+        BYTES=$((BYTES-1))
+      done
+      echo "T->$SIGNAME[i] = (tmp & S.getMask<uint64_t>());"
+      echo "}"
+    else 
+      echo "uint64_t tmp = 0;"
+      until ((BYTES < 0))
+      do
+        echo "tmp = (tmp<<8) + (((uint64_t)Packet[$BYTES]) & 255);"
+        BYTES=$((BYTES-1))
+      done
+      echo "T->$SIGNAME = (tmp & S.getMask<uint64_t>());"
+    fi
   else
     # > 64 bits
     # Verilator splits these into struct VlWide which is m_storage[T_Words] of EData (uint32_t). Can be indexed directly
@@ -133,22 +165,44 @@ build_read () {
     echo "// less than 32 bit"
     echo "uint8_t tmp = 0;"
     LOOPI=0
-    until ((LOOPI == ALIGWIDTH))
-    do
-      echo "tmp = (T->$SIGNAME >> $LOOPI) & 255;"
-      echo "d.push_back(tmp);"
-      LOOPI=$((LOOPI + 8))
-    done
+    if (( $DEPTH > 1 )); then
+      echo "for (int i=0; i<$DEPTH; i++) {"
+      until ((LOOPI == ALIGWIDTH))
+      do
+        echo "tmp = (T->$SIGNAME[i] >> $LOOPI) & 255;"
+        echo "d.push_back(tmp);"
+        LOOPI=$((LOOPI + 8))
+      done
+      echo "}"
+    else
+      until ((LOOPI == ALIGWIDTH))
+      do
+        echo "tmp = (T->$SIGNAME >> $LOOPI) & 255;"
+        echo "d.push_back(tmp);"
+        LOOPI=$((LOOPI + 8))
+      done
+    fi
   elif [ $WIDTH -lt 65 ]; then
     echo "// less than 64 bit"
     echo "uint8_t tmp = 0;"
     LOOPI=0
-    until ((LOOPI == ALIGWIDTH))
-    do
-      echo "tmp = (T->$SIGNAME >> $LOOPI) & 255;"
-      echo "d.push_back(tmp);"
-      LOOPI=$((LOOPI + 8))
-    done
+    if (( $DEPTH > 1 )); then
+      echo "for (int i=0; i<$DEPTH; i++) {"
+      until ((LOOPI == ALIGWIDTH))
+      do
+        echo "tmp = (T->$SIGNAME[i] >> $LOOPI) & 255;"
+        echo "d.push_back(tmp);"
+        LOOPI=$((LOOPI + 8))
+      done
+      echo "}"
+    else
+      until ((LOOPI == ALIGWIDTH))
+      do
+        echo "tmp = (T->$SIGNAME >> $LOOPI) & 255;"
+        echo "d.push_back(tmp);"
+        LOOPI=$((LOOPI + 8))
+      done
+    fi
   else
     echo "// wider than 64 bits"
     REMWIDTH=$((WIDTH % 32))
