@@ -21,28 +21,36 @@
 # Generate the signals from the Verilator top
 # -----------------------------------------------------------------
 set(VTOP "${CMAKE_CURRENT_SOURCE_DIR}/${VERILOG_DEVICE}/VTop.h")
+message(STATUS "Building verilator source...")
 execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/BuildVerilatorSrc.sh
                         ${VERILOG_DEVICE} ${VERILOG_TOP} ${VERILOG_TOP_SOURCES}
                 OUTPUT_VARIABLE VERILATOR_OUT
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+message(STATUS "Building port definitions...")
 execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/BuildPortDef.sh ${VTOP}
                 OUTPUT_VARIABLE VERILATOR_SST_PORT_DEF
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
+message(STATUS "Building port entries...")
 execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/BuildPortEntry.sh ${VTOP} ${VERILOG_DEVICE}
                 OUTPUT_VARIABLE VERILATOR_SST_PORT_ENTRY
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
+message(STATUS "Building port map...")
 execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/BuildPortMap.sh ${VTOP}
                 OUTPUT_VARIABLE VERILATOR_SST_PORT_MAP
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
+message(STATUS "Building port handlers...")
 execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/BuildPortHandlers.sh ${VTOP}
                 OUTPUT_VARIABLE VERILATOR_SST_PORT_HANDLERS
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
+message(STATUS "Building port IO...")
 execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/BuildPortIO.sh ${VTOP}
                 OUTPUT_VARIABLE VERILATOR_SST_PORT_IO_HANDLERS
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
+message(STATUS "Building port IO implementations...")
 execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/BuildPortIOImpls.sh ${VTOP} ${VERILOG_DEVICE}
                 OUTPUT_VARIABLE VERILATOR_SST_PORT_IO_IMPLS
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
+message(STATUS "Building port handler implementations...")
 execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/BuildPortHandlerImpls.sh ${VTOP} ${VERILOG_DEVICE}
                 OUTPUT_VARIABLE VERILATOR_SST_PORT_HANDLER_IMPLS
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
