@@ -47,12 +47,12 @@ VerilatorSST@VERILOG_DEVICE@::VerilatorSST@VERILOG_DEVICE@(ComponentId_t id,
   // init verilator interfaces
   ContextP = new VerilatedContext();
   ContextP->threads(1);
-  Top = new VTop();
   ContextP->debug(VL_DEBUG);
   ContextP->randReset(2);
   ContextP->traceEverOn(true);
   const char *empty {};
   ContextP->commandArgs(0,&empty);
+  Top = new VTop(ContextP, "");
 #if VL_DEBUG == 1
   ContextP->internalsDump();
 #endif
@@ -249,12 +249,104 @@ uint64_t VerilatorSST@VERILOG_DEVICE@::getCurrentTick(){
 }
 
 std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPortVPI(std::string PortName){
+  vpiHandle vh1 = vpi_handle_by_name((PLI_BYTE8 *)PortName.data(), NULL);
+  assert(vh1 && "vpi should return a handle (port not found)");
+
+  auto vpiTypeVal = vpi_get(vpiType, vh1);
+  auto vpiSizeVal = vpi_get(vpiSize, vh1);
+
   std::vector<uint8_t> d;
+
+  if(vpiTypeVal == vpiReg){
+    t_vpi_value val{vpiStringVal};
+    vpi_get_value(vh1, &val);
+    unsigned numBytes = (vpiSizeVal / 8) + (vpiSizeVal % 8 == 0) ? 0 : 1;
+    for (unsigned i=0; i<numBytes; i++) {
+      d.push_back((uint8_t)val.value.str[i]);
+    }
+    return d;
+  }
+
+  if(vpiTypeVal == vpiMemory){
+    vpiHandle iter = vpi_iterate(vpiMemoryWord,vh1);
+    assert(iter);
+
+    bool first = true;
+    auto firstWordSizeBits = 0;
+    auto nBytesPerWord = 0;
+    auto totalBytes = 0;
+    PLI_BYTE8 * buf;
+
+    int i = 0;
+    while(auto wordHandle = vpi_scan(iter)){
+      PLI_INT32 wordSizeBits = vpi_get(vpiSize, wordHandle);
+
+      if(first == true){
+        firstWordSizeBits = wordSizeBits;
+        nBytesPerWord = (firstWordSizeBits / 8) + (firstWordSizeBits % 8 == 0) ? 0 : 1;
+        totalBytes = nBytesPerWord*vpiSizeVal;
+        first = false;
+      }
+      assert(firstWordSizeBits == wordSizeBits);
+
+      t_vpi_value word{vpiStringVal};
+      vpi_get_value(wordHandle, &word);
+
+      auto offset = (totalBytes-(nBytesPerWord*(1+i)));
+      for (unsigned j=0; j<nBytesPerWord; j++) {
+        d.push_back((uint8_t) word.value.str[j]);
+      }
+
+      vpi_free_object(wordHandle);
+      i++;
+    }
+
+    return d;
+  }
+  assert(false && "unsupported vpiType");
   return d;
 }
 
 void VerilatorSST@VERILOG_DEVICE@::writePortVPI(std::string PortName,
                                                 std::vector<uint8_t> Packet){
+  vpiHandle vh1 = vpi_handle_by_name((PLI_BYTE8 *)PortName.data(), NULL);
+  assert(vh1 && "vpi should return a handle (port not found)");
+
+  auto vpiTypeVal = vpi_get(vpiType, vh1);
+  auto vpiSizeVal = vpi_get(vpiSize, vh1);
+  
+  auto vpiDirVal = vpi_get(vpiDirection,vh1);
+  assert(vpiDirVal == vpiInput && "port must be an input, inout not supported");
+
+  if(vpiTypeVal == vpiReg){
+    t_vpi_value val = {vpiStringVal, (PLI_BYTE8 *) Packet.data()};
+    //t_vpi_value val = signal.getVpiValue(0);
+    vpi_put_value(vh1,&val,NULL,0);
+    return;
+  }
+
+  if(vpiTypeVal == vpiMemory){
+    //assert(vpiSizeVal == signal.getDepth() && "port depth must match signal depth");
+    vpiHandle iter = vpi_iterate(vpiMemoryWord,vh1);
+    assert(iter);
+
+    int i = 0;
+    while(auto wordHandle = vpi_scan(iter)){
+      auto wordSizeBits = vpi_get(vpiSize, wordHandle);
+      unsigned numBytes = (wordSizeBits / 8) + (wordSizeBits % 8 == 0) ? 0 : 1;
+      //assert(wordSizeBits == signal.getNumBits() && "word width must mach signal width");
+
+      t_vpi_value val = {vpiStringVal, (PLI_BYTE8 *) Packet.data()+numBytes*i};
+      //t_vpi_value val = signal.getVpiValue(i);
+      vpi_put_value(wordHandle,&val,NULL,0);
+
+      vpi_free_object(wordHandle);
+      i++;
+    }
+
+    return;
+  }
+  assert(false && "unsupported vpiType");
 }
 
 void VerilatorSST@VERILOG_DEVICE@::writePort(std::string PortName,
