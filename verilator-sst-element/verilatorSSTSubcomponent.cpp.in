@@ -260,7 +260,7 @@ std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPortVPI(std::string PortN
   if(vpiTypeVal == vpiReg){
     t_vpi_value val{vpiStringVal};
     vpi_get_value(vh1, &val);
-    unsigned numBytes = (vpiSizeVal / 8) + (vpiSizeVal % 8 == 0) ? 0 : 1;
+    unsigned numBytes = (vpiSizeVal / 8) + ((vpiSizeVal % 8 == 0) ? 0 : 1);
     for (unsigned i=0; i<numBytes; i++) {
       d.push_back((uint8_t)val.value.str[i]);
     }
@@ -283,7 +283,7 @@ std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPortVPI(std::string PortN
 
       if(first == true){
         firstWordSizeBits = wordSizeBits;
-        nBytesPerWord = (firstWordSizeBits / 8) + (firstWordSizeBits % 8 == 0) ? 0 : 1;
+        nBytesPerWord = (firstWordSizeBits / 8) + ((firstWordSizeBits % 8 == 0) ? 0 : 1);
         totalBytes = nBytesPerWord*vpiSizeVal;
         first = false;
       }
@@ -333,7 +333,7 @@ void VerilatorSST@VERILOG_DEVICE@::writePortVPI(std::string PortName,
     int i = 0;
     while(auto wordHandle = vpi_scan(iter)){
       auto wordSizeBits = vpi_get(vpiSize, wordHandle);
-      unsigned numBytes = (wordSizeBits / 8) + (wordSizeBits % 8 == 0) ? 0 : 1;
+      unsigned numBytes = (wordSizeBits / 8) + ((wordSizeBits % 8 == 0) ? 0 : 1);
       //assert(wordSizeBits == signal.getNumBits() && "word width must mach signal width");
 
       t_vpi_value val = {vpiStringVal, (PLI_BYTE8 *) Packet.data()+numBytes*i};
