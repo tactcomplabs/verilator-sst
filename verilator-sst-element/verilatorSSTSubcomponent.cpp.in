@@ -97,10 +97,13 @@ void VerilatorSST@VERILOG_DEVICE@::pollWriteQueue(){
   for (auto it=WriteQueue.begin(); it!=WriteQueue.end();) {
     auto ele = *it;
     if (ele.AtTick == currTick) {
-      printf("VerilatorSST subcomponent: writing port %s with %x at tick %lld\n", ele.portName.data(), ele.Packet[0], currTick);
-      unsigned Idx = PortMap.at(ele.portName);
-      DirectWriteFunc Func = std::get<V_WRITEFUNC>(Ports[Idx]);
-      (*Func)(Top,ele.Packet);
+      if (UseVPI) {
+        writePortVPI(ele.PortName, ele.Packet);
+      } else {
+        unsigned Idx = PortMap.at(ele.PortName);
+        DirectWriteFunc Func = std::get<V_WRITEFUNC>(Ports[Idx]);
+        (*Func)(Top,ele.Packet);
+      }
       it = WriteQueue.erase(it);
     } else {
       it++;
@@ -376,13 +379,9 @@ void VerilatorSST@VERILOG_DEVICE@::writePortAtTick(std::string PortName,
                   PortName.c_str());
   }
 
-  // determine which write to use
-  if( UseVPI ){
-    writePortVPI(PortName, Packet);
-  }else{
-    // Tick is used as a delay/offset, not a definite tick value
-    WriteQueue.emplace_back(PortName, Tick+getCurrentTick(), Packet);
-  }
+  // Tick is used as a delay/offset, not a definite tick value
+  // VPI/Direct is decided when polling the WriteQueue
+  WriteQueue.emplace_back(PortName, Tick+getCurrentTick(), Packet);
 }
 
 std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPort(std::string PortName){

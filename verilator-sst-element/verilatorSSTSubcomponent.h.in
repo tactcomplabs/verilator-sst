@@ -68,11 +68,11 @@ typedef std::pair<std::string,
                   uint64_t> PortReset;
 
 struct QueueEntry {
-  std::string portName;
+  std::string PortName;
   uint64_t AtTick;
   std::vector<uint8_t> Packet;
-  QueueEntry(std::string portName, uint64_t AtTick, std::vector<uint8_t> Packet)
-      : portName(portName), AtTick(AtTick), Packet(Packet) { }
+  QueueEntry(std::string PortName, uint64_t AtTick, std::vector<uint8_t> Packet)
+      : PortName(PortName), AtTick(AtTick), Packet(Packet) { }
 };
 
 
