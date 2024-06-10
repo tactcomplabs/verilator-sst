@@ -69,9 +69,6 @@ void BasicVerilogUartMem::verifyMemory(){
 	auto dataBytes = Signal::calculateNumBytes(dataWidth);
 	auto addrLen = (1 << addrWidth);
 	auto maxAddr = addrLen - 1;
-	for(auto i=0;i<(dataBytes*addrLen);i++){
-		out->output("memDebugArr[%u]=%u\n",i,memDebugArr[i]);
-	}
 
 	for(auto i=0;i<addrLen;i++){
 		auto mappedAddr = i*dataBytes;

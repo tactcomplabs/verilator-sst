@@ -37,7 +37,6 @@ assign baud_reset = (start) ? BAUD_PERIOD >> 1 : BAUD_PERIOD;
 always_ff @(posedge clk) begin
 	if (start | shift) begin
 		baud_cnt <= baud_reset;
-		$display("verilog:rx: resetting baud time=%0t baud_reset=%0d baud_cnt=%0d start=%0d shift=%0d",$time,baud_reset, baud_cnt,start,shift);
 	end
 	else if (dec_baud) begin
 		baud_cnt <= baud_cnt - 1;
