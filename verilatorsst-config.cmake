@@ -50,13 +50,12 @@ set(LDFLAGS "${SST_LDFLAGS}")
 #------------------------------------------------------------------
 # VERILATOR SETUP
 #------------------------------------------------------------------
-find_package(verilator HINTS $ENV{VERILATOR_ROOT} ${VERILATOR_ROOT})
+# find_program(VERILATOR verilator)
+find_package(verilator $ENV{VERILATOR_ROOT} ${VERILATOR_ROOT})
 if (NOT verilator_FOUND)
-	message(FATAL_ERROR "Verilator was not found. Either install it, or set the VERILATOR_ROOT environment variable")
+    message(FATAL_ERROR "Verilator package could not be found")
 endif()
-if(NOT VERILATOR_INCLUDE)
-	set(VERILATOR_INCLUDE "${VERILATOR_ROOT}/include")
-endif()
+set(VERILATOR_INCLUDE ${VERILATOR_ROOT}/include)
 
 message(STATUS "[VERILATOR] VERILATOR_INCLUDE=${VERILATOR_INCLUDE}")
 
@@ -65,7 +64,7 @@ message(STATUS "[VERILATOR] VERILATOR_INCLUDE=${VERILATOR_INCLUDE}")
 #------------------------------------------------------------------
 
 function(verilatorsstf TARGET)
-	cmake_parse_arguments(VERILATORSSTF "DEBUG" "VSRC_DIR;CSRC_DIR;TOP_MODULE" "VERILATOR_ARGS" ${ARGN})
+	cmake_parse_arguments(VERILATORSSTF "DEBUG;SUBCOMPONENT" "VSRC_DIR;CSRC_DIR;TOP_MODULE" "VERILATOR_ARGS" ${ARGN})
 
     if(VERILATORSSTF_DEBUG)
         set(VL_DEBUG_FLAG --debug -CFLAGS "-DVL_DEBUG")
@@ -86,8 +85,7 @@ function(verilatorsstf TARGET)
 	set(VTOP_LIB "vtop")
     set(MDIR ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${VTOP_LIB}.dir)
 
-    find_program(VERILATOR verilator)
-    set(VERILATOR_COMMAND ${VERILATOR}
+    set(VERILATOR_COMMAND ${VERILATOR_BIN}
         --threads 1 --cc --build --vpi --public-flat-rw
         -CFLAGS "${SST_CXXFLAGS}" -LDFLAGS "${SST_LDFLAGS}"
         -Wall -Mdir ${MDIR} --prefix VTop
@@ -134,19 +132,30 @@ function(verilatorsstf TARGET)
     target_include_directories(${TARGET}
         PUBLIC ${SST_INSTALL_DIR}/include)
 
-    # # # configure subcomponent
-    # set(SUBCOMPONENT ${CMAKE_CURRENT_BINARY_DIR}/verilatorSSTSubcomponent.cpp ${CMAKE_CURRENT_BINARY_DIR}/verilatorSSTSubcomponent.h)
-    # add_custom_command(OUTPUT ${SUBCOMPONENT}
-    #     COMMAND ${CMAKE_COMMAND} -DVTOP_HEADER=${MDIR}/VTop.h -P ${CMAKE_CURRENT_FUNCTION_LIST_DIR}/src/subcomponent.cmake
-    #     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    #     DEPENDS ${VTOP_LIB}
-    #     COMMENT "Configuring subcomponents")
+    # configure subcomponent
+    if(VERILATORSSTF_SUBCOMPONENT)
+        set(SUBCOMPONENT_SRC ${CMAKE_CURRENT_BINARY_DIR}/verilatorSSTSubcomponent.cpp)
+        set(SUBCOMPONENT_HDR ${CMAKE_CURRENT_BINARY_DIR}/verilatorSSTSubcomponent.h)
 
-    # # # add subcomponent files to target
-    # target_sources(${TARGET}
-    #     PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/verilatorSSTSubcomponent.cpp)
-    # target_include_directories(${TARGET}
-    #     PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+        set(SUBCOMPONENT_CONFIG_COMMAND ${CMAKE_COMMAND}
+            -DVTOP=${MDIR}/Vtop.h
+            -DVERILOG_TOP=VTOP
+            -DSOURCE_DIR=${CMAKE_CURRENT_FUNCTION_LIST_DIR}/verilator-sst-element
+            -DSCRIPT_DR=${CMAKE_CURRENT_FUNCTION_LIST_DIR}/scripts
+            -P ${CMAKE_CURRENT_FUNCTION_LIST_DIR}/verilator-sst-element/subcomponent-configure.cmake)
+
+        add_custom_command(
+            OUTPUT ${SUBCOMPONENT_SRC}
+            COMMAND ${SUBCOMPONENT_CONFIG_COMMAND}
+            COMMENT "Configuring subcomponent verilatorSSTSubcomponent.cpp"
+            VERBATIM)
+
+        # add subcomponent files to target
+        target_sources(${TARGET}
+            PRIVATE ${SUBCOMPONENT_SRC})
+        target_include_directories(${TARGET}
+            PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+    endif()
 
     # add DEBUG flags
     if(VERILATORSSTF_DEBUG)
@@ -158,6 +167,8 @@ function(verilatorsstf TARGET)
     target_compile_options(${TARGET} PRIVATE ${SST_CXXFLAGS_LIST})
     separate_arguments(SST_LDFLAGS_LIST UNIX_COMMAND ${SST_LDFLAGS})
     target_link_options(${TARGET} PRIVATE ${SST_LDFLAGS_LIST})
+
+    # change output to libverilatorsst.X
     set_target_properties(${TARGET} PROPERTIES OUTPUT_NAME "verilatorsst")
 
     # set install location and comamnds

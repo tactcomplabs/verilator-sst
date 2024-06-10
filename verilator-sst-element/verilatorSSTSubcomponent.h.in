@@ -8,8 +8,8 @@
 // See LICENSE in the top level directory for licensing details
 //
 
-#ifndef _VERILATOR_SST_H_
-#define _VERILATOR_SST_H_
+#ifndef _@VERILOG_DEVICE@_SUBCOMPONENT_H_
+#define _@VERILOG_DEVICE@_SUBCOMPONENT_H_
 
 // -- Standard Headers
 #include <vector>
@@ -29,7 +29,7 @@
 #include "verilated.h"
 #include "verilated_vpi.h"
 
-namespace SST::VerilatorSST{
+namespace SST::VerilatorSST {
 
 enum class VPortType : uint8_t {
   V_INPUT   = 0b00000000,       /// VPortType: input port
@@ -253,7 +253,7 @@ protected:
 class VerilatorSST@VERILOG_DEVICE@ : public VerilatorSSTBase{
 public:
   SST_ELI_REGISTER_SUBCOMPONENT(VerilatorSST@VERILOG_DEVICE@,
-                                "verilatorsst@VERILOG_DEVICE@",
+                                "verilatorsst",
                                 "VerilatorSST@VERILOG_DEVICE@",
                                 SST_ELI_ELEMENT_VERSION(1, 0, 0),
                                 "Verilator SST @VERILOG_DEVICE@ Wrapper",
@@ -383,4 +383,4 @@ private:
 
 } // namespace SST::VerilatorSST
 
-#endif // _VERILATOR_SST_H_
+#endif

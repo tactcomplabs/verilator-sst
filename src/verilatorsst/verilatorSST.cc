@@ -183,4 +183,3 @@ void VerilatorSST<T>::finish(){
     top->final();
     isFinished = true;
 }
-

@@ -10,7 +10,7 @@
 
 #include "verilatorSSTSubcomponent.h"
 
-namespace SST::VerilatorSST{
+using namespace SST::VerilatorSST;
 
 // ---------------------------------------------------------------
 // VerilatorSSTBase
@@ -408,7 +408,5 @@ std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPort(std::string PortName
 @VERILATOR_SST_PORT_IO_IMPLS@
 
 @VERILATOR_SST_PORT_HANDLER_IMPLS@
-
-} // namespace SST::VerilatorSST
 
 // EOF
