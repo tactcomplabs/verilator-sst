@@ -1,8 +1,3 @@
-`ifndef STOP_WIDTH
-`define STOP_WIDTH 1
-`endif
-
-
 module Counter #(parameter STOP_WIDTH=`STOP_WIDTH) (
    input              clk,
    input              reset_l,

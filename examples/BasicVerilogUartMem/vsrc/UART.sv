@@ -3,18 +3,6 @@
 //read rx={0} -> rx{addr} -> tx{data}
 //write rx={1} -> rx{addr} -> rx{data}
 
-`ifndef ADDR_WIDTH
-`define ADDR_WIDTH 1
-`endif
-
-`ifndef DATA_WIDTH
-`define DATA_WIDTH 1
-`endif
-
-`ifndef BAUD_PERIOD
-`define BAUD_PERIOD 1
-`endif
-
 `define assert(cond,msg) initial begin \
     if (~cond) begin \
         $display(msg); \
@@ -23,6 +11,7 @@
 end
 
 module UART #(
+    parameter FRAME_WIDTH=`FRAME_WIDTH,
     parameter ADDR_WIDTH=`ADDR_WIDTH, 
     parameter DATA_WIDTH=`DATA_WIDTH, 
     parameter BAUD_PERIOD=`BAUD_PERIOD)(
@@ -33,11 +22,11 @@ module UART #(
     output [DATA_WIDTH-1:0] mem_debug [0:(2**ADDR_WIDTH)-1]);
 
 wire rx_done, tx_done;
-wire [ADDR_WIDTH-1:0] tx_data, rx_data;
+wire [FRAME_WIDTH-1:0] tx_data, rx_data;
 reg [ADDR_WIDTH-1:0] write_addr;
 reg set_addr, wr, trmt, clr_rx_done, clr_tx_done;
 
-UART_tx #(.ADDR_WIDTH(ADDR_WIDTH), .BAUD_PERIOD(BAUD_PERIOD)) iTX(
+UART_tx #(.FRAME_WIDTH(FRAME_WIDTH), .BAUD_PERIOD(BAUD_PERIOD)) iTX(
     .clk(clk),
     .rst_l(rst_l),
     .tx(TX),
@@ -46,7 +35,7 @@ UART_tx #(.ADDR_WIDTH(ADDR_WIDTH), .BAUD_PERIOD(BAUD_PERIOD)) iTX(
     .tx_done(tx_done),
     .clr_tx_done(clr_tx_done));
 
-UART_rx #(.ADDR_WIDTH(ADDR_WIDTH), .BAUD_PERIOD(BAUD_PERIOD)) iRX(
+UART_rx #(.FRAME_WIDTH(FRAME_WIDTH), .BAUD_PERIOD(BAUD_PERIOD)) iRX(
     .clk(clk), 
     .rst_l(rst_l), 
     .rx(RX), 
@@ -56,7 +45,7 @@ UART_rx #(.ADDR_WIDTH(ADDR_WIDTH), .BAUD_PERIOD(BAUD_PERIOD)) iRX(
 
 
 wire [DATA_WIDTH-1:0] rdata;
-assign tx_data = {{ADDR_WIDTH-DATA_WIDTH{1'bx}}, rdata};
+assign tx_data = {{FRAME_WIDTH-DATA_WIDTH{1'bx}}, rdata};
 RAM #(.ADDR_WIDTH(ADDR_WIDTH), .DATA_WIDTH(DATA_WIDTH)) ram (
     .clk(clk),
     .rst_l(rst_l),
@@ -73,7 +62,7 @@ always_ff @(posedge clk, negedge rst_l) begin
 	if (~rst_l)
 		write_addr <= '0;
 	else if (set_addr)
-        write_addr <= rx_data;
+        write_addr <= rx_data[ADDR_WIDTH-1:0];
 end
 
 always_ff @(posedge clk, negedge rst_l) begin
@@ -143,11 +132,22 @@ always_comb begin
 end
 
 initial begin
-    if (ADDR_WIDTH < DATA_WIDTH) begin
-        $display("ADDR_WIDTH must be larger than or equal to DATA_WIDTH");
+    if (FRAME_WIDTH < ADDR_WIDTH) begin
+        $display("verilog:top: FRAME_WIDTH must be larger than or equal to ADDR_WIDTH");
         $finish;
     end
-    $display("ADDR_WIDTH=%0d DATA_WIDTH=%0d BAUD_PERIOD=%0d", ADDR_WIDTH, DATA_WIDTH, BAUD_PERIOD);
+
+    if (FRAME_WIDTH < DATA_WIDTH) begin
+        $display("verilog:top: FRAME_WIDTH must be larger than or equal to DATA_WIDTH");
+        $finish;
+    end
+    
+    if (16 < BAUD_PERIOD) begin
+        $display("verilog:top: BAUD_PERIOD must be larger than or equal to 16");
+        $finish;
+    end
+
+    $display("verilog:top: FRAME_WIDTH=%0d ADDR_WIDTH=%0d DATA_WIDTH=%0d BAUD_PERIOD=%0d", FRAME_WIDTH, ADDR_WIDTH, DATA_WIDTH, BAUD_PERIOD);
 end
 
 endmodule;

@@ -17,6 +17,7 @@ always_ff @ (posedge clk, negedge rst_l) begin
       end
       else if (wr) begin
         mem[addr] <= wdata;
+        $display("verilog:ram: wrote %0d to mem addr %0d",wdata,addr);
       end
    end
 

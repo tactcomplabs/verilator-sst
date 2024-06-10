@@ -65,7 +65,11 @@ message(STATUS "[VERILATOR] VERILATOR_INCLUDE=${VERILATOR_INCLUDE}")
 #------------------------------------------------------------------
 
 function(verilatorsstf TARGET)
-	cmake_parse_arguments(VERILATORSSTF "" "VSRC_DIR;CSRC_DIR;TOP_MODULE" "VERILATOR_ARGS" ${ARGN})
+	cmake_parse_arguments(VERILATORSSTF "DEBUG" "VSRC_DIR;CSRC_DIR;TOP_MODULE" "VERILATOR_ARGS" ${ARGN})
+
+    if(VERILATORSSTF_DEBUG)
+        set(VL_DEBUG_FLAG --debug -CFLAGS "-DVL_DEBUG")
+    endif()
 
 	# check required arguments
 	if (NOT VERILATORSSTF_VSRC_DIR)
@@ -85,13 +89,17 @@ function(verilatorsstf TARGET)
     find_program(VERILATOR verilator)
     set(VERILATOR_COMMAND ${VERILATOR}
         --threads 1 --cc --build --vpi --public-flat-rw
-        -CFLAGS \"-fPIC -std=c++17\" -LDFLAGS \"${SST_LDFLAGS}\"
+        -CFLAGS "${SST_CXXFLAGS}" -LDFLAGS "${SST_LDFLAGS}"
         -Wall -Mdir ${MDIR} --prefix VTop
-        -I${VERILATORSSTF_VSRC_DIR} ${VERILATORSSTF_VERILATOR_ARGS} ${VERILATORSSTF_TOP_MODULE})
+        -I${VERILATORSSTF_VSRC_DIR} 
+        ${VERILATORSSTF_VERILATOR_ARGS} 
+        ${VL_DEBUG_FLAG}
+        ${VERILATORSSTF_TOP_MODULE})
 
     add_custom_target(${VTOP_LIB}
         COMMAND ${VERILATOR_COMMAND}
-        COMMENT "Verilating verilog files")
+        COMMENT "Verilating verilog files"
+        VERBATIM)
     add_dependencies(${TARGET} ${VTOP_LIB})
         
     # add verilator output files to target dependencies
@@ -139,6 +147,11 @@ function(verilatorsstf TARGET)
     #     PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/verilatorSSTSubcomponent.cpp)
     # target_include_directories(${TARGET}
     #     PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
+    # add DEBUG flags
+    if(VERILATORSSTF_DEBUG)
+        target_compile_options(${TARGET} PRIVATE "-DDEBUG -O0")
+    endif()
 
     # add SST flags
     separate_arguments(SST_CXXFLAGS_LIST UNIX_COMMAND ${SST_CXXFLAGS})

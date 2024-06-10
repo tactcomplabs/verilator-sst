@@ -1,15 +1,15 @@
-module UART_tx #(parameter ADDR_WIDTH, parameter BAUD_PERIOD) (
+module UART_tx #(parameter FRAME_WIDTH, parameter BAUD_PERIOD) (
     input clk, 
     input rst_l, 
     input trmt, 
-    input [ADDR_WIDTH-1:0] tx_data, 
+    input [FRAME_WIDTH-1:0] tx_data, 
     output tx, 
     output tx_done,
 	input clr_tx_done);
 
 reg tx_done_reg;
-logic [$clog2(ADDR_WIDTH)+1:0]bit_cnt;	// Counts each bit sent
-logic [ADDR_WIDTH:0]shift_reg;	// Register to hold and shift tx data
+logic [$clog2(FRAME_WIDTH)+1:0]bit_cnt;	// Counts each bit sent
+logic [FRAME_WIDTH:0]shift_reg;	// Register to hold and shift tx data
 logic init;	// SM output to begin transmission
 logic transmitting;	// SM output to be high while transmitting
 logic set_done;	// SM output to signal end of transmission
@@ -31,11 +31,9 @@ end
 always_ff @(posedge clk, negedge rst_l) begin
 	if (init | shift | ~rst_l)begin
 		baud_cnt <= '0;
-		$display("verilog:tx: resetting baud time=%0t baud_cnt=%0d init=%0d shift=%0d",$time, baud_cnt,init,shift);
 	end
 	else if(transmitting) begin
 		baud_cnt <= baud_cnt + 1;
-		// $display("verilog:tx: increment baud time=%0t baud_cnt=%0d",$time,baud_cnt);
 	end
 end
 
@@ -49,7 +47,7 @@ always_ff @(posedge clk, negedge rst_l) begin
 	else if (init)
 		shift_reg <= {tx_data, 1'b0};
 	else if (shift) begin
-		shift_reg <= {1'b1, shift_reg[ADDR_WIDTH:1]};
+		shift_reg <= {1'b1, shift_reg[FRAME_WIDTH:1]};
 		$display("verilog:tx: shfting value time=%0t tx=%d shift_reg=%d bit_cnt=%d",$time, tx, shift_reg, bit_cnt);
 	end
 end
@@ -72,7 +70,7 @@ always_comb begin
 			$display("verilog:tx: transition IDLE->TRANSMIT time=%0t tx_data=%0d", $time, tx_data);
 		end
 	TRANSMIT:
-		if (bit_cnt < ADDR_WIDTH+2) begin
+		if (bit_cnt < FRAME_WIDTH+2) begin
 			transmitting = 1'b1;
 		end else begin
 			set_done = 1'b1;

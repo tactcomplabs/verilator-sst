@@ -1,8 +1,8 @@
-module UART_rx #(parameter ADDR_WIDTH, parameter BAUD_PERIOD) (
+module UART_rx #(parameter FRAME_WIDTH, parameter BAUD_PERIOD) (
 input clk,
 input rst_l,
 input rx,
-output [ADDR_WIDTH-1:0] rx_data,
+output [FRAME_WIDTH-1:0] rx_data,
 output reg rx_done,
 input clr_rx_done
 );
@@ -12,8 +12,8 @@ reg rx_pre_stable, rx_stable, rx_post_stable;	// Meta stable FF outputs
 logic start, dec_baud, shift, set_done;	// Intermediate signals
 wire [11:0]baud_reset;
 reg [11:0]baud_cnt;
-logic [$clog2(ADDR_WIDTH)+1:0]bit_cnt;
-logic [ADDR_WIDTH+1:0]rx_shft_reg;
+logic [$clog2(FRAME_WIDTH)+1:0]bit_cnt;
+logic [FRAME_WIDTH+1:0]rx_shft_reg;
 
 typedef enum reg {IDLE, RECV} state_t;
 state_t state, next_state;
@@ -61,10 +61,10 @@ end
 // Shifter
 always_ff @(posedge clk) begin
 	if (shift)
-		rx_shft_reg <= {rx_stable, rx_shft_reg[ADDR_WIDTH+1:1]};
+		rx_shft_reg <= {rx_stable, rx_shft_reg[FRAME_WIDTH+1:1]};
 end
 
-assign rx_data = rx_shft_reg[ADDR_WIDTH:1];
+assign rx_data = rx_shft_reg[FRAME_WIDTH:1];
 
 // State machine logic
 always_comb begin
@@ -81,7 +81,7 @@ always_comb begin
 			$display("verilog:rx: transition IDLE->RECV time=%0t rx_post_stable=%0d rx_stable=%0d", $time, rx_post_stable, rx_stable);
 		end
 	RECV:
-		if (bit_cnt >= ADDR_WIDTH+2) begin
+		if (bit_cnt >= FRAME_WIDTH+2) begin
 			set_done = 1'b1;
 			next_state = IDLE;
 			$display("verilog:rx: transition RECV->IDLE time=%0t rx_data=%0d", $time, rx_data);

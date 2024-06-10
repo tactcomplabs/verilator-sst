@@ -4,9 +4,6 @@
 
 #include "BasicVerilogCounter.h"
 
-#define LOW (uint64_t) 0
-#define HIGH (uint64_t) 1
-
 using namespace SST::VerilatorSST;
 
 BasicVerilogCounter::BasicVerilogCounter(ComponentId_t id, Params& params)
@@ -33,7 +30,7 @@ BasicVerilogCounter::~BasicVerilogCounter(){
 void BasicVerilogCounter::verilatorSetup(uint16_t stop){
   top = std::make_unique<VerilatorSST<VTop>>();
 
-  Signal init_low(1,LOW);
+  Signal init_low(1,SIGNAL_LOW);
   Signal init_stop(stopWidth,stop);
 
   top->writePort("clk", init_low);
@@ -41,14 +38,14 @@ void BasicVerilogCounter::verilatorSetup(uint16_t stop){
   top->writePort("stop", init_stop);
   top->tick(1);
 
-  Signal reset_delay(1,HIGH);
+  Signal reset_delay(1,SIGNAL_HIGH);
   top->writePortAtTick("reset_l",reset_delay,5);
 }
 
 bool BasicVerilogCounter::testBenchPass(){
   Signal done = top->readPort("done");
 
-  auto pass = done.getUIntScalar<uint8_t>();
+  auto pass = done.getUIntScalar();
   if(pass & 1){
     out->output("sst: test passed!\n");
     top->finish();
