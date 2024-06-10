@@ -1,6 +1,6 @@
 import sst
 
-uart_component = sst.Component("CounterComponent", "verilatorsst.BasicVerilogUartMem")
+uart_component = sst.Component("UartMemComponent", "verilatorsst.BasicVerilogUartMem")
 uart_component.addParams({
     'ADDR_WIDTH': 8,
     'DATA_WIDTH': 16,
