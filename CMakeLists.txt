@@ -85,23 +85,28 @@ find_program(SST_CONFIG sst-config)
 if(NOT SST OR NOT SST_CONFIG)
   message(FATAL_ERROR "No SST binary or sst-config binary found in path")
 endif()
+message (STATUS "sst and sst-config found")
 execute_process(COMMAND sst-config --prefix
                 OUTPUT_VARIABLE SST_INSTALL_DIR
                 OUTPUT_STRIP_TRAILING_WHITESPACE
 )
+message (STATUS "sst config prefix done")
 execute_process(COMMAND sst-config --CXX
                 OUTPUT_VARIABLE CXX
                 OUTPUT_STRIP_TRAILING_WHITESPACE
 )
+message (STATUS "sst config CXX done")
 execute_process(COMMAND sst-config --ELEMENT_CXXFLAGS
                 OUTPUT_VARIABLE SST_CXXFLAGS
                 OUTPUT_STRIP_TRAILING_WHITESPACE
 )
-set(CXXFLAGS "${SST_CXXFLAGS}  -fno-stack-protector")
+message (STATUS "sst config CXXFLAGS done")
+set(CXXFLAGS "${SST_CXXFLAGS}  -fno-stack-protector") #TODO: ask john about this, appears to be overwritten by line 111
 execute_process(COMMAND sst-config --ELEMENT_LDFLAGS
                 OUTPUT_VARIABLE SST_LDFLAGS
                 OUTPUT_STRIP_TRAILING_WHITESPACE
 )
+message (STATUS "sst config LDFLAGS done")
 
 message(STATUS "[SST] SST_INSTALL_DIR=${SST_INSTALL_DIR}")
 message(STATUS "[SST] SST CXX=${CXX}")
@@ -109,6 +114,7 @@ message(STATUS "[SST] SST_CXXFLAGS=${SST_CXXFLAGS}")
 message(STATUS "[SST] SST_LDFLAGS=${SST_LDFLAGS}")
 
 set(CXXFLAGS "${SST_CXXFLAGS}")
+message(STATUS "[CMAKE] CXXFLAGS=${CXXFLAGS}")
 set(LDFLAGS "${SST_LDFLAGS}")
 
 set(VERILATORSST_EXTERNAL_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/verilator-sst-element")

@@ -1,5 +1,5 @@
 `ifndef ACCUM_WIDTH
-`define ACCUM_WIDTH 128
+`define ACCUM_WIDTH 32
 `define ADD_WIDTH ACCUM_WIDTH/2
 `endif
 
