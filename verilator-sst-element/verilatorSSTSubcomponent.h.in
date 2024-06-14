@@ -148,8 +148,6 @@ public:
 class SignalHelper{
 private:
   unsigned Width; ///< signal width
-  unsigned Depth = 1;
-  unsigned NextRow = 0;
 
 public:
 
@@ -158,9 +156,6 @@ public:
 
   /// SignalHelper Overloaded Constructor
   SignalHelper(unsigned W) : Width(W){};
-
-  /// SignalHelper Overloaded Constructor
-  SignalHelper(unsigned W, unsigned D) : Width(W), Depth(D){};
 
   /// SignalHelper destructor
   ~SignalHelper() {}
@@ -180,29 +175,6 @@ public:
     }
     return ret;
   }
-  /// helper to convert size from bits to bytes
-  uint32_t calculateNumBytes();
-
-  /// helper to convert size from bits to words
-  uint32_t calculateNumWords();
-
-  /// helper to convert array (vector) type
-  std::vector<uint32_t> uint8ArrToUint32Arr(std::vector<uint8_t> src, uint32_t bytesPerRow, uint64_t rows);
-
-  /// helper to convert array (vector) type
-  std::vector<uint8_t> uint32ArrToUint8Arr(std::vector<uint32_t> src, uint32_t bytesPerRow, uint64_t rows);
-
-  /// helper to read in VPI values to a variable (declared externally)
-  bool readIn(const s_vpi_value &row, p_vpi_value existing);
-
-  /// helper to fill VPI values based on uint8 vector
-  void putVpiValue(std::vector<uint8_t> data, p_vpi_value extStorage);
-
-  /// helper to output VPI values in a uint8 vector format
-  std::vector<uint8_t> getUIntVector(p_vpi_value extStorage);
-
-  /// helper to properly free a vpi value
-  void freeVpiValue(p_vpi_value extStorage);
 
 }; // SignalHelper
 
@@ -284,7 +256,6 @@ protected:
 class VerilatorSST@VERILOG_DEVICE@ : public VerilatorSSTBase{
 public:
   SST_ELI_REGISTER_SUBCOMPONENT(VerilatorSST@VERILOG_DEVICE@,
-                                "verilatorSST@VERILOG_DEVICE@",
                                 "verilatorsst@VERILOG_DEVICE@",
                                 "VerilatorSST@VERILOG_DEVICE@",
                                 SST_ELI_ELEMENT_VERSION(1, 0, 0),
