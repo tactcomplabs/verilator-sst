@@ -1,5 +1,4 @@
 #include "Signal.h"
-#include <stdio.h>
 
 using namespace SST::VerilatorSST;
 
@@ -14,8 +13,6 @@ uint32_t Signal::calculateNumWords(uint32_t nBits){
   const auto words = 1+((nBits-1)/(sizeof(uint32_t)*8));
   return words;
 }
-
-//Signal::Signal(uint32_t nBits, uint64_t initVal) : Signal(nBits, 1, reinterpret_cast<uint8_t*>(&initVal),false){}
 
 Signal::Signal(uint32_t nBits, std::vector<uint8_t> initVal) : Signal(nBits,1,initVal,false){}
 
@@ -38,8 +35,6 @@ Signal::Signal(uint32_t nBits, uint64_t depth, std::vector<uint8_t> initVal, boo
     for(int k=0;k<words;k++){
       row->value.vector[k].aval = buf[(i*words)+k];
       row->value.vector[k].bval = 0UL;
-      //printf("%s: row %d vector %d set to %x (vector located at %p)\n", __func__, i, k, row->value.vector[k].aval, row->value.vector);
-      //fflush(NULL);
     }
   }
 }
@@ -52,12 +47,6 @@ Signal::Signal(uint32_t nBits, uint64_t depth, p_vpi_value storage):
 }
 
 Signal::Signal(const Signal& other) : Signal(other.nBits, other.depth, other.getUIntVector(false), false){}
-
-/*
-Signal::Signal(Signal && other) : Signal(1,SIGNAL_LOW){
-  swap(*this,other);
-}
-*/
 
 Signal::~Signal(){
   for(auto i=0;i<depth;i++){
@@ -116,7 +105,6 @@ std::vector<uint8_t> Signal::getUIntVector(bool reverse) const{
   const auto words = calculateNumWords(nBits);
   const auto bytes = calculateNumBytes(nBits);
 
-  //const auto buf = new uint32_t[words*depth];
   auto buf = std::vector<uint32_t>(words*depth);
   for(auto i=0;i<depth;i++){
     auto row = reverse ? storage[depth-i-1] : storage[i];
@@ -132,18 +120,12 @@ std::vector<uint8_t> Signal::getUIntVector(bool reverse) const{
 
 std::vector<uint8_t> Signal::uint32ArrToUint8Arr(const std::vector<uint32_t> src, const uint32_t bytesPerRow, const uint64_t rows){
   const auto wordsPerRow = calculateNumWords(bytesPerRow*8);
-  //auto buf = new uint8_t[bytesPerRow*rows];
   auto buf = std::vector<uint8_t>(bytesPerRow*rows);
-  //printf("%s: using rows=%d and wordsPerRow=%d\n", __func__, rows, wordsPerRow);
   for(auto i=0;i<rows;i++){
-    //auto rowBuf = new uint8_t[bytesPerRow];
     auto rowBuf = std::vector<uint8_t>(bytesPerRow);
         
     for(auto j=0;j<wordsPerRow;j++){
-      //printf("%s: processing word %d: %lx\n", __func__, j, src[i*wordsPerRow+j]);
       for(auto k=0;k<sizeof(uint32_t);k++){
-        //printf("%s: row %d word %d byte %d is %x\n", __func__, i, j, k, reinterpret_cast<const uint8_t*>(&src[(i*wordsPerRow)+j])[k]);
-        //fflush(NULL);
         rowBuf[(j*sizeof(uint32_t))+k] = reinterpret_cast<const uint8_t*>(&src[(i*wordsPerRow)+j])[k];
       }
     }
@@ -159,23 +141,16 @@ std::vector<uint8_t> Signal::uint32ArrToUint8Arr(const std::vector<uint32_t> src
 
 std::vector<uint32_t> Signal::uint8ArrToUint32Arr(const std::vector<uint8_t> src, const uint32_t bytesPerRow, const uint64_t rows){
   const auto wordsPerRow = calculateNumWords(bytesPerRow*8);
-  //auto buf = new uint32_t[wordsPerRow*rows];
   auto buf = std::vector<uint32_t>(wordsPerRow*rows);
 
-  //printf("%s: wordsPerRow=%d, bytesPerRow=%d\n", __func__, wordsPerRow, bytesPerRow);
   for(auto i = 0; i < rows; i++){
-    //auto rowBuf = new uint32_t[wordsPerRow];
     auto rowBuf = std::vector<uint32_t>(wordsPerRow);
     for(auto k = 0; k < bytesPerRow; k++){
       reinterpret_cast<uint8_t*>(rowBuf.data())[k] = src[(i*bytesPerRow)+k];
-      //printf("%s: rowBuf[%d]=%x, src[%d]=%x\n", __func__, k, reinterpret_cast<uint8_t*>(rowBuf.data())[k], (i*bytesPerRow)+k, src[(i*bytesPerRow)+k]);
-      //fflush(NULL);
     }
     uint32_t mask = (bytesPerRow < 4) ? (1 << (bytesPerRow*8)) - 1 : 0xffffffff;
     for(auto j = 0; j < wordsPerRow; j++){
       buf[(i*wordsPerRow)+j] = rowBuf[j] & mask;
-      //printf("%s: buf[%d]=%x, rowBuf[%d]=%x, mask=%x\n", __func__, (i*wordsPerRow)+j,buf[(i*wordsPerRow)+j], j, rowBuf[j], mask);
-      //fflush(NULL);
     }
   }
 
@@ -196,7 +171,6 @@ words(Signal::calculateNumWords(bits)),
 depth(depth){
   assert(depth > 0 && "depth must be positive");
   storage = new s_vpi_value[depth];
-  //printf("%s: factory created with depth %d and storage allocated at %p\n", __func__, depth, storage);
 }
 
 SignalFactory::SignalFactory() : SignalFactory(1,1){};
@@ -217,15 +191,11 @@ Signal * SignalFactory::operator()(const s_vpi_value &row){
 
   storage[nextRow].format = SIGNAL_VPI_FORMAT;
   storage[nextRow].value.vector = new s_vpi_vecval[words];
-  //printf("%s: loading in row of size %d, storing at %p\n", __func__, words*4, storage[nextRow].value.vector);
-  //fflush(NULL);
   std::memcpy(storage[nextRow].value.vector, row.value.vector, words*sizeof(uint32_t)*2); // *2 to account for aval and bval
     
   nextRow++;  
 
   if(nextRow == depth){
-    //printf("%s: final row done\n", __func__);
-    //fflush(NULL);
     Signal * signal = new Signal(bits,depth,storage);
     storage = nullptr;
 

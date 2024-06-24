@@ -261,7 +261,6 @@ std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPortVPI(std::string PortN
 
   std::vector<uint8_t> d;
   if(vpiTypeVal == vpiReg){
-    printf("%s: reading type vpiReg. width=%d\n", __func__, vpiSizeVal);
     s_vpi_value val{vpiVectorVal};
     vpi_get_value(vh1, &val);
     
@@ -282,7 +281,6 @@ std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPortVPI(std::string PortN
     while(auto rowHandle = vpi_scan(iter)){
       if(i == 0){
         const auto rowSizeBits = vpi_get(vpiSize, rowHandle);
-        printf("%s: reading type vpiMemory. width=%d depth=%d\n", __func__, rowSizeBits, vpiSizeVal);
         signalFactory = new SignalFactory(rowSizeBits, vpiSizeVal);
       }
 
@@ -322,7 +320,6 @@ void VerilatorSST@VERILOG_DEVICE@::writePortVPI(std::string PortName,
   getPortDepth(PortName, Depth);
   Signal toWrite(Width, Depth, Packet, true);
   if(vpiTypeVal == vpiReg){
-    printf("%s: writing type vpiReg. width=%d depth=%d\n", __func__, Width, Depth);
     t_vpi_value val = toWrite.getVpiValue(0);
     vpi_put_value(vh1,&val,NULL,vpiNoDelay);
     return;
@@ -332,7 +329,6 @@ void VerilatorSST@VERILOG_DEVICE@::writePortVPI(std::string PortName,
     assert(vpiSizeVal == Depth && "port depth must match signal depth");
     vpiHandle iter = vpi_iterate(vpiMemoryWord,vh1);
     assert(iter);
-    printf("%s: writing type vpiMemory. width=%d depth=%d\n", __func__, Width, Depth);
 
     int i = 0;
     while(auto rowHandle = vpi_scan(iter)){

@@ -36,8 +36,6 @@ class Signal {
 
   public:
     Signal(const Signal& other);
-    //Signal(Signal&& other);
-    //Signal(uint32_t nBits, uint64_t init_val);
     Signal(uint32_t nBits, std::vector<uint8_t> init_val);
     Signal(uint32_t nBits, uint64_t depth, std::vector<uint8_t> init_val, bool descending);
     ~Signal();
