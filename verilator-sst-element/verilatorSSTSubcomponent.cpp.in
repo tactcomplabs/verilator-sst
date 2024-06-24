@@ -261,12 +261,13 @@ std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPortVPI(std::string PortN
 
   std::vector<uint8_t> d;
   if(vpiTypeVal == vpiReg){
+    printf("%s: reading type vpiReg. width=%d\n", __func__, vpiSizeVal);
     s_vpi_value val{vpiVectorVal};
     vpi_get_value(vh1, &val);
     
     auto signalFactory = SignalFactory(vpiSizeVal,1);
     auto signalPtr = signalFactory(val);
-    d = signalPtr->getUIntVector(false);
+    d = signalPtr->getUIntVector(true);
     delete signalPtr;
     return d;
   }
@@ -281,6 +282,7 @@ std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPortVPI(std::string PortN
     while(auto rowHandle = vpi_scan(iter)){
       if(i == 0){
         const auto rowSizeBits = vpi_get(vpiSize, rowHandle);
+        printf("%s: reading type vpiMemory. width=%d depth=%d\n", __func__, rowSizeBits, vpiSizeVal);
         signalFactory = new SignalFactory(rowSizeBits, vpiSizeVal);
       }
 
@@ -293,7 +295,7 @@ std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPortVPI(std::string PortN
     }
 
     //Signal signal = *signalPtr;
-    d = signalPtr->getUIntVector(false);
+    d = signalPtr->getUIntVector(true);
     delete signalPtr;
     delete signalFactory;
     return d;
