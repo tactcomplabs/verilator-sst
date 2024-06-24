@@ -1,5 +1,5 @@
 #include "Signal.h"
-//#include <stdio.h>
+#include <stdio.h>
 
 using namespace SST::VerilatorSST;
 
@@ -37,8 +37,8 @@ Signal::Signal(uint32_t nBits, uint64_t depth, std::vector<uint8_t> initVal, boo
     for(auto k=0;k<words;k++){
       row->value.vector = new s_vpi_vecval[words];
       row->value.vector[k].aval = buf[(i*words)+k];
-      //printf("%s: row %d vector %d set to %x (should be %x)\n", __func__, i, k, row->value.vector[k].aval, buf[(i*words)+k]);
-      //fflush(NULL);
+      printf("%s: row %d vector %d set to %x (should be %x)\n", __func__, i, k, row->value.vector[k].aval, buf[(i*words)+k]);
+      fflush(NULL);
     }
   }
 }
@@ -158,20 +158,20 @@ std::vector<uint32_t> Signal::uint8ArrToUint32Arr(const std::vector<uint8_t> src
   //auto buf = new uint32_t[wordsPerRow*rows];
   auto buf = std::vector<uint32_t>(wordsPerRow*rows);
 
-  //printf("%s: wordsPerRow=%d, bytesPerRow=%d\n", __func__, wordsPerRow, bytesPerRow);
+  printf("%s: wordsPerRow=%d, bytesPerRow=%d\n", __func__, wordsPerRow, bytesPerRow);
   for(auto i = 0; i < rows; i++){
     //auto rowBuf = new uint32_t[wordsPerRow];
     auto rowBuf = std::vector<uint32_t>(wordsPerRow);
     for(auto k = 0; k < bytesPerRow; k++){
       reinterpret_cast<uint8_t*>(rowBuf.data())[k] = src[(i*bytesPerRow)+k];
-      //printf("%s: rowBuf[%d]=%x, src[%d]=%x\n", __func__, k, reinterpret_cast<uint8_t*>(rowBuf.data())[k], (i*bytesPerRow)+k, src[(i*bytesPerRow)+k]);
-      //fflush(NULL);
+      printf("%s: rowBuf[%d]=%x, src[%d]=%x\n", __func__, k, reinterpret_cast<uint8_t*>(rowBuf.data())[k], (i*bytesPerRow)+k, src[(i*bytesPerRow)+k]);
+      fflush(NULL);
     }
     uint32_t mask = (bytesPerRow < 4) ? (1 << (bytesPerRow*8)) - 1 : 0xffffffff;
     for(auto j = 0; j < wordsPerRow; j++){
       buf[(i*wordsPerRow)+j] = rowBuf[j] & mask;
-      //printf("%s: buf[%d]=%x, rowBuf[%d]=%x, mask=%x\n", __func__, (i*wordsPerRow)+j,buf[(i*wordsPerRow)+j], j, rowBuf[j], mask);
-      //fflush(NULL);
+      printf("%s: buf[%d]=%x, rowBuf[%d]=%x, mask=%x\n", __func__, (i*wordsPerRow)+j,buf[(i*wordsPerRow)+j], j, rowBuf[j], mask);
+      fflush(NULL);
     }
   }
 
