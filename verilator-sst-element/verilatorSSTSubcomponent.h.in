@@ -51,8 +51,6 @@ enum class VPortType : uint8_t {
 typedef void (*DirectWriteFunc)(VTop*,std::vector<uint8_t>);
 typedef std::vector<uint8_t> (*DirectReadFunc)(VTop*);
 
-#define SIGNAL_VPI_FORMAT vpiVectorVal
-
 #define V_NAME            0
 #define V_TYPE            1
 #define V_WIDTH           2
