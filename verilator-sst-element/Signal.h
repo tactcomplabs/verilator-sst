@@ -6,6 +6,7 @@
 #include <cassert>
 #include <cstring>
 #include <memory>
+#include <vector>
 #include "vpi_user.h"
 #include "verilatedos.h"
 
