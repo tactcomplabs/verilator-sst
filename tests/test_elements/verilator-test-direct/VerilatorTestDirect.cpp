@@ -100,79 +100,32 @@ bool VerilatorTestDirect::clock(SST::Cycle_t currentCycle){
                    i.c_str());
     }
     uint32_t bits = Width * Depth;
-    if (i.compare("en") == 0) {
-      if (currentCycle % 4 == 0) {
-        std::vector<uint8_t> setHigh;
-        std::vector<uint8_t> setLow;
-        setLow.push_back((uint8_t)0U);
-        setHigh.push_back((uint8_t)1U);
-        model->writePortAtTick(i,setHigh, 1);
-        model->writePortAtTick(i,setLow, 3);
-        output.verbose(CALL_INFO, 1, 0, "Sending en cycle sequence\n");
+    std::vector<uint8_t> data;
+    if (Type == SST::VerilatorSST::VPortType::V_INPUT) {
+      // write to the port
+      data = generateData(Width, Depth);
+      if (bits < 9) {
+        output.verbose(CALL_INFO, 1, 0, "Data generated (W%dD%d) for sending on port %s: %02x\n", Width, Depth, i.data(), data[0]);
       }
-    } else if (i.compare("clk") == 0) {
-      if (currentCycle % 2 == 0) {
-        std::vector<uint8_t> setHigh;
-        std::vector<uint8_t> setLow;
-        setLow.push_back((uint8_t)0U);
-        setHigh.push_back((uint8_t)1U);
-        model->writePort(i,setLow);
-        model->writePortAtTick(i,setHigh, 1);
-      } /* else {
-        std::vector<uint8_t> setHigh;
-        setHigh.push_back((uint8_t)1U);
-        model->writePort(i,setHigh);
-      } */
-    } else if (i.compare("reset_l") == 0) {
-      if (currentCycle % 20 == 0) {
-        std::vector<uint8_t> setHigh;
-        std::vector<uint8_t> setLow;
-        setLow.push_back((uint8_t)0U);
-        setHigh.push_back((uint8_t)1U);
-        model->writePort(i,setLow);
-        model->writePortAtTick(i,setHigh, 3);
-
-      }
-    }
-    else {
-      std::vector<uint8_t> data;
-      if (Type == SST::VerilatorSST::VPortType::V_INPUT) {
-        // write to the port
-        data = generateData(Width, Depth);
-        if (bits < 9) {
-          output.verbose(CALL_INFO, 1, 0, "Data generated (W%dD%d) for sending on port %s: %02x\n", Width, Depth, i.data(), data[0]);
-        }
-        else if (bits < 33) {
-          output.verbose(CALL_INFO, 1, 0, "Data generated (W%dD%d) for sending on port %s: %02x %02x %02x %02x\n", Width, Depth, i.data(), data[0], data[1], data[2], data[3]);
-        }
-        else if (bits < 65) {
-          output.verbose(CALL_INFO, 1, 0, "Data generated (W%dD%d) for sending on port %s: %02x %02x %02x %02x %02x %02x %02x %02x\n", Width, Depth, i.data(), data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
-        }
-        else {
-          for (int j=0; j<4; j++) {
-            output.verbose(CALL_INFO, 1, 0, "Data generated (W%dD%d) for sending on port %s[%d]: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n", Width, Depth, i.data(), j, data[j*10+0], data[j*10+1], data[j*10+2], data[j*10+3], data[j*10+4], data[j*10+5], data[j*10+6], data[j*10+7], data[j*10+8], data[j*10+9], data[j*10+10], data[j*10+11]);
-          }
-        }
-        model->writePort(i, data);
+      else if (bits < 33) {
+        output.verbose(CALL_INFO, 1, 0, "Data generated (W%dD%d) for sending on port %s: %02x %02x %02x %02x\n", Width, Depth, i.data(), data[0], data[1], data[2], data[3]);
       }
       else {
-        // read from the port
-        data = model->readPort(i);
-        // TODO: accum prints out the CORRECT WAY AS IS when received but has the wrong endianness in the output printed WHEN SENT
-        if (bits < 9) {
-          output.verbose(CALL_INFO, 1, 0, "Data received (W%dD%d) from port %s: %02x\n", Width, Depth, i.data(), data[0]);
-        }
-        else if (bits < 33) {
-          output.verbose(CALL_INFO, 1, 0, "Data received (W%dD%d) from port %s: %02x %02x %02x %02x\n", Width, Depth, i.data(), data[0], data[1], data[2], data[3]);
-        }
-        else if (bits < 65) {
-          output.verbose(CALL_INFO, 1, 0, "Data received (W%dD%d) from port %s: %02x %02x %02x %02x %02x %02x %02x %02x\n", Width, Depth, i.data(), data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
-        }
-        else {
-          for (int j=0; j<4; j++) {
-            output.verbose(CALL_INFO, 1, 0, "Data received (W%dD%d) from port %s[%d]: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n", Width, Depth, i.data(), j, data[j*18+0], data[j*18+1], data[j*18+2], data[j*18+3], data[j*18+4], data[j*18+5], data[j*18+6], data[j*18+7], data[j*18+8], data[j*18+9], data[j*18+10], data[j*18+11]);
-          }
-        }
+        output.verbose(CALL_INFO, 1, 0, "Data generated (W%dD%d) for sending on port %s: %02x %02x %02x %02x %02x %02x %02x %02x\n", Width, Depth, i.data(), data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
+      }
+      model->writePort(i, data);
+    }
+    else {
+      // read from the port
+      data = model->readPort(i);
+      if (bits < 9) {
+        output.verbose(CALL_INFO, 1, 0, "Data received (W%dD%d) from port %s: %02x\n", Width, Depth, i.data(), data[0]);
+      }
+      else if (bits < 33) {
+        output.verbose(CALL_INFO, 1, 0, "Data received (W%dD%d) from port %s: %02x %02x %02x %02x\n", Width, Depth, i.data(), data[0], data[1], data[2], data[3]);
+      }
+      else {
+        output.verbose(CALL_INFO, 1, 0, "Data received (W%dD%d) from port %s: %02x %02x %02x %02x %02x %02x %02x %02x\n", Width, Depth, i.data(), data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
       }
     }
   }
