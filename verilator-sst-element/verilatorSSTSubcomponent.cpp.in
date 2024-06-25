@@ -9,6 +9,7 @@
 //
 
 #include "verilatorSSTSubcomponent.h"
+#include "Signal.h"
 
 using namespace SST::VerilatorSST;
 
@@ -259,14 +260,14 @@ std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPortVPI(std::string PortN
   auto vpiSizeVal = vpi_get(vpiSize, vh1);
 
   std::vector<uint8_t> d;
-
   if(vpiTypeVal == vpiReg){
-    t_vpi_value val{vpiStringVal};
+    s_vpi_value val{vpiVectorVal};
     vpi_get_value(vh1, &val);
-    unsigned numBytes = (vpiSizeVal / 8) + ((vpiSizeVal % 8 == 0) ? 0 : 1);
-    for (unsigned i=0; i<numBytes; i++) {
-      d.push_back((uint8_t)val.value.str[i]);
-    }
+    
+    auto signalFactory = SignalFactory(vpiSizeVal,1);
+    auto signalPtr = signalFactory(val);
+    d = signalPtr->getUIntVector(true);
+    delete signalPtr;
     return d;
   }
 
@@ -274,81 +275,76 @@ std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPortVPI(std::string PortN
     vpiHandle iter = vpi_iterate(vpiMemoryWord,vh1);
     assert(iter);
 
-    bool first = true;
-    auto firstWordSizeBits = 0;
-    auto nBytesPerWord = 0;
-    auto totalBytes = 0;
-    PLI_BYTE8 * buf;
-
-    int i = 0;
-    while(auto wordHandle = vpi_scan(iter)){
-      PLI_INT32 wordSizeBits = vpi_get(vpiSize, wordHandle);
-
-      if(first == true){
-        firstWordSizeBits = wordSizeBits;
-        nBytesPerWord = (firstWordSizeBits / 8) + ((firstWordSizeBits % 8 == 0) ? 0 : 1);
-        totalBytes = nBytesPerWord*vpiSizeVal;
-        first = false;
-      }
-      assert(firstWordSizeBits == wordSizeBits);
-
-      t_vpi_value word{vpiStringVal};
-      vpi_get_value(wordHandle, &word);
-
-      auto offset = (totalBytes-(nBytesPerWord*(1+i)));
-      for (unsigned j=0; j<nBytesPerWord; j++) {
-        d.push_back((uint8_t) word.value.str[j]);
+    SignalFactory * signalFactory;
+    Signal * signalPtr = nullptr;
+    auto i = 0;
+    while(auto rowHandle = vpi_scan(iter)){
+      if(i == 0){
+        const auto rowSizeBits = vpi_get(vpiSize, rowHandle);
+        signalFactory = new SignalFactory(rowSizeBits, vpiSizeVal);
       }
 
-      vpi_free_object(wordHandle);
+      s_vpi_value row{SIGNAL_VPI_FORMAT};
+      vpi_get_value(rowHandle, &row);
+      signalPtr = (*signalFactory)(row);
+
+      vpi_free_object(rowHandle);
       i++;
     }
 
+    //Signal signal = *signalPtr;
+    d = signalPtr->getUIntVector(true);
+    delete signalPtr;
+    delete signalFactory;
     return d;
   }
+
   assert(false && "unsupported vpiType");
   return d;
 }
 
 void VerilatorSST@VERILOG_DEVICE@::writePortVPI(std::string PortName,
                                                 std::vector<uint8_t> Packet){
-  vpiHandle vh1 = vpi_handle_by_name((PLI_BYTE8 *)PortName.data(), NULL);
+  vpiHandle vh1 = vpi_handle_by_name(PortName.data(), NULL);
   assert(vh1 && "vpi should return a handle (port not found)");
 
   auto vpiTypeVal = vpi_get(vpiType, vh1);
   auto vpiSizeVal = vpi_get(vpiSize, vh1);
   
+
   auto vpiDirVal = vpi_get(vpiDirection,vh1);
   assert(vpiDirVal == vpiInput && "port must be an input, inout not supported");
-
+  unsigned Width;
+  unsigned Depth;
+  getPortWidth(PortName, Width);
+  getPortDepth(PortName, Depth);
+  Signal toWrite(Width, Depth, Packet, true);
   if(vpiTypeVal == vpiReg){
-    t_vpi_value val = {vpiStringVal, (PLI_BYTE8 *) Packet.data()};
-    //t_vpi_value val = signal.getVpiValue(0);
-    vpi_put_value(vh1,&val,NULL,0);
+    t_vpi_value val = toWrite.getVpiValue(0);
+    vpi_put_value(vh1,&val,NULL,vpiNoDelay);
     return;
   }
 
   if(vpiTypeVal == vpiMemory){
-    //assert(vpiSizeVal == signal.getDepth() && "port depth must match signal depth");
+    assert(vpiSizeVal == Depth && "port depth must match signal depth");
     vpiHandle iter = vpi_iterate(vpiMemoryWord,vh1);
     assert(iter);
 
     int i = 0;
-    while(auto wordHandle = vpi_scan(iter)){
-      auto wordSizeBits = vpi_get(vpiSize, wordHandle);
-      unsigned numBytes = (wordSizeBits / 8) + ((wordSizeBits % 8 == 0) ? 0 : 1);
-      //assert(wordSizeBits == signal.getNumBits() && "word width must mach signal width");
+    while(auto rowHandle = vpi_scan(iter)){
+      auto rowSizeBits = vpi_get(vpiSize, rowHandle);
+      assert(rowSizeBits == Width && "row width must match signal width");
 
-      t_vpi_value val = {vpiStringVal, (PLI_BYTE8 *) Packet.data()+numBytes*i};
-      //t_vpi_value val = signal.getVpiValue(i);
-      vpi_put_value(wordHandle,&val,NULL,0);
+      t_vpi_value val = toWrite.getVpiValue(i);
+      vpi_put_value(rowHandle,&val,NULL,0);
 
-      vpi_free_object(wordHandle);
+      vpi_free_object(rowHandle);
       i++;
     }
 
     return;
   }
+
   assert(false && "unsupported vpiType");
 }
 

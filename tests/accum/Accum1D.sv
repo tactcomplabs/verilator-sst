@@ -1,5 +1,5 @@
 `ifndef ACCUM_WIDTH
-`define ACCUM_WIDTH 32
+`define ACCUM_WIDTH 64
 `define ADD_WIDTH ACCUM_WIDTH/2
 `endif
 
@@ -8,31 +8,25 @@ module Accum #(parameter ACCUM_WIDTH=`ACCUM_WIDTH, ADD_WIDTH=`ADD_WIDTH) (
    input                       clk,
    input                       reset_l,
    input                       en,     // triggers addition
-   input  [ADD_WIDTH-1:0]   add[4],  // value to be added
-   output [ACCUM_WIDTH-1:0] accum[4],  // current accumulated value
+   input  [ADD_WIDTH-1:0]   add,  // value to be added
+   output [ACCUM_WIDTH-1:0] accum,  // current accumulated value
    output wire                 done    // signals addition completed
    );
 
-   reg [ACCUM_WIDTH-1:0] accumulator[4];
+   reg [ACCUM_WIDTH-1:0] accumulator;
    reg doner;
    integer i;
 
    always_ff @ (posedge clk, negedge reset_l) begin
       if (!reset_l) begin
-         for (i=0; i<4; i++) 
-         begin
-           accumulator[i] <= '0;
-         end
+         accumulator <= '0;
          doner <= '0;
       end
       else if (en && !doner) begin
-         for (i=0; i<4; i++)
-         begin
-            accumulator[i] <= accumulator[i] + {{ADD_WIDTH{1'b0}}, add[i]};
-            $display("verilog: accumulator[%d]: %x\n", i, accumulator[i]);
-            $display("verilog: add[%d]: %x\n", i, add[i]);
-         end
          doner <= 1'b1;
+         accumulator <= accumulator + {{ADD_WIDTH{1'b0}}, add};
+         $display("verilog: accumulator: %x\n", accumulator);
+         $display("verilog: add: %x\n", add);
       end
       else if (!en && doner) begin
          doner <= 1'b0;

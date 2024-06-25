@@ -122,6 +122,8 @@ set(targetName "verilatorsst${VERILOG_DEVICE}")
 set(verilatorSSTSrcs
   verilatorSSTSubcomponent.cpp
   verilatorSSTSubcomponent.h
+  Signal.cpp
+  Signal.h
 )
 
 add_library(${targetName} SHARED ${verilatorSSTSrcs})

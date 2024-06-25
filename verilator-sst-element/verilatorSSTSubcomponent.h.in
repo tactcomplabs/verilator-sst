@@ -173,7 +173,8 @@ public:
     }
     return ret;
   }
-};
+
+}; // SignalHelper
 
 // ---------------------------------------------------------------
 // VerilatorSSTBase
