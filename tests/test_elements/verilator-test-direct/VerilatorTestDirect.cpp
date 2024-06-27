@@ -111,18 +111,7 @@ bool VerilatorTestDirect::clock(SST::Cycle_t currentCycle){
         output.verbose(CALL_INFO, 1, 0, "Sending en cycle sequence\n");
       }
     } else if (i.compare("clk") == 0) {
-      if (currentCycle % 2 == 0) {
-        std::vector<uint8_t> setHigh;
-        std::vector<uint8_t> setLow;
-        setLow.push_back((uint8_t)0U);
-        setHigh.push_back((uint8_t)1U);
-        model->writePort(i,setLow);
-        model->writePortAtTick(i,setHigh, 1);
-      } /* else {
-        std::vector<uint8_t> setHigh;
-        setHigh.push_back((uint8_t)1U);
-        model->writePort(i,setHigh);
-      } */
+      // do nothing; this behavior will be implemented in the subcomponent
     } else if (i.compare("reset_l") == 0) {
       if (currentCycle % 20 == 0) {
         std::vector<uint8_t> setHigh;
