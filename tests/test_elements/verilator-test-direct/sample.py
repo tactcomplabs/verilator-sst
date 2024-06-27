@@ -22,6 +22,7 @@ model.addParams({
   "useVPI" : 1,
   "clockFreq" : "1GHz",
   "clockPort" : "clk",
+  "resetVals" : ["reset_l:0", "clk:0", "add:16", "en:0"]
 })
 """
 model = top.setSubComponent("model", "verilatorsstUART.VerilatorSSTUART")
