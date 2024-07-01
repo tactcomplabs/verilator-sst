@@ -72,7 +72,9 @@ cmake \
     ../
 make VERBOSE=1 2>&1 | tee make.log
 make VERBOSE=1 install 2>&1 | tee make.install.log
-echo "To test the generated module using the built-in test component, change the invoked subcomponent in sample.py and run:"
-echo "sst tests/test_elements/verilator-test-direct/sample.py"
+if [ -n "$TEST_MOD" ]; then
+echo "To test the generated module using the built-in test component, run:"
+echo "sst --model-options='-m $VTOP' tests/test_elements/verilator-test-direct/sample.py"
+fi
 cd ..
 exit 0
