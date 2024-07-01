@@ -21,5 +21,5 @@ target_include_directories(verilatortestdirect
                        ${VERILATOR_INCLUDE}
                        ${VERILATOR_INCLUDE}/vltstd)
 
-install(TARGETS verilatortestdirect DESTINATION ${CMAKE_CURRENT_SOURCE_DIR})
-install(CODE "execute_process(COMMAND sst-register verilatortestdirect verilatortestdirect_LIBDIR=${CMAKE_CURRENT_SOURCE_DIR})")
+install(TARGETS verilatortestdirect DESTINATION ${CMAKE_SOURCE_DIR}/install)
+install(CODE "execute_process(COMMAND sst-register verilatortestdirect verilatortestdirect_LIBDIR=${CMAKE_SOURCE_DIR}/install)")
