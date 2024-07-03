@@ -1,14 +1,17 @@
 #!/bin/bash
 #set -ex
 DEBUG=""
-while getopts "hdt:m:s:f:" flag
+LINKHANDLE=""
+while getopts "hdlt:m:s:f:" flag
 do
     case "${flag}" in
         h) echo "./build.sh -t {counter, accum, accum1D, uart} will build the selected example module"
            echo "For custom modules, -m <module_name> -s <source_dir> -f <source_files> must be defined"
            echo "-d : Sets cmake build type to Debug"
+           echo "-l : Includes automatic link generation based on port names"
            exit 1;;
         d) DEBUG="-DCMAKE_BUILD_TYPE=Debug";;
+        l) LINKHANDLE="-DENABLE_LINK_HANDLING=ON";;
         t) TEST_MOD=${OPTARG};;
         m) MODULE=${OPTARG};;
         s) SOURCE_DIR=${OPTARG};;
@@ -69,6 +72,7 @@ cmake \
     -DVERILOG_DEVICE=$VDEVICE \
     -DVERILOG_TOP_SOURCES=$VSRCS \
     -DVERILOG_TOP=$VTOP \
+    $LINKHANDLE \
     ../
 make VERBOSE=1 2>&1 | tee make.log
 make VERBOSE=1 install 2>&1 | tee make.install.log

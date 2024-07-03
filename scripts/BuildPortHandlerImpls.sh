@@ -8,6 +8,7 @@
 
 Top=$1
 Device=$2
+LINK=$3
 
 #-- Generate all the input signals
 INPUTS=`cat $Top | grep VL_IN`
@@ -43,7 +44,9 @@ for OUT in $OUTPUTS;do
   echo "Packet = readPort(\"${SIGNAME}\");"
   echo "delete ev;"
   echo "PortEvent *pe = new PortEvent(Packet);"
-  echo "link_${SIGNAME}->send(pe);"
+  if (( $LINK > 0 )); then
+    echo "link_${SIGNAME}->send(pe);"
+  fi
   echo "}"
 done;
 

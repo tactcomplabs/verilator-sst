@@ -51,17 +51,25 @@ execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/BuildPortIOImpls.
                 OUTPUT_VARIABLE VERILATOR_SST_PORT_IO_IMPLS
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
 message(STATUS "Building port handler implementations...")
-execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/BuildPortHandlerImpls.sh ${VTOP} ${VERILOG_DEVICE}
-                OUTPUT_VARIABLE VERILATOR_SST_PORT_HANDLER_IMPLS
-                OUTPUT_STRIP_TRAILING_WHITESPACE)
-message(STATUS "Building link definitions...")
-execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/BuildLinkDef.sh ${VTOP}
-                OUTPUT_VARIABLE VERILATOR_SST_LINK_DEFS
-                OUTPUT_STRIP_TRAILING_WHITESPACE)
-message(STATUS "Building link configurations...")
-execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/BuildLinkConfig.sh ${VTOP} ${VERILOG_DEVICE}
-                OUTPUT_VARIABLE VERILATOR_SST_LINK_CONFIGS
-                OUTPUT_STRIP_TRAILING_WHITESPACE)
+if( ENABLE_LINK_HANDLING )
+  execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/BuildPortHandlerImpls.sh ${VTOP} ${VERILOG_DEVICE} 1
+                  OUTPUT_VARIABLE VERILATOR_SST_PORT_HANDLER_IMPLS
+                  OUTPUT_STRIP_TRAILING_WHITESPACE)
+  message(STATUS "Building link definitions...")
+  execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/BuildLinkDef.sh ${VTOP}
+                  OUTPUT_VARIABLE VERILATOR_SST_LINK_DEFS
+                  OUTPUT_STRIP_TRAILING_WHITESPACE)
+  message(STATUS "Building link configurations...")
+  execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/BuildLinkConfig.sh ${VTOP} ${VERILOG_DEVICE}
+                  OUTPUT_VARIABLE VERILATOR_SST_LINK_CONFIGS
+                  OUTPUT_STRIP_TRAILING_WHITESPACE)
+else()
+  execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/BuildPortHandlerImpls.sh ${VTOP} ${VERILOG_DEVICE} 0
+                  OUTPUT_VARIABLE VERILATOR_SST_PORT_HANDLER_IMPLS
+                  OUTPUT_STRIP_TRAILING_WHITESPACE)
+  set(VERILATOR_SST_LINK_DEFS "")
+  set(VERILATOR_SST_LINK_CONFIGS "")
+endif()
 
 # -----------------------------------------------------------------
 # Configure the verilatorSST files
