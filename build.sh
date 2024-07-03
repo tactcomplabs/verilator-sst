@@ -2,7 +2,8 @@
 #set -ex
 DEBUG=""
 LINKHANDLE=""
-while getopts "hdlt:m:s:f:" flag
+CLOCKHANDLE=""
+while getopts "hdlct:m:s:f:" flag
 do
     case "${flag}" in
         h) echo "./build.sh -t {counter, accum, accum1D, uart} will build the selected example module"
@@ -12,6 +13,7 @@ do
            exit 1;;
         d) DEBUG="-DCMAKE_BUILD_TYPE=Debug";;
         l) LINKHANDLE="-DENABLE_LINK_HANDLING=ON";;
+        c) CLOCKHANDLE="-DENABLE_CLK_HANDLING=ON";;
         t) TEST_MOD=${OPTARG};;
         m) MODULE=${OPTARG};;
         s) SOURCE_DIR=${OPTARG};;
@@ -73,6 +75,7 @@ cmake \
     -DVERILOG_TOP_SOURCES=$VSRCS \
     -DVERILOG_TOP=$VTOP \
     $LINKHANDLE \
+    $CLOCKHANDLE \
     ../
 make VERBOSE=1 2>&1 | tee make.log
 make VERBOSE=1 install 2>&1 | tee make.install.log

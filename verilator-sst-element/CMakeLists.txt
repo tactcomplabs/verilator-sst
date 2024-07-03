@@ -71,6 +71,30 @@ else()
   set(VERILATOR_SST_LINK_CONFIGS "")
 endif()
 
+if ( ENABLE_CLK_HANDLING )
+  execute_process(COMMAND echo "// cycle verilator clock and apply queued writes
+  std::vector<uint8_t> setHigh;
+  std::vector<uint8_t> setLow;
+  setLow.push_back((uint8_t)0U);
+  writePort(clockPort,setLow);
+  ContextP->timeInc(1);
+  Top->eval();
+  setHigh.push_back((uint8_t)1U);
+  writePort(clockPort,setHigh);
+  pollWriteQueue();
+  ContextP->timeInc(1);
+  Top->eval();"
+  OUTPUT_VARIABLE VERILATOR_SST_CLOCK_TICK
+  OUTPUT_STRIP_TRAILING_WHITESPACE )
+else()
+  execute_process(COMMAND echo "// apply queued writes
+  pollWriteQueue();
+  ContextP->timeInc(1);
+  Top->eval();"
+  OUTPUT_VARIABLE VERILATOR_SST_CLOCK_TICK
+  OUTPUT_STRIP_TRAILING_WHITESPACE )
+endif()
+
 # -----------------------------------------------------------------
 # Configure the verilatorSST files
 # -----------------------------------------------------------------
