@@ -60,6 +60,7 @@ VerilatorSST@VERILOG_DEVICE@::VerilatorSST@VERILOG_DEVICE@(ComponentId_t id,
 
   // attempt to build the reset value tables
   initResetValues(params);
+  @VERILATOR_SST_LINK_CONFIGS@
 
   // register the clock
   registerClock(clockFreq,

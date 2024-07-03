@@ -342,6 +342,8 @@ private:
   VerilatedContext *ContextP;       ///< verilated context
   VTop *Top;                        ///< top module
   std::list<QueueEntry> WriteQueue; ///< port write queue
+  // Links for each port
+  @VERILATOR_SST_LINK_DEFS@
 
   // Private functions
 

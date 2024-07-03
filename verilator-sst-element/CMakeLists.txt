@@ -54,6 +54,14 @@ message(STATUS "Building port handler implementations...")
 execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/BuildPortHandlerImpls.sh ${VTOP} ${VERILOG_DEVICE}
                 OUTPUT_VARIABLE VERILATOR_SST_PORT_HANDLER_IMPLS
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
+message(STATUS "Building link definitions...")
+execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/BuildLinkDef.sh ${VTOP}
+                OUTPUT_VARIABLE VERILATOR_SST_LINK_DEFS
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+message(STATUS "Building link configurations...")
+execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/BuildLinkConfig.sh ${VTOP} ${VERILOG_DEVICE}
+                OUTPUT_VARIABLE VERILATOR_SST_LINK_CONFIGS
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 # -----------------------------------------------------------------
 # Configure the verilatorSST files
