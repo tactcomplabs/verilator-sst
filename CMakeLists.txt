@@ -29,7 +29,13 @@ option(VERILOG_TOP_SOURCES "top.v" "List of verilog top source files")
 
 option(VERILATOR_OPTIONS "" "Additional verilator compilation options")
 
-option(VERILATOR_INCLUDE "" "Sets the verilator include paht")
+option(VERILATOR_INCLUDE "" "Sets the verilator include path")
+
+option(VERILATORSST_ENABLE_TESTING "Enable Testing" ON)
+
+option(ENABLE_CLK_HANDLING "Allows subcomponent to handle the clock port automatically" OFF) #Not yet supported
+
+option(ENABLE_LINK_HANDLING "Automatically adds SST link definitions and configurations" OFF)
 
 #------------------------------------------------------------------
 # VERILATOR SETUP
@@ -118,7 +124,6 @@ set(VERILATORSST_EXTERNAL_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/verilator-sst-ele
 #------------------------------------------------------------------
 add_subdirectory(verilator-sst-element)
 
-option(VERILATORSST_ENABLE_TESTING "Enable Testing" ON)
 if(VERILATORSST_ENABLE_TESTING)
   add_subdirectory(tests)
 endif()

@@ -60,6 +60,7 @@ VerilatorSST@VERILOG_DEVICE@::VerilatorSST@VERILOG_DEVICE@(ComponentId_t id,
 
   // attempt to build the reset value tables
   initResetValues(params);
+  @VERILATOR_SST_LINK_CONFIGS@
 
   // register the clock
   registerClock(clockFreq,
@@ -165,18 +166,7 @@ void VerilatorSST@VERILOG_DEVICE@::finish(){
 }
 
 bool VerilatorSST@VERILOG_DEVICE@::clock(SST::Cycle_t cycle){
-  // cycle verilator clock and apply queued writes
-  std::vector<uint8_t> setHigh;
-  std::vector<uint8_t> setLow;
-  setLow.push_back((uint8_t)0U);
-  writePort(clockPort,setLow);
-  ContextP->timeInc(1);
-  Top->eval();
-  setHigh.push_back((uint8_t)1U);
-  writePort(clockPort,setHigh);
-  pollWriteQueue();
-  ContextP->timeInc(1);
-  Top->eval();
+  @VERILATOR_SST_CLOCK_TICK@
   return false;
 }
 
