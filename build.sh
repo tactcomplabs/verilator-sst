@@ -44,6 +44,12 @@ elif [ "$TEST_MOD" = "uart" ]; then
     VDEVICE="UART"
     VSRCS="$PWD/tests/uart_mem/*"
     VTOP="UART"
+elif [ "$TEST_MOD" = "scratchpad" ]; then
+    echo "Generating example module scratchpad"
+    VSOURCE="$PWD/tests/scratchpad/"
+    VDEVICE="Scratchpad"
+    VSRCS="$PWD/tests/scratchpad/*"
+    VTOP="Scratchpad"
 elif [ -z "$TEST_MOD" ]; then
     echo "Generating custom module. . ."
     if [ -z "$SOURCE_DIR" ]; then
