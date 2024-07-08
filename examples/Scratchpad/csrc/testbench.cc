@@ -8,7 +8,7 @@
 #define CHUNK_SIZE 10
 #define NUM_CHUNKS 10
 #define SCRATCHPAD_BASE 16
-#define SCRATCHPAD_SIZE CHUNK_SIZE * NUM_CHUNKS
+#define SCRATCHPAD_SIZE (CHUNK_SIZE * NUM_CHUNKS)
 
 #define BYTE 0
 #define HALF 1
@@ -30,7 +30,7 @@ void writeOp(VTop * top, int addr, int len, uint64_t wdata) {
     top->wdata = wdata;
     clock(top);
     top->en = 0;
-    printf("testbench:wdata=%llx\n",wdata);
+    printf("testbench:wdata=%llx addr=%u\n",wdata,addr);
 }
 
 uint64_t readOp(VTop * top, int addr, int len) {
@@ -41,7 +41,7 @@ uint64_t readOp(VTop * top, int addr, int len) {
     clock(top);
     top->en = 0;
     uint64_t rdata = top->rdata;
-    printf("testbench:rdata=%llx\n",rdata);
+    printf("testbench:rdata=%llx addr=%u\n",rdata,addr);
     return rdata;
 }
 
@@ -87,26 +87,29 @@ int main(int argc, char** argv) {
     //random writes
     printf("\nRANDOM TEST...\n");
     uint8_t data_byte[SCRATCHPAD_SIZE];
+    int addrs[100];
     for(auto i = 0; i<100; i++) {
         int addr = rand() % SCRATCHPAD_SIZE;
+        addrs[i] = addr;
         data_byte[addr] = static_cast<uint8_t>(rand());
         writeOp(top,addr,BYTE,data_byte[addr]);
     }
 
     for(auto i = 0; i<100; i++) {
-        int addr = rand() % SCRATCHPAD_SIZE;
-        assert(readOp(top,addr,BYTE) == data_byte[addr]); 
+        int addr = addrs[i];
+        assert(static_cast<uint8_t>(readOp(top,addr,BYTE)) == data_byte[addr]); 
     }
 
     uint64_t data_double[SCRATCHPAD_SIZE/8];
     for(auto i = 0; i<100; i++) {
         int addr = (rand() % (SCRATCHPAD_SIZE/8 - 1)) * 8;
+        addrs[i] = addr;
         data_double[addr/8] = (static_cast<uint64_t>(rand()) << 32) | rand();
         writeOp(top,addr,DOUBLE,data_double[addr/8]);
     }
 
     for(auto i = 0; i<100; i++) {
-        int addr = (rand() % (SCRATCHPAD_SIZE/8 - 1)) * 8;
+        int addr = addrs[i];
         assert(readOp(top,addr,DOUBLE) == data_double[addr/8]); 
     }
 
