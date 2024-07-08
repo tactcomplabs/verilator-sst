@@ -4,7 +4,7 @@
 `define CHUNK_SIZE 4
 `endif
 `ifndef NUM_CHUNKS
-`define NUM_CHUNKS 2
+`define NUM_CHUNKS 16
 `endif
 `ifndef SCRATCHPAD_BASE
 `define SCRATCHPAD_BASE 16
@@ -23,7 +23,6 @@ module Scratchpad #(
     parameter NUM_CHUNKS=`NUM_CHUNKS,
     parameter SCRATCHPAD_BASE=`SCRATCHPAD_BASE)(
     input clk,
-    input rst_l,
     input en,
     input write,
     input [63:0] addr,
