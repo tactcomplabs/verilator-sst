@@ -22,7 +22,7 @@ generate
   for (i=0;i<8;i=i+1) begin
     always_ff @(posedge clk) begin
       if (wr & en) begin
-        mem[addr+i] <= wdata[(8*i)+7:(8*i)] & mask[(8*i)+7:(8*i)];
+        mem[addr+i] <= (wdata[(8*i)+7:(8*i)] & mask[(8*i)+7:(8*i)]) | (mem[addr+i] & ~mask[(8*i)+7:(8*i)]);
       end
     end
   end
@@ -34,7 +34,7 @@ generate
   for (j=0;j<8;j=j+1) begin
     always_ff @(posedge clk) begin
       if (~wr & en) begin
-        rdata[(8*j)+7:(8*j)] <= mem[addr+j];
+        rdata[(8*j)+7:(8*j)] <= mem[addr+j] & mask[(8*j)+7:(8*j)];
       end
     end
   end
@@ -42,13 +42,9 @@ endgenerate
 
 always_ff@(negedge clk) begin
   if(wr & en)
-    $display("verilog:wdata=%h",wdata);
+    $display("verilog:wdata=%h addr=%d",wdata, addr);
   else if(~wr & en)
-    $display("verilog:rdata=%h",rdata);
+    $display("verilog:rdata=%h addr=%d",rdata, addr);
 end
-
-// initial begin
-//   $display("ADDR_WIDTH=%d\n",ADDR_WIDTH);
-// end
 
 endmodule;
