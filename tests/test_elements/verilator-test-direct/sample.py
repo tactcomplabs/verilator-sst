@@ -12,12 +12,20 @@ import os
 import sys
 import sst
 
-examples = ["Counter", "Accum", "UART"]
 if (len(sys.argv) > 2 and sys.argv[1] == "-m"):
-     sub = sys.argv[2]
-     if sub not in examples:
+     test = sys.argv[2]
+     file_path = os.path.abspath(__file__)
+     test_path = os.path.join(file_path,
+                              os.path.pardir,
+                              os.path.pardir,
+                              os.path.pardir,
+                              test)
+     test_abs_path = os.path.abspath(test_path)
+     print(test_abs_path)
+     if not os.path.exists(test_abs_path):
           raise Exception("Unknown model selected")
-     subName = "verilatorsst{}.VerilatorSST{}".format(sub, sub)
+
+     subName = "verilatorsst{}.VerilatorSST{}".format(test, test)
 else:
      # Default to accum because it is a relatively robust example
      subName = "verilatorsstAccum.VerilatorSSTAccum"
@@ -26,7 +34,7 @@ top = sst.Component("top0", "verilatortestdirect.VerilatorTestDirect")
 top.addParams({
   "verbose" : 1,
   "clockFreq" : "1GHz",
-  "numCycles" : 5000
+  "numCycles" : 5
 })
 model = top.setSubComponent("model", subName)
 model.addParams({

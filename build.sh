@@ -1,12 +1,12 @@
 #!/bin/bash
-#set -ex
+set -e
 DEBUG=""
 LINKHANDLE=""
 CLOCKHANDLE=""
 while getopts "hdlct:m:s:f:" flag
 do
     case "${flag}" in
-        h) echo "./build.sh -t {counter, accum, accum1D, uart} will build the selected example module"
+        h) echo "./build.sh -t [TEST_MODULE] will build the selected example module"
            echo "For custom modules, -m <module_name> -s <source_dir> -f <source_files> must be defined"
            echo "-d : Sets cmake build type to Debug"
            echo "-l : Includes automatic link generation based on port names"
@@ -20,30 +20,12 @@ do
         f) SOURCE_FILES=${OPTARG};;
     esac
 done
-if [ "$TEST_MOD" = "counter" ]; then
-    echo "Generating example module counter"
-    VSOURCE="$PWD/tests/counter/"
-    VDEVICE="Counter"
-    VSRCS="$PWD/tests/counter/Counter.v"
-    VTOP="Counter"
-elif [ "$TEST_MOD" = "accum" ]; then
-    echo "Generating example module accum"
-    VSOURCE="$PWD/tests/accum/"
-    VDEVICE="Accum"
-    VSRCS="$PWD/tests/accum/Accum.sv"
-    VTOP="Accum"
-elif [ "$TEST_MOD" = "accum1D" ]; then
-    echo "Generating example module accum1D"
-    VSOURCE="$PWD/tests/accum/"
-    VDEVICE="Accum"
-    VSRCS="$PWD/tests/accum/Accum1D.sv"
-    VTOP="Accum"
-elif [ "$TEST_MOD" = "uart" ]; then
-    echo "Generating example module uart"
-    VSOURCE="$PWD/tests/uart_mem/"
-    VDEVICE="UART"
-    VSRCS="$PWD/tests/uart_mem/*"
-    VTOP="UART"
+if [ -d "$PWD/tests/$TEST_MOD" ]; then
+    echo "Generating example module $TEST_MOD"
+    VSOURCE="$PWD/tests/$TEST_MOD/vsrc"
+    VDEVICE="$TEST_MOD"
+    VSRCS="$PWD/tests/$TEST_MOD/vsrc/*"
+    VTOP="$TEST_MOD"
 elif [ -z "$TEST_MOD" ]; then
     echo "Generating custom module. . ."
     if [ -z "$SOURCE_DIR" ]; then
