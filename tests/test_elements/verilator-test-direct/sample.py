@@ -21,7 +21,6 @@ if (len(sys.argv) > 2 and sys.argv[1] == "-m"):
                               os.path.pardir,
                               test)
      test_abs_path = os.path.abspath(test_path)
-     print(test_abs_path)
      if not os.path.exists(test_abs_path):
           raise Exception("Unknown model selected")
 
