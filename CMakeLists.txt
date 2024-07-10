@@ -117,6 +117,9 @@ message(STATUS "[SST] SST_LDFLAGS=${SST_LDFLAGS}")
 set(CXXFLAGS "${SST_CXXFLAGS}")
 set(LDFLAGS "${SST_LDFLAGS}")
 
+separate_arguments(SST_CXXFLAGS_LIST UNIX_COMMAND ${CXXFLAGS})
+separate_arguments(SST_LDFLAGS_LIST UNIX_COMMAND ${LDFLAGS})
+
 set(VERILATORSST_EXTERNAL_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/verilator-sst-element")
 
 #------------------------------------------------------------------

@@ -6,10 +6,15 @@
 # See LICENSE in the top level directory for licensing details
 #
 
+cmake_path(GET VERILOG_SOURCE PARENT_PATH TEST_DIR)
+cmake_path(APPEND TEST_CSRC "${TEST_DIR}" "csrc")
+cmake_path(APPEND TEST_CSRC_TESTBENCH "${TEST_CSRC}" "testBench.cpp")
+
 set(VTDSrcs
 VerilatorTestDirect.cpp
 VerilatorTestDirect.h
 SST.h
+${TEST_CSRC_TESTBENCH}
 )
 
 add_library(verilatortestdirect SHARED ${VTDSrcs})
@@ -20,6 +25,9 @@ target_include_directories(verilatortestdirect
                 PUBLIC ${SST_INSTALL_DIR}/include
                        ${VERILATOR_INCLUDE}
                        ${VERILATOR_INCLUDE}/vltstd)
+
+target_compile_options(verilatortestdirect PRIVATE ${SST_CXXFLAGS_LIST})
+target_link_options(verilatortestdirect PRIVATE ${SST_LDFLAGS_LIST})
 
 install(TARGETS verilatortestdirect DESTINATION ${CMAKE_SOURCE_DIR}/install)
 install(CODE "execute_process(COMMAND sst-register verilatortestdirect verilatortestdirect_LIBDIR=${CMAKE_SOURCE_DIR}/install)")
