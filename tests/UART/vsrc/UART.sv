@@ -3,18 +3,6 @@
 //read rx={0} -> rx{addr} -> tx{data}
 //write rx={1} -> rx{addr} -> rx{data}
 
-`ifndef ADDR_WIDTH
-`define ADDR_WIDTH 1
-`endif
-
-`ifndef DATA_WIDTH
-`define DATA_WIDTH 1
-`endif
-
-`ifndef BAUD_PERIOD
-`define BAUD_PERIOD 1
-`endif
-
 `define assert(cond,msg) initial begin \
     if (~cond) begin \
         $display(msg); \
@@ -23,9 +11,9 @@
 end
 
 module UART #(
-    parameter ADDR_WIDTH=`ADDR_WIDTH, 
-    parameter DATA_WIDTH=`DATA_WIDTH, 
-    parameter BAUD_PERIOD=`BAUD_PERIOD)(
+    parameter ADDR_WIDTH=16, 
+    parameter DATA_WIDTH=8, 
+    parameter BAUD_PERIOD=16)(
     input clk,
     input rst_l,
     input RX,
