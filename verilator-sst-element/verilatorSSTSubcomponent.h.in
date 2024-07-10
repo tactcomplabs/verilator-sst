@@ -31,9 +31,9 @@
 
 namespace SST::VerilatorSST {
 
-enum class VPortType : uint8_t {
-  V_INPUT   = 0b00000000,       /// VPortType: input port
-  V_OUTPUT  = 0b00000001,       /// VPortType: output port
+enum class VPortType : int {
+  V_INPUT   = 0,       /// VPortType: input port
+  V_OUTPUT  = 1,       /// VPortType: output port
 };
 
 // ---------------------------------------------------------------
@@ -242,6 +242,9 @@ public:
   /// VerilatorSSTBase: read from the target port
   virtual std::vector<uint8_t> readPort(std::string portName) = 0;
 
+  /// VerilatorSSTBase: force verilog evaluation
+  virtual void forceEvaluation() = 0;
+
 protected:
   SST::Output *output;        ///< VerilatorSST: SST output handler
   uint32_t verbosity;         ///< VerilatorSST: verbosity parameter
@@ -335,6 +338,8 @@ public:
   /// read from the target port
   virtual std::vector<uint8_t> readPort(std::string portName) override;
 
+  /// force verilog evaluation
+  virtual void forceEvaluation() override;
 private:
 
   // Private data

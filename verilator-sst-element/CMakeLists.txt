@@ -72,6 +72,7 @@ else()
 endif()
 
 if ( ENABLE_CLK_HANDLING )
+  add_compile_definitions("ENABLE_CLK_HANDLING")
   execute_process(COMMAND echo "// cycle verilator clock and apply queued writes
   std::vector<uint8_t> setHigh;
   std::vector<uint8_t> setLow;

@@ -40,10 +40,12 @@ VerilatorSST@VERILOG_DEVICE@::VerilatorSST@VERILOG_DEVICE@(ComponentId_t id,
   const std::string clockFreq = params.find<std::string>("clockFreq", "1GHz");
 
   clockPort = params.find<std::string>("clockPort", "NullPort");
+#if ENABLE_CLK_HANDLING
   if( !isNamedPort(clockPort) ){
     output->fatal(CALL_INFO, -1, "Could not find clock port with name=%s\n",
                   clockPort.c_str());
   }
+#endif
 
   // init verilator interfaces
   ContextP = new VerilatedContext();
@@ -412,6 +414,10 @@ std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPort(std::string PortName
   }
 
   return data;
+}
+
+void VerilatorSST@VERILOG_DEVICE@::forceEvaluation() {
+  Top->eval();
 }
 
 @VERILATOR_SST_PORT_IO_IMPLS@
