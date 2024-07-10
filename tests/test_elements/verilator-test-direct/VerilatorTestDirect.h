@@ -96,6 +96,18 @@ private:
   /// generate random input data
   std::vector<uint8_t> generateData(unsigned Width, unsigned Depth);
 
+  // test suites
+
+  void testPortNames();
+  void testNumPorts();
+  void testPortWidth();
+  void testPortDepth();
+  void testPortType();
+  void testPortWrite();
+  void testPortRead();
+  void testPortWriteRead();
+  void testSuite();
+
 };  // class VerilatorTestDirect
 
 };  // namespace SST::VerilatorSST

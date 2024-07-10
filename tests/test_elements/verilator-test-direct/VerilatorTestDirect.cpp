@@ -75,11 +75,24 @@ std::vector<uint8_t> VerilatorTestDirect::generateData(unsigned Width, unsigned 
   return data;
 }
 
+void VerilatorTestDirect::testSuite() { 
+  testPortNames();
+  testNumPorts();
+  testPortWidth();
+  testPortDepth();
+  testPortType();
+  testPortWrite();
+  testPortRead();
+  testPortWriteRead();
+}
+
 bool VerilatorTestDirect::clock(SST::Cycle_t currentCycle){
   if( currentCycle > NumCycles ){
     primaryComponentOKToEndSim();
     return true;
   }
+
+  testSuite();
 
   // build a new set of wire payloads
   std::vector<std::string> Ports = model->getPortsNames();
