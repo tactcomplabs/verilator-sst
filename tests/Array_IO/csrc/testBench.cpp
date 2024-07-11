@@ -11,7 +11,7 @@ using namespace SST::VerilatorSST;
     }
 
 void VerilatorTestDirect::testPortNames() {
-    const auto portNames = model->getPortsNames();
+    const std::vector<std::string> & portNames = model->getPortsNames();
     CHECK_EQ(static_cast<int>(portNames.size()),N_PORTS);
     for(const auto &it : portNames) {
         CHECK_EQ(model->isNamedPort(it),true);
@@ -51,20 +51,20 @@ void VerilatorTestDirect::testPortType() {
 
 void VerilatorTestDirect::testPortWrite() {
     std::vector<uint8_t> writeVals;
-    const auto ngroups = ((PACKED_WIDTH + 7)/ 8)*UNPACKED_ELEMENTS;
+    const uint32_t ngroups = ((PACKED_WIDTH + 7)/ 8)*UNPACKED_ELEMENTS;
     writeVals.resize(ngroups);
     model->writePort("arr_in", writeVals);
 }
 
 void VerilatorTestDirect::testPortRead() {
     std::vector<uint8_t> readVals = model->readPort("arr_out");
-    const auto ngroups = ((PACKED_WIDTH + 7)/ 8)*UNPACKED_ELEMENTS;
+    const uint32_t ngroups = ((PACKED_WIDTH + 7)/ 8)*UNPACKED_ELEMENTS;
     CHECK_EQ(static_cast<uint32_t>(readVals.size()),ngroups);
 }
 
 void VerilatorTestDirect::testPortWriteRead() {
     std::vector<uint8_t> writeVals;
-    const auto ngroups = ((PACKED_WIDTH + 7)/ 8)*UNPACKED_ELEMENTS;
+    const uint32_t ngroups = ((PACKED_WIDTH + 7)/ 8)*UNPACKED_ELEMENTS;
     writeVals.resize(ngroups);
     for (auto & it : writeVals) {
         it = static_cast<uint8_t>(rand());
@@ -74,11 +74,11 @@ void VerilatorTestDirect::testPortWriteRead() {
 
     std::vector<uint8_t> expectedVals;
     expectedVals.resize(ngroups);
-    for (auto i = 0; i < ngroups; i++) {
+    for (size_t i = 0; i < ngroups; i++) {
         expectedVals[i] = ~writeVals[i];
     }
     std::vector<uint8_t> readVals = model->readPort("arr_out");
-    const auto readData = reinterpret_cast<uint8_t*>(readVals.data());
-    const auto expectedData = reinterpret_cast<uint8_t*>(expectedVals.data());
+    const uint8_t * readData = reinterpret_cast<uint8_t*>(readVals.data());
+    const uint8_t * expectedData = reinterpret_cast<uint8_t*>(expectedVals.data());
     CHECK_EQ(std::memcmp(readData,expectedData,ngroups),0);
 }

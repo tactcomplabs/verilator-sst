@@ -13,7 +13,7 @@ using namespace SST::VerilatorSST;
     }
 
 void VerilatorTestDirect::testPortNames() {
-    const auto portNames = model->getPortsNames();
+    const std::vector<std::string> & portNames = model->getPortsNames();
     CHECK_EQ(static_cast<int>(portNames.size()),N_PORTS);
     for(const auto &it : portNames) {
         CHECK_EQ(model->isNamedPort(it),true);

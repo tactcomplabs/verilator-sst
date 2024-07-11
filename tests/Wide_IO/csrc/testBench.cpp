@@ -12,7 +12,7 @@ using namespace SST::VerilatorSST;
     }
 
 void VerilatorTestDirect::testPortNames() {
-    const auto portNames = model->getPortsNames();
+    const std::vector<std::string> & portNames = model->getPortsNames();
     CHECK_EQ(static_cast<int>(portNames.size()),N_PORTS);
     for(const auto &it : portNames) {
         CHECK_EQ(model->isNamedPort(it),true);
@@ -92,18 +92,18 @@ void VerilatorTestDirect::testPortWrite() {
 }
 
 void VerilatorTestDirect::testPortRead() {
-    const auto longVal = model->readPort("long_in");
-    const auto longLongVal = model->readPort("long_long_in");
-    const auto superVal = model->readPort("super_in");
+    const std::vector<uint8_t> longVal = model->readPort("long_in");
+    const std::vector<uint8_t> longLongVal = model->readPort("long_long_in");
+    const std::vector<uint8_t> superVal = model->readPort("super_in");
     CHECK_EQ(static_cast<uint32_t>(longVal.size()),(LONG_WIDTH + 7)/ 8);
     CHECK_EQ(static_cast<uint32_t>(longLongVal.size()),(LONG_LONG_WIDTH + 7)/ 8);
     CHECK_EQ(static_cast<uint32_t>(superVal.size()),(SUPER_WIDTH + 7)/ 8);
 }
 
 void VerilatorTestDirect::testPortWriteRead() {
-    const auto longBytes = (LONG_WIDTH + 7)/ 8;
-    const auto longLongBytes = (LONG_LONG_WIDTH + 7)/ 8;
-    const auto superBytes = (SUPER_WIDTH + 7)/ 8;
+    const uint32_t longBytes = (LONG_WIDTH + 7)/ 8;
+    const uint32_t longLongBytes = (LONG_LONG_WIDTH + 7)/ 8;
+    const uint32_t superBytes = (SUPER_WIDTH + 7)/ 8;
 
     // generate random write data
     std::vector<uint8_t> writeLongVal;
@@ -133,20 +133,20 @@ void VerilatorTestDirect::testPortWriteRead() {
     expectedLongVal.resize(longBytes);
     expectedLongLongVal.resize(longLongBytes);
     expectedSuperVal.resize(superBytes);
-    for(auto i = 0; i < longBytes; i++) {
+    for(size_t i = 0; i < longBytes; i++) {
         expectedLongVal[i] = ~writeLongVal[i];
     }
-    for(auto i = 0; i < longLongBytes; i++) {
+    for(size_t i = 0; i < longLongBytes; i++) {
         expectedLongLongVal[i] = ~writeLongLongVal[i];
     }
-    for(auto i = 0; i < superBytes; i++) {
+    for(size_t i = 0; i < superBytes; i++) {
         expectedSuperVal[i] = ~writeSuperVal[i];
     }
 
     // check value match
-    const auto readLongVal = model->readPort("long_out");
-    const auto readLongLongVal = model->readPort("long_long_out");
-    const auto readSuperVal = model->readPort("super_out");
+    const std::vector<uint8_t> readLongVal = model->readPort("long_out");
+    const std::vector<uint8_t> readLongLongVal = model->readPort("long_long_out");
+    const std::vector<uint8_t> readSuperVal = model->readPort("super_out");
     CHECK_EQ(std::memcmp(readLongVal.data(),expectedLongVal.data(),longBytes),0);
     CHECK_EQ(std::memcmp(readLongLongVal.data(),expectedLongLongVal.data(),longLongBytes),0);
     CHECK_EQ(std::memcmp(readSuperVal.data(),expectedSuperVal.data(),superBytes),0);
