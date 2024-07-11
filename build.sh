@@ -11,7 +11,7 @@ do
            echo "   -d                 : sets cmake build type to debug"
            echo "   -l                 : includes automatic link generation based on port names"
            echo -e "\nTest mode: build a testbench directory"
-           echo "   -t <test_dir_name> : Counter, Accum, UART, ..."
+           echo "   -t <test_dir_name> : Accum, Accum1D, Array_IO, Counter, Scratchpad, UART, WIDE_IO"
            echo -e "\nCustom mode: build a custom verilog module. Ignored when -t is defined"
            echo "   -m <module_name>   : verilog top module"
            echo "   -s <source_dir>    : verilog source directory"
