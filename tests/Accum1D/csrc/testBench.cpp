@@ -24,7 +24,7 @@ void VerilatorTestDirect::testPortNames() {
         if (std::strcmp(it.c_str(),"add") == 0) continue;
         if (std::strcmp(it.c_str(),"accum") == 0) continue;
         if (std::strcmp(it.c_str(),"done") == 0) continue;
-        output.fatal(CALL_INFO,-1,"Unknown port name returned\n");
+        output.fatal(CALL_INFO,-1,"Unknown port name returned: %s\n",it.c_str());
     }
 }
 
