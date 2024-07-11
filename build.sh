@@ -49,7 +49,7 @@ elif [ -z "$TEST_MOD" ]; then
     VSRCS="$SOURCE_FILES"
     VTOP="$MODULE"
 else
-    echo "Error: built-in test module not recognized; options for use with -t flag are counter, accum, accum1D, uart"
+    echo "Error: built-in test module not recognized; options for use with -t flag are counter, accum, accum1D, uart, scratchpad"
     exit 1
 fi
 #cd $(dirname $0)
