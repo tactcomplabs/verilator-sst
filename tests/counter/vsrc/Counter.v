@@ -1,4 +1,8 @@
-module Counter #(parameter STOP_WIDTH=4) (
+`ifndef STOP_WIDTH
+`define STOP_WIDTH 4
+`endif
+
+module Counter #(parameter STOP_WIDTH=`STOP_WIDTH) (
    input                  clk,
    input                  reset_l,
    input [STOP_WIDTH-1:0] stop,

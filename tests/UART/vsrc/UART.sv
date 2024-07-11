@@ -1,3 +1,12 @@
+`ifndef ADDR_WIDTH
+`define ADDR_WIDTH 16
+`endif
+`ifndef DATA_WIDTH
+`define DATA_WIDTH 8
+`endif
+`ifndef BAUD_PERIOD
+`define BAUD_PERIOD 16
+`endif
 //addr_width > data_width
 //nRX=nTX
 //read rx={0} -> rx{addr} -> tx{data}
@@ -11,9 +20,9 @@
 end
 
 module UART #(
-    parameter ADDR_WIDTH=16, 
-    parameter DATA_WIDTH=8, 
-    parameter BAUD_PERIOD=16)(
+    parameter ADDR_WIDTH=`ADDR_WIDTH, 
+    parameter DATA_WIDTH=`DATA_WIDTH,
+    parameter BAUD_PERIOD=`BAUD_PERIOD)(
     input clk,
     input rst_l,
     input RX,
