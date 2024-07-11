@@ -12,7 +12,7 @@ import os
 import sys
 import sst
 
-examples = ["Counter", "Accum", "UART"]
+examples = ["Counter", "Accum", "UART", "Scratchpad"]
 if (len(sys.argv) > 2 and sys.argv[1] == "-m"):
      sub = sys.argv[2]
      if sub not in examples:

@@ -44,6 +44,12 @@ elif [ "$TEST_MOD" = "uart" ]; then
     VDEVICE="UART"
     VSRCS="$PWD/tests/uart_mem/*"
     VTOP="UART"
+elif [ "$TEST_MOD" = "scratchpad" ]; then
+    echo "Generating example module scratchpad"
+    VSOURCE="$PWD/tests/scratchpad/"
+    VDEVICE="Scratchpad"
+    VSRCS="$PWD/tests/scratchpad/*"
+    VTOP="Scratchpad"
 elif [ -z "$TEST_MOD" ]; then
     echo "Generating custom module. . ."
     if [ -z "$SOURCE_DIR" ]; then
@@ -61,7 +67,7 @@ elif [ -z "$TEST_MOD" ]; then
     VSRCS="$SOURCE_FILES"
     VTOP="$MODULE"
 else
-    echo "Error: built-in test module not recognized; options for use with -t flag are counter, accum, accum1D, uart"
+    echo "Error: built-in test module not recognized; options for use with -t flag are counter, accum, accum1D, uart, scratchpad"
     exit 1
 fi
 #cd $(dirname $0)
