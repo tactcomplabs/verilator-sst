@@ -73,7 +73,7 @@ void VerilatorTestDirect::testPortWrite() {
 }
 
 void VerilatorTestDirect::testPortRead() {
-    std::vector<uint8_t> done = model->readPort("done");
+    const std::vector<uint8_t> done = model->readPort("done");
     CHECK_EQ(static_cast<uint32_t>(done.size()),1);
 }
 

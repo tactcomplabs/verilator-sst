@@ -80,9 +80,9 @@ void VerilatorTestDirect::testPortWrite() {
 }
 
 void VerilatorTestDirect::testPortRead() {
-    std::vector<uint8_t> mem_debug = model->readPort("mem_debug");
+    const std::vector<uint8_t> mem_debug = model->readPort("mem_debug");
     CHECK_EQ(static_cast<uint32_t>(mem_debug.size()),((MEM_DEBUG_WIDTH+7)/8)*MEM_DEBUG_DEPTH);
-    std::vector<uint8_t> tx = model->readPort("TX");
+    const std::vector<uint8_t> tx = model->readPort("TX");
     CHECK_EQ(static_cast<uint32_t>(tx.size()),1);
 }
 

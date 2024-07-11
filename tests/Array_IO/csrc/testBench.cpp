@@ -57,7 +57,7 @@ void VerilatorTestDirect::testPortWrite() {
 }
 
 void VerilatorTestDirect::testPortRead() {
-    std::vector<uint8_t> readVals = model->readPort("arr_out");
+    const std::vector<uint8_t> readVals = model->readPort("arr_out");
     const uint32_t ngroups = ((PACKED_WIDTH + 7)/ 8)*UNPACKED_ELEMENTS;
     CHECK_EQ(static_cast<uint32_t>(readVals.size()),ngroups);
 }

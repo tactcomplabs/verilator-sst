@@ -91,9 +91,9 @@ void VerilatorTestDirect::testPortWrite() {
 }
 
 void VerilatorTestDirect::testPortRead() {
-    std::vector<uint8_t> accum = model->readPort("accum");
+    const std::vector<uint8_t> accum = model->readPort("accum");
     CHECK_EQ(static_cast<uint32_t>(accum.size()),((ACCUM_WIDTH+7)/8)*ACCUM_DEPTH);
-    std::vector<uint8_t> done = model->readPort("done");
+    const std::vector<uint8_t> done = model->readPort("done");
     CHECK_EQ(static_cast<uint32_t>(done.size()),1);
 }
 
