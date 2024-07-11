@@ -118,13 +118,13 @@ bool VerilatorTestDirect::clock(SST::Cycle_t currentCycle){
       // write to the port
       data = generateData(Width, Depth);
       if (bits < 9) {
-        output.verbose(CALL_INFO, 1, 0, "Data generated (W%dD%d) for sending on port %s: %02x\n", Width, Depth, i.data(), data[0]);
+        output.verbose(CALL_INFO, 2, 0, "Data generated (W%dD%d) for sending on port %s: %02x\n", Width, Depth, i.data(), data[0]);
       }
       else if (bits < 33) {
-        output.verbose(CALL_INFO, 1, 0, "Data generated (W%dD%d) for sending on port %s: %02x %02x %02x %02x\n", Width, Depth, i.data(), data[0], data[1], data[2], data[3]);
+        output.verbose(CALL_INFO, 2, 0, "Data generated (W%dD%d) for sending on port %s: %02x %02x %02x %02x\n", Width, Depth, i.data(), data[0], data[1], data[2], data[3]);
       }
       else {
-        output.verbose(CALL_INFO, 1, 0, "Data generated (W%dD%d) for sending on port %s: %02x %02x %02x %02x %02x %02x %02x %02x\n", Width, Depth, i.data(), data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
+        output.verbose(CALL_INFO, 2, 0, "Data generated (W%dD%d) for sending on port %s: %02x %02x %02x %02x %02x %02x %02x %02x\n", Width, Depth, i.data(), data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
       }
       model->writePort(i, data);
     }
@@ -132,13 +132,13 @@ bool VerilatorTestDirect::clock(SST::Cycle_t currentCycle){
       // read from the port
       data = model->readPort(i);
       if (bits < 9) {
-        output.verbose(CALL_INFO, 1, 0, "Data received (W%dD%d) from port %s: %02x\n", Width, Depth, i.data(), data[0]);
+        output.verbose(CALL_INFO, 2, 0, "Data received (W%dD%d) from port %s: %02x\n", Width, Depth, i.data(), data[0]);
       }
       else if (bits < 33) {
-        output.verbose(CALL_INFO, 1, 0, "Data received (W%dD%d) from port %s: %02x %02x %02x %02x\n", Width, Depth, i.data(), data[0], data[1], data[2], data[3]);
+        output.verbose(CALL_INFO, 2, 0, "Data received (W%dD%d) from port %s: %02x %02x %02x %02x\n", Width, Depth, i.data(), data[0], data[1], data[2], data[3]);
       }
       else {
-        output.verbose(CALL_INFO, 1, 0, "Data received (W%dD%d) from port %s: %02x %02x %02x %02x %02x %02x %02x %02x\n", Width, Depth, i.data(), data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
+        output.verbose(CALL_INFO, 2, 0, "Data received (W%dD%d) from port %s: %02x %02x %02x %02x %02x %02x %02x %02x\n", Width, Depth, i.data(), data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
       }
     }
   }

@@ -33,7 +33,7 @@ top = sst.Component("top0", "verilatortestdirect.VerilatorTestDirect")
 top.addParams({
   "verbose" : 1,
   "clockFreq" : "1GHz",
-  "numCycles" : 5
+  "numCycles" : 5000
 })
 model = top.setSubComponent("model", subName)
 model.addParams({
