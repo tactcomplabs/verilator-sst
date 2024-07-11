@@ -6,10 +6,16 @@ CLOCKHANDLE=""
 while getopts "hdlct:m:s:f:" flag
 do
     case "${flag}" in
-        h) echo "./build.sh -t [TEST_MODULE] will build the selected example module"
-           echo "For custom modules, -m <module_name> -s <source_dir> -f <source_files> must be defined"
-           echo "-d : Sets cmake build type to Debug"
-           echo "-l : Includes automatic link generation based on port names"
+        h) echo "Usage: ./build.sh [OPTIONS] [-t <test_dir_name>] [-m <module_name> -s <source_dir> -f <source_files>]"
+           echo -e "\nOptional flags:"
+           echo "   -d                 : sets cmake build type to debug"
+           echo "   -l                 : includes automatic link generation based on port names"
+           echo -e "\nTest mode: build a testbench directory"
+           echo "   -t <test_dir_name> : Counter, Accum, UART, ..."
+           echo -e "\nCustom mode: build a custom verilog module. Ignored when -t is defined"
+           echo "   -m <module_name>   : verilog top module"
+           echo "   -s <source_dir>    : verilog source directory"
+           echo "   -f <source_files>  : verilog source files"
            exit 1;;
         d) DEBUG="-DCMAKE_BUILD_TYPE=Debug";;
         l) LINKHANDLE="-DENABLE_LINK_HANDLING=ON";;
