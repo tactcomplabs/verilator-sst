@@ -16,7 +16,7 @@ uint32_t Signal::calculateNumWords(uint32_t nBits){
 
 Signal::Signal(uint32_t nBits, std::vector<uint8_t> initVal) : Signal(nBits,1,initVal,false){}
 
-Signal::Signal(uint32_t nBits, uint64_t depth, std::vector<uint8_t> initVal, bool descending):
+Signal::Signal(uint32_t nBits, uint64_t depth, const std::vector<uint8_t>& initVal, bool descending):
   depth(depth), 
   nBits(nBits){
   validate(nBits,depth);
@@ -86,7 +86,8 @@ uint8_t Signal::getUIntScalar() const{
   return bit;
 }
 
-std::vector<uint8_t> Signal::getUIntArray(uint64_t depth) const{
+// currently unused
+const std::vector<uint8_t> Signal::getUIntArray(uint64_t depth) const{
   assert(depth < this->depth && "depth out of range");
 
   const auto words = calculateNumWords(nBits);
@@ -96,12 +97,12 @@ std::vector<uint8_t> Signal::getUIntArray(uint64_t depth) const{
     buf[i] = storage[depth].value.vector[i].aval;
   }
 
-  auto ret = uint32ArrToUint8Arr(buf,bytes,1);
+  const std::vector<uint8_t>& ret = uint32ArrToUint8Arr(buf,bytes,1);
 
   return ret;
 }
 
-std::vector<uint8_t> Signal::getUIntVector(bool reverse) const{
+const std::vector<uint8_t> Signal::getUIntVector(bool reverse) const{
   const auto words = calculateNumWords(nBits);
   const auto bytes = calculateNumBytes(nBits);
 
@@ -113,12 +114,12 @@ std::vector<uint8_t> Signal::getUIntVector(bool reverse) const{
     }
   }
 
-  auto ret = uint32ArrToUint8Arr(buf, bytes, depth);
+  const std::vector<uint8_t>& ret = uint32ArrToUint8Arr(buf, bytes, depth);
 
   return ret;
 }
 
-std::vector<uint8_t> Signal::uint32ArrToUint8Arr(const std::vector<uint32_t> src, const uint32_t bytesPerRow, const uint64_t rows){
+const std::vector<uint8_t> Signal::uint32ArrToUint8Arr(const std::vector<uint32_t>& src, const uint32_t bytesPerRow, const uint64_t rows){
   const auto wordsPerRow = calculateNumWords(bytesPerRow*8);
   auto buf = std::vector<uint8_t>(bytesPerRow*rows);
   for(auto i=0;i<rows;i++){
@@ -139,7 +140,7 @@ std::vector<uint8_t> Signal::uint32ArrToUint8Arr(const std::vector<uint32_t> src
   return buf;
 }
 
-std::vector<uint32_t> Signal::uint8ArrToUint32Arr(const std::vector<uint8_t> src, const uint32_t bytesPerRow, const uint64_t rows){
+const std::vector<uint32_t> Signal::uint8ArrToUint32Arr(const std::vector<uint8_t>& src, const uint32_t bytesPerRow, const uint64_t rows){
   const auto wordsPerRow = calculateNumWords(bytesPerRow*8);
   auto buf = std::vector<uint32_t>(wordsPerRow*rows);
 

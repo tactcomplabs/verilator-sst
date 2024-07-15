@@ -37,7 +37,7 @@ class Signal {
   public:
     Signal(const Signal& other);
     Signal(uint32_t nBits, std::vector<uint8_t> init_val);
-    Signal(uint32_t nBits, uint64_t depth, std::vector<uint8_t> init_val, bool descending);
+    Signal(uint32_t nBits, uint64_t depth, const std::vector<uint8_t>& init_val, bool descending);
     ~Signal();
     Signal& operator=(Signal other);
 
@@ -47,8 +47,8 @@ class Signal {
 
     //storage representation accessors
     uint8_t getUIntScalar() const;
-    std::vector<uint8_t> getUIntArray(uint64_t depth) const;
-    std::vector<uint8_t> getUIntVector(bool reverse) const;
+    const std::vector<uint8_t> getUIntArray(uint64_t depth) const;
+    const std::vector<uint8_t> getUIntVector(bool reverse) const;
     s_vpi_value getVpiValue(uint64_t depth) const;
 
 
@@ -57,8 +57,8 @@ class Signal {
     
     static uint32_t calculateNumBytes(uint32_t nBits);
     static uint32_t calculateNumWords(uint32_t nBits);
-    static std::vector<uint32_t> uint8ArrToUint32Arr(const std::vector<uint8_t> src, const uint32_t size, const uint64_t rows);
-    static std::vector<uint8_t> uint32ArrToUint8Arr(const std::vector<uint32_t> src, const uint32_t size, const uint64_t rows);
+    static const std::vector<uint32_t> uint8ArrToUint32Arr(const std::vector<uint8_t>& src, const uint32_t size, const uint64_t rows);
+    static const std::vector<uint8_t> uint32ArrToUint8Arr(const std::vector<uint32_t>& src, const uint32_t size, const uint64_t rows);
 };
 
 class SignalFactory {
