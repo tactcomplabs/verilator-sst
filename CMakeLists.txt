@@ -33,9 +33,11 @@ option(VERILATOR_INCLUDE "" "Sets the verilator include path")
 
 option(VERILATORSST_ENABLE_TESTING "Enable Testing" ON)
 
-option(ENABLE_CLK_HANDLING "Allows subcomponent to handle the clock port automatically" OFF) #Not yet supported
+option(ENABLE_CLK_HANDLING "Allows subcomponent to handle the clock port automatically" OFF)
 
 option(ENABLE_LINK_HANDLING "Automatically adds SST link definitions and configurations" OFF)
+
+option(CLOCK_PORT_NAME "clk" "Name of the top-level module's clock port") #Defaults to "clk"
 
 #------------------------------------------------------------------
 # VERILATOR SETUP

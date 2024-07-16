@@ -9,6 +9,7 @@
 Top=$1
 Device=$2
 LINK=$3
+CLKNAME=$4
 
 #-- Generate all the input signals
 INPUTS=`cat $Top | grep VL_IN`
@@ -22,12 +23,22 @@ for IN in $INPUTS;do
   echo "void VerilatorSST$Device::handle_${SIGNAME}(SST::Event* ev){"
   echo "PortEvent *p = static_cast<PortEvent*>(ev);"
   echo "// handle the message"
-  echo "if( p->getAtTick() != 0x00ull ){"
-  echo "writePortAtTick(\"${SIGNAME}\",p->getPacket(),p->getAtTick());"
-  echo "}else{"
-  echo "writePort(\"${SIGNAME}\",p->getPacket());"
-  # should we add ack messages?
-  echo "}"
+  if [ "$SIGNAME" = "$CLKNAME" ]; then
+    echo "// clock handler: apply queued writes and eval model first"
+    echo "pollWriteQueue();"
+    echo "// clock port should only be actively written (not queued) using links"
+    echo "writePort(\"${SIGNAME}\",p->getPacket());"
+    echo "ContextP->timeInc(1);"
+    echo "Top->eval();"
+  else 
+    echo "// CLKNAME=${CLKNAME}"
+    echo "if( p->getAtTick() != 0x00ull ){"
+    echo "writePortAtTick(\"${SIGNAME}\",p->getPacket(),p->getAtTick());"
+    echo "}else{"
+    echo "writePort(\"${SIGNAME}\",p->getPacket());"
+    echo "}"
+    #echo "Top->${SIGNAME}.eval();" #Causes error (TODO)
+  fi
   echo "delete ev;"
   echo "}"
 done;

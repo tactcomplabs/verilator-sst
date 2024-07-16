@@ -1,19 +1,33 @@
 #!/bin/bash
-#set -ex
+set -e
 DEBUG=""
 LINKHANDLE=""
 CLOCKHANDLE=""
-while getopts "hdlct:m:s:f:" flag
+CLOCKNAME=""
+while getopts "hdlcn:t:m:s:f:" flag
 do
     case "${flag}" in
         h) echo "./build.sh -t {counter, accum, accum1D, uart} will build the selected example module"
            echo "For custom modules, -m <module_name> -s <source_dir> -f <source_files> must be defined"
            echo "-d : Sets cmake build type to Debug"
-           echo "-l : Includes automatic link generation based on port names"
+           echo "-l : Includes automatic link generation based on port names (cannot be used with automatic clock handling and should include clock port name)"
+           echo "-n : Sets the top module's clock port name for discovery (should be used with automatic link generation)"
+           echo "-c : Includes automatic clock handling (should only be used with subcomponent calls)"
            exit 1;;
         d) DEBUG="-DCMAKE_BUILD_TYPE=Debug";;
-        l) LINKHANDLE="-DENABLE_LINK_HANDLING=ON";;
-        c) CLOCKHANDLE="-DENABLE_CLK_HANDLING=ON";;
+        l) LINKHANDLE="-DENABLE_LINK_HANDLING=ON"
+            if [ "$CLOCKHANDLE" = "-DENABLE_CLK_HANDLING=ON" ]; then
+            echo "Error: Automatic clock handling and automatic link generation cannot be used simultaneously"
+            exit 1;
+            fi
+            ;;
+        c) CLOCKHANDLE="-DENABLE_CLK_HANDLING=ON"
+            if [ "$LINKHANDLE" = "-DENABLE_LINK_HANDLING=ON" ]; then
+            echo "Error: Automatic clock handling and automatic link generation cannot be used simultaneously"
+            exit 1;
+            fi
+            ;;
+        n) CLOCKNAME="-DCLOCK_PORT_NAME=${OPTARG}";;
         t) TEST_MOD=${OPTARG};;
         m) MODULE=${OPTARG};;
         s) SOURCE_DIR=${OPTARG};;
@@ -82,12 +96,13 @@ cmake \
     -DVERILOG_TOP=$VTOP \
     $LINKHANDLE \
     $CLOCKHANDLE \
+    $CLOCKNAME \
     ../
-make VERBOSE=1 2>&1 | tee make.log
-make VERBOSE=1 install 2>&1 | tee make.install.log
+make VERBOSE=1 | tee make.log
+make VERBOSE=1 install | tee make.install.log
 if [ -n "$TEST_MOD" ]; then
-echo "To test the generated module using the built-in test component, run:"
-echo "sst --model-options='-m $VTOP' tests/test_elements/verilator-test-direct/sample.py"
+    echo "To test the generated module using the built-in test component, run:"
+    echo "sst --model-options='-m $VTOP' tests/test_elements/verilator-test-direct/sample.py"
 fi
 cd ..
 exit 0
