@@ -37,7 +37,7 @@ option(ENABLE_CLK_HANDLING "Allows subcomponent to handle the clock port automat
 
 option(ENABLE_LINK_HANDLING "Automatically adds SST link definitions and configurations" OFF)
 
-option(CLOCK_PORT_NAME "clk" "Name of the top-level module's clock port") #Defaults to "clk"
+set(CLOCK_PORT_NAME "clk" CACHE STRING "Name of the top-level module's clock port") #Defaults to "clk"
 
 #------------------------------------------------------------------
 # VERILATOR SETUP
