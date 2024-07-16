@@ -319,7 +319,7 @@ for IN in $INPUTS;do
   ENDBIT=$(($ENDBIT + 1))
   WIDTH=$(($ENDBIT - $STARTBIT))
 
-  echo "void VerilatorSST$Device::DirectWrite${SIGNAME}(VTop *T,std::vector<uint8_t> Packet){"
+  echo "void VerilatorSST$Device::DirectWrite${SIGNAME}(VTop *T, const std::vector<uint8_t>& Packet){"
   build_write $SIGNAME $WIDTH $DEPTH
   echo "}"
   echo "std::vector<uint8_t> VerilatorSST$Device::DirectRead${SIGNAME}(VTop *T){"
@@ -343,7 +343,7 @@ for OUT in $OUTPUTS;do
   ENDBIT=$(($ENDBIT + 1))
   WIDTH=$(($ENDBIT - $STARTBIT))
 
-  echo "void VerilatorSST$Device::DirectWrite${SIGNAME}(VTop *T,std::vector<uint8_t> Packet){"
+  echo "void VerilatorSST$Device::DirectWrite${SIGNAME}(VTop *T, const std::vector<uint8_t>& Packet){"
   echo "}"
   echo "std::vector<uint8_t> VerilatorSST$Device::DirectRead${SIGNAME}(VTop *T){"
   echo "std::vector<uint8_t> d;"

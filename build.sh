@@ -1,5 +1,5 @@
 #!/bin/bash
-#set -ex
+set -e
 DEBUG=""
 LINKHANDLE=""
 CLOCKHANDLE=""
@@ -83,8 +83,8 @@ cmake \
     $LINKHANDLE \
     $CLOCKHANDLE \
     ../
-make VERBOSE=1 2>&1 | tee make.log
-make VERBOSE=1 install 2>&1 | tee make.install.log
+make VERBOSE=1 | tee make.log
+make VERBOSE=1 install | tee make.install.log
 if [ -n "$TEST_MOD" ]; then
 echo "To test the generated module using the built-in test component, run:"
 echo "sst --model-options='-m $VTOP' tests/test_elements/verilator-test-direct/sample.py"
