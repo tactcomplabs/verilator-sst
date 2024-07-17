@@ -1,4 +1,4 @@
 # add tests
 add_subdirectory(port)
-add_subdirectory(readPort)
-add_subdirectory(writePort)
+add_subdirectory(readport)
+add_subdirectory(writeport)
