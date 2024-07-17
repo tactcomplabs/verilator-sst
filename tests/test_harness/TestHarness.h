@@ -1,7 +1,7 @@
 #ifndef _Test_HARNESS_H_
 #define _Test_HARNESS_H_
 
-#include "testMacros.h"
+#include "TestMacros.h"
 
 // -- Verilator SST Headers
 #include "verilatorSSTSubcomponent.h"

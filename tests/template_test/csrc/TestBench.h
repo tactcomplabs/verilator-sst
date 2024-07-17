@@ -1,4 +1,4 @@
-#include "testHarness.h"
+#include "TestHarness.h"
 
 namespace SST::VerilatorSST{
 class $TEST_BENCH_CLASS : public TestHarness {

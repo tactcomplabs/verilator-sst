@@ -1,4 +1,4 @@
-#include "testHarness.h"
+#include "TestHarness.h"
 
 namespace SST::VerilatorSST{
 TestHarness::TestHarness(SST::ComponentId_t id, const SST::Params& params)

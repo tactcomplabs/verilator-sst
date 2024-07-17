@@ -1,4 +1,4 @@
-#include "testHarness.h"
+#include "TestHarness.h"
 
 namespace SST::VerilatorSST{
 class CounterTestBench : public TestHarness {

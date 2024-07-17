@@ -20,7 +20,7 @@ install(TARGETS ${TESTS_TARGET} DESTINATION ${CMAKE_SOURCE_DIR}/install)
 install(CODE "execute_process(COMMAND sst-register ${TESTS_TARGET} ${TESTS_TARGET}_LIBDIR=${CMAKE_SOURCE_DIR}/install)")
 
 # add test harness
-add_subdirectory(harness)
+add_subdirectory(test_harness)
 
 # add tests directories
 add_subdirectory(api_tests)
