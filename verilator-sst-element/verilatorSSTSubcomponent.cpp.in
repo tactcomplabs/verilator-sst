@@ -39,12 +39,6 @@ VerilatorSST@VERILOG_DEVICE@::VerilatorSST@VERILOG_DEVICE@(ComponentId_t id,
   UseVPI = params.find<bool>("useVPI", false);
   const std::string clockFreq = params.find<std::string>("clockFreq", "1GHz");
 
-  clockPort = params.find<std::string>("clockPort", "NullPort");
-  if( !isNamedPort(clockPort) ){
-    output->fatal(CALL_INFO, -1, "Could not find clock port with name=%s\n",
-                  clockPort.c_str());
-  }
-
   // init verilator interfaces
   ContextP = new VerilatedContext();
   ContextP->threads(1);
