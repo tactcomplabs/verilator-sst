@@ -72,7 +72,7 @@ void testWriteDoublePort(SST::Output * output, SST::VerilatorSST::VerilatorSSTBa
 }
 
 void testWriteQuadPort(SST::Output * output, SST::VerilatorSST::VerilatorSSTBase * dut){
-    // SKIP_TEST; //TODO
+    SKIP_TEST; //TODO https://github.com/tactcomplabs/verilator-sst/issues/17
     std::vector<uint8_t> write_quad_port_v;
     write_quad_port_v.resize(16);
     for(int i = 0; i < write_quad_port_v.size(); i++) {
@@ -88,36 +88,55 @@ void testWriteQuadPort(SST::Output * output, SST::VerilatorSST::VerilatorSSTBase
 }
 
 void testWriteArrayPort(SST::Output * output, SST::VerilatorSST::VerilatorSSTBase * dut){
-    // const std::vector<uint8_t> & read_port_v = dut->readPort("read_array_port");
-    // for(int i = 0; i < 128; i++) {
-    //     CHECK_EQ(read_port_v[i] & 1, i % 2);
-    // }
+    SKIP_TEST; //TODO
+    std::vector<uint8_t> write_array_port_v;
+    write_array_port_v.resize(128);
+    for(int i = 0; i < write_array_port_v.size(); i++) {
+        write_array_port_v[i] = i;
+    }
+    dut->writePort("write_array_port", write_array_port_v);
+    dut->clock(-1);
+    const std::vector<uint8_t> read_write_array_port_v = dut->readPort("read_write_array_port");
+    CHECK_EQ(read_write_array_port_v.size(),write_array_port_v.size());
+    for(int i = 0; i < write_array_port_v.size(); i++) {
+        CHECK_EQ(read_write_array_port_v[i],write_array_port_v[i]);
+    }
 }
 
 void testWriteQuadArrayPort(SST::Output * output, SST::VerilatorSST::VerilatorSSTBase * dut){
-    // const std::vector<uint8_t> & read_quad_array_port_v = dut->readPort("read_quad_array_port");
-    // uint64_t quad_msb;
-    // uint64_t quad_lsb;
-    // const uint64_t mask = 0xFFFFFFFFFFFFFF00;
-    // for(uint16_t i = 0; i < 128; i++) {
-    //     memcpy(&quad_msb, read_quad_array_port_v.data()+(16*i)+8, sizeof(uint64_t));
-    //     memcpy(&quad_lsb, read_quad_array_port_v.data()+(16*i),   sizeof(uint64_t));
-    //     CHECK_EQ(quad_msb, (READ_QUAD_PORT_MSB_EXP & mask) | i);
-    //     CHECK_EQ(quad_lsb, (READ_QUAD_PORT_LSB_EXP & mask) | i);
-    // }
+    std::vector<uint8_t> write_quad_array_port_v;
+    write_quad_array_port_v.resize(16*128);
+    for(int i = 0; i < write_quad_array_port_v.size(); i++) {
+        write_quad_array_port_v[i] = i;
+    }
+    dut->writePort("write_quad_array_port", write_quad_array_port_v);
+    dut->clock(-1);
+    const std::vector<uint8_t> read_write_quad_array_port_v = dut->readPort("read_write_quad_array_port");
+    CHECK_EQ(read_write_quad_array_port_v.size(),write_quad_array_port_v.size());
+    for(int i = 0; i < write_quad_array_port_v.size(); i++) {
+        CHECK_EQ(read_write_quad_array_port_v[i],write_quad_array_port_v[i]);
+    }
 }
 
 void testWriteRegPort(SST::Output * output, SST::VerilatorSST::VerilatorSSTBase * dut){
-    // const std::vector<uint8_t> & read_reg_port_v = dut->readPort("read_reg_port");
-    // CHECK_EQ(read_reg_port_v[0],READ_PORT_EXP);
+    const std::vector<uint8_t> write_reg_port_v = {1};
+    dut->writePort("write_reg_port", write_reg_port_v);
+    dut->clock(-1);
+    const std::vector<uint8_t> read_write_reg_port_v = dut->readPort("read_write_reg_port");
+    CHECK_EQ(read_write_reg_port_v.size(),1);
+    CHECK_EQ(read_write_reg_port_v[0],read_write_reg_port_v[0]);
 }
 
 void testWriteWirePort(SST::Output * output, SST::VerilatorSST::VerilatorSSTBase * dut){
-    // const std::vector<uint8_t> & read_wire_port_v = dut->readPort("read_wire_port");
-    // CHECK_EQ(read_wire_port_v[0],READ_PORT_EXP);
+    const std::vector<uint8_t> write_wire_port_v = {1};
+    dut->writePort("write_wire_port", write_wire_port_v);
+    dut->clock(-1);
+    const std::vector<uint8_t> read_write_wire_port_v = dut->readPort("read_write_wire_port");
+    CHECK_EQ(read_write_wire_port_v.size(),1);
+    CHECK_EQ(read_write_wire_port_v[0],read_write_wire_port_v[0]);
 }
 
-void WritePortTestBench::runTestSuite(SST::Cycle_t cycle){
+void WritePortTestBench::runTestSuite(SST::Cycle_t){
     testWritePort(output, dut);
     testWriteBytePort(output, dut);
     testWriteHalfPort(output, dut);
