@@ -24,3 +24,5 @@ add_subdirectory(harness)
 
 # add tests directories
 add_subdirectory(api_tests)
+add_subdirectory(functional_tests)
+add_subdirectory(integration_tests)
