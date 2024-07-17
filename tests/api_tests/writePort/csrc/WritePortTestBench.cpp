@@ -88,7 +88,7 @@ void testWriteQuadPort(SST::Output * output, SST::VerilatorSST::VerilatorSSTBase
 }
 
 void testWriteArrayPort(SST::Output * output, SST::VerilatorSST::VerilatorSSTBase * dut){
-    SKIP_TEST; //TODO
+    SKIP_TEST; //TODO https://github.com/tactcomplabs/verilator-sst/issues/18
     std::vector<uint8_t> write_array_port_v;
     write_array_port_v.resize(128);
     for(int i = 0; i < write_array_port_v.size(); i++) {
@@ -99,6 +99,7 @@ void testWriteArrayPort(SST::Output * output, SST::VerilatorSST::VerilatorSSTBas
     const std::vector<uint8_t> read_write_array_port_v = dut->readPort("read_write_array_port");
     CHECK_EQ(read_write_array_port_v.size(),write_array_port_v.size());
     for(int i = 0; i < write_array_port_v.size(); i++) {
+        output->output("read_write_array_port_v=%u\n",read_write_array_port_v[i]);
         CHECK_EQ(read_write_array_port_v[i],write_array_port_v[i]);
     }
 }
