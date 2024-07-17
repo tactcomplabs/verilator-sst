@@ -1,5 +1,5 @@
-#ifndef __TEST_MACROS_H_
-#define __TEST_MACROS_H_
+#ifndef _TEST_MACROS_H_
+#define _TEST_MACROS_H_
 
 #define CHECK_EQ(got, exp) \
     if ((got) != (exp)) { \
