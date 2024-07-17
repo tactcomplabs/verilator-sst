@@ -17,7 +17,7 @@
 #define UNIMPLEMENTED_TEST output->fatal(CALL_INFO,1,"UNIMPLEMENTED TEST\n");
 
 #define SKIP_TEST \
-    output->output(,"SKIPPING TEST\n"); \
+    output->verbose(CALL_INFO,1,0,"SKIPPING TEST\n"); \
     return;
 
 #endif
