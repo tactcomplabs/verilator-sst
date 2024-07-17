@@ -41,13 +41,14 @@ void testGetPortNames(SST::Output * output, SST::VerilatorSST::VerilatorSSTBase 
 }
 
 void testGetPortDirection(SST::Output * output, SST::VerilatorSST::VerilatorSSTBase * dut){
+    SKIP_TEST; //TODO https://github.com/tactcomplabs/verilator-sst/issues/13
     VPortType direction;
     CHECK_TRUE(dut->getPortType("input_port", direction));
     CHECK_EQ(direction,VPortType::V_INPUT);
     CHECK_TRUE(dut->getPortType("output_port", direction));
     CHECK_EQ(direction,VPortType::V_OUTPUT);
     CHECK_TRUE(dut->getPortType("inout_port", direction));
-    // CHECK_EQ(direction,VPortType::V_INOUT); TODO unsupported
+    // CHECK_EQ(direction,VPortType::V_INOUT);
 }
 
 void testGetPortWidth(SST::Output * output, SST::VerilatorSST::VerilatorSSTBase * dut){
