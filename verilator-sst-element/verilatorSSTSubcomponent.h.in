@@ -48,7 +48,7 @@ enum class VPortType : uint8_t {
 // ---------------------------------------------------------------
 // Data Structures
 // ---------------------------------------------------------------
-typedef void (*DirectWriteFunc)(VTop*,std::vector<uint8_t>);
+typedef void (*DirectWriteFunc)(VTop*, const std::vector<uint8_t>&);
 typedef std::vector<uint8_t> (*DirectReadFunc)(VTop*);
 
 #define V_NAME            0
@@ -232,11 +232,11 @@ public:
 
   /// VerilatorSSTBase: write to the target port
   virtual void writePort(std::string portName,
-                         std::vector<uint8_t> packet) = 0;
+                         const std::vector<uint8_t>& packet) = 0;
 
   /// VerilatorSSTBase: write to the target port at the target clock cycle
   virtual void writePortAtTick(std::string portName,
-                               std::vector<uint8_t> packet,
+                               const std::vector<uint8_t>& packet,
                                uint64_t tick) = 0;
 
   /// VerilatorSSTBase: read from the target port
@@ -325,11 +325,11 @@ public:
 
   /// write to the target port
   virtual void writePort(std::string portName,
-                         std::vector<uint8_t> packet) override;
+                         const std::vector<uint8_t>& packet) override;
 
   /// write to the target port at the target clock cycle
   virtual void writePortAtTick(std::string portName,
-                               std::vector<uint8_t> packet,
+                               const std::vector<uint8_t>& packet,
                                uint64_t tick) override;
 
   /// read from the target port
@@ -361,7 +361,7 @@ private:
 
   /// VPI Write of Port
   void writePortVPI(std::string PortName,
-                    std::vector<uint8_t> Packet);
+                    const std::vector<uint8_t>& Packet);
 
   @VERILATOR_SST_PORT_IO_HANDLERS@
 

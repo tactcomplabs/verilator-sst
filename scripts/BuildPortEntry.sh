@@ -42,6 +42,7 @@ for OUT in $OUTPUTS;do
   REMDEPTH=`echo $NOPAREN2 | sed 's/\[[0-9]*\]//'`
   SIGNAME=`echo $REMDEPTH | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g"`
   ENDBIT=`echo $REMDEPTH | sed "s/,/ /g" | awk '{print $2}'`
+  STARTBIT=`echo $REMDEPTH | sed "s/,/ /g" | awk '{print $3}' | sed "s/;//g"`
 
   ENDBIT=$(($ENDBIT + 1))
   WIDTH=$(($ENDBIT - $STARTBIT))
