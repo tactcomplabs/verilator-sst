@@ -3,11 +3,10 @@
 using namespace SST::VerilatorSST;
 
 void testWritePort(SST::Output * output, SST::VerilatorSST::VerilatorSSTBase * dut){
-    //TODO fail
+    //TODO https://github.com/tactcomplabs/verilator-sst/issues/16
     const std::vector<uint8_t> write_port_v = {1};
     dut->writePort("write_port", write_port_v);
     dut->clock(-1);
-
     const std::vector<uint8_t> read_write_port_v = dut->readPort("write_port");
     CHECK_EQ(read_write_port_v.size(),1);
     CHECK_EQ(read_write_port_v[0],read_write_port_v[0]);
