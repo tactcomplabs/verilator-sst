@@ -2,7 +2,7 @@
 #define READ_QUAD_PORT_LSB_EXP 0xFEDCBA9876543210
 #define READ_PORT_EXP 0x1
 
-#include "testHarness.h"
+#include "ReadPortTestBench.h"
 
 using namespace SST::VerilatorSST;
 
@@ -52,7 +52,7 @@ void testReadWirePort(SST::Output * output, SST::VerilatorSST::VerilatorSSTBase 
     CHECK_EQ(read_wire_port_v[0],READ_PORT_EXP);
 }
 
-void TestHarness::runTestSuite(SST::Cycle_t cycle){
+void ReadPortTestBench::runTestSuite(SST::Cycle_t cycle){
     testReadPort(output, dut);
     testReadQuadPort(output,dut);
     testReadArrayPort(output, dut);

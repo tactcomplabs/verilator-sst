@@ -1,6 +1,6 @@
 #define N_PORTS 10
 
-#include "testHarness.h"
+#include "PortTestBench.h"
 
 using namespace SST::VerilatorSST;
 
@@ -70,7 +70,7 @@ void testGetPortDepth(SST::Output * output, SST::VerilatorSST::VerilatorSSTBase 
     CHECK_EQ(depth,9999);
 }
 
-void TestHarness::runTestSuite(SST::Cycle_t){
+void PortTestBench::runTestSuite(SST::Cycle_t){
     testIsNamedPort(output, dut);
     testNumPorts(output, dut);
     testGetPortNames(output, dut);
