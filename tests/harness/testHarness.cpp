@@ -26,6 +26,8 @@ TestHarness::TestHarness(SST::ComponentId_t id, const SST::Params& params)
 }
 
 TestHarness::~TestHarness(){
+    delete output;
+    delete dut;
 }
 
 void TestHarness::setup(){
@@ -44,14 +46,8 @@ bool TestHarness::clock(SST::Cycle_t currentCycle){
         return true;
     }
 
-#ifndef TEST_BENCH_ADDED
-    output->fatal(CALL_INFO,1,"test bench source file was not compiled\n");
-#endif
-
     runTestSuite(currentCycle);
     return false;
 }
 
-} // namespace SST::VerilatorSST
-
-// EOF
+}
