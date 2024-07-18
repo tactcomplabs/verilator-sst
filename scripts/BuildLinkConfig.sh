@@ -18,7 +18,7 @@ for IN in $INPUTS;do
   NOPAREN2=`echo $NOPAREN | sed 's/)//'`
   REMDEPTH=`echo $NOPAREN2 | sed 's/\[[0-9]*\]//'`
   SIGNAME=`echo $REMDEPTH | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g"`
-  echo "link_${SIGNAME} = configureLink(\"link_${SIGNAME}\", \"0ns\", new Event::Handler<VerilatorSST${Device}>(this, &VerilatorSST${Device}::handle_${SIGNAME}));"
+  echo "link_${SIGNAME} = configureLink(\"${SIGNAME}\", \"0ns\", new Event::Handler<VerilatorSST${Device}>(this, &VerilatorSST${Device}::handle_${SIGNAME}));"
   echo "if( nullptr == link_${SIGNAME} ) {"
   echo "  output->fatal( CALL_INFO, -1, \"Error: was unable to configureLink link_${SIGNAME}\n\" );"
   echo "}"
@@ -30,7 +30,7 @@ for OUT in $OUTPUTS;do
   NOPAREN2=`echo $NOPAREN | sed 's/)//'`
   REMDEPTH=`echo $NOPAREN2 | sed 's/\[[0-9]*\]//'`
   SIGNAME=`echo $REMDEPTH | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g"`
-  echo "link_${SIGNAME} = configureLink(\"link_${SIGNAME}\", \"0ns\", new Event::Handler<VerilatorSST${Device}>(this, &VerilatorSST${Device}::handle_${SIGNAME}));"
+  echo "link_${SIGNAME} = configureLink(\"${SIGNAME}\", \"0ns\", new Event::Handler<VerilatorSST${Device}>(this, &VerilatorSST${Device}::handle_${SIGNAME}));"
   echo "if( nullptr == link_${SIGNAME} ) {"
   echo "  output->fatal( CALL_INFO, -1, \"Error: was unable to configureLink link_${SIGNAME}\n\" );"
   echo "}"
