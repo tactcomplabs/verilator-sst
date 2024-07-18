@@ -167,6 +167,7 @@ set(verilatorSSTSrcs
 )
 
 add_library(${targetName} SHARED ${verilatorSSTSrcs})
+set_property(TARGET ${targetName} PROPERTY CXX_STANDARD 17)
 target_include_directories(${targetName}
                           PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
                                   ${CMAKE_CURRENT_SOURCE_DIR}/${VERILOG_DEVICE}
@@ -183,6 +184,7 @@ set(verilatorCompSrcs
   verilatorComponent.h
 )
 add_library(verilatorcomponent SHARED ${verilatorCompSrcs})
+set_property(TARGET ${targetName} PROPERTY CXX_STANDARD 17)
 target_include_directories(verilatorcomponent
                           PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
                                   ${CMAKE_CURRENT_SOURCE_DIR}/${VERILOG_DEVICE}
