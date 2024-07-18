@@ -4,7 +4,7 @@
 `endif
 
 
-module ACCUM #(parameter ACCUM_WIDTH=`ACCUM_WIDTH, ADD_WIDTH=`ADD_WIDTH) (
+module Accum #(parameter ACCUM_WIDTH=`ACCUM_WIDTH, ADD_WIDTH=`ADD_WIDTH) (
    input                       clk,
    input                       reset_l,
    input                       en,     // triggers addition
