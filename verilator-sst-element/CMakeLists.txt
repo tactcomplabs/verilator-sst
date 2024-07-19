@@ -192,6 +192,11 @@ target_include_directories(verilatorcomponent
                                  ${VERILATOR_INCLUDE}
                                  ${VERILATOR_INCLUDE}/vltstd)
 
+target_compile_options(verilatorcomponent PRIVATE ${SST_CXXFLAGS_LIST})
+target_link_options(verilatorcomponent PRIVATE ${SST_LDFLAGS_LIST})
+target_compile_options(${targetName} PRIVATE ${SST_CXXFLAGS_LIST})
+target_link_options(${targetName} PRIVATE ${SST_LDFLAGS_LIST})
+
 # -----------------------------------------------------------------
 # Install the source
 # -----------------------------------------------------------------
