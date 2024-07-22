@@ -31,7 +31,6 @@ for IN in $INPUTS;do
     echo "ContextP->timeInc(1);"
     echo "Top->eval();"
   else 
-    echo "// CLKNAME=${CLKNAME}"
     echo "if( p->getAtTick() != 0x00ull ){"
     echo "writePortAtTick(\"${SIGNAME}\",p->getPacket(),p->getAtTick());"
     echo "}else{"
