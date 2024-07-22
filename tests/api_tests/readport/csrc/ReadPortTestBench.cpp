@@ -43,7 +43,6 @@ void testReadDoublePort(SST::Output * output, SST::VerilatorSST::VerilatorSSTBas
 }
 
 void testReadQuadPort(SST::Output * output, SST::VerilatorSST::VerilatorSSTBase * dut){
-    SKIP_TEST; //TODO https://github.com/tactcomplabs/verilator-sst/issues/17
     const std::vector<uint8_t> & read_quad_port_v = dut->readPort("read_quad_port");
     CHECK_EQ(read_quad_port_v.size(), 16);
     uint64_t read_quad_port_msb;

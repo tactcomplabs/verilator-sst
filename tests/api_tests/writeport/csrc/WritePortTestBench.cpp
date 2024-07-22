@@ -72,7 +72,6 @@ void testWriteDoublePort(SST::Output * output, SST::VerilatorSST::VerilatorSSTBa
 }
 
 void testWriteQuadPort(SST::Output * output, SST::VerilatorSST::VerilatorSSTBase * dut){
-    SKIP_TEST; //TODO https://github.com/tactcomplabs/verilator-sst/issues/17
     std::vector<uint8_t> write_quad_port_v;
     write_quad_port_v.resize(16);
     for(int i = 0; i < write_quad_port_v.size(); i++) {
