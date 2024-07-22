@@ -1,3 +1,11 @@
+// tests/api_tests/readport/csrc/ReadPortTestBench.cpp
+//
+// Copyright (C) 2017-2024 Tactical Computing Laboratories, LLC
+// All Rights Reserved
+// contact@tactcomplabs.com
+//
+// See LICENSE in the top level directory for licensing details
+
 #define READ_QUAD_PORT_MSB_EXP 0x0123456789ABCDEF
 #define READ_QUAD_PORT_LSB_EXP 0xFEDCBA9876543210
 #define READ_PORT_EXP 0x1

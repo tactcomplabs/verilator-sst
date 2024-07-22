@@ -1,3 +1,11 @@
+// tests/api_tests/readport/vsrc/DUT.sv
+//
+// Copyright (C) 2017-2024 Tactical Computing Laboratories, LLC
+// All Rights Reserved
+// contact@tactcomplabs.com
+//
+// See LICENSE in the top level directory for licensing details
+
 module DUT(
     output         read_port,
     output [7:0]   read_byte_port,

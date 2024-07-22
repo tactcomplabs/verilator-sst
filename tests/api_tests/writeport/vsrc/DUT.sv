@@ -1,3 +1,11 @@
+// tests/api_tests/writeport/vsrc/DUT.sv
+//
+// Copyright (C) 2017-2024 Tactical Computing Laboratories, LLC
+// All Rights Reserved
+// contact@tactcomplabs.com
+//
+// See LICENSE in the top level directory for licensing details
+
 module DUT(
     input          write_port,
     input [7:0]    write_byte_port,

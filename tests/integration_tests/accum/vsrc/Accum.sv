@@ -1,8 +1,15 @@
+// tests/integration_test/accum/vsrc/Accum.sv
+//
+// Copyright (C) 2017-2024 Tactical Computing Laboratories, LLC
+// All Rights Reserved
+// contact@tactcomplabs.com
+//
+// See LICENSE in the top level directory for licensing details
+
 `ifndef ACCUM_WIDTH
 `define ACCUM_WIDTH 32
 `define ADD_WIDTH ACCUM_WIDTH/2
 `endif
-
 
 module Accum #(parameter ACCUM_WIDTH=`ACCUM_WIDTH, ADD_WIDTH=`ADD_WIDTH) (
    input                       clk,

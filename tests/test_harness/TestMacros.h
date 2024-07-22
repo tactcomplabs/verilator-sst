@@ -1,3 +1,11 @@
+// tests/test_harness/TestMacros.h
+//
+// Copyright (C) 2017-2024 Tactical Computing Laboratories, LLC
+// All Rights Reserved
+// contact@tactcomplabs.com
+//
+// See LICENSE in the top level directory for licensing details
+
 #ifndef _TEST_MACROS_H_
 #define _TEST_MACROS_H_
 

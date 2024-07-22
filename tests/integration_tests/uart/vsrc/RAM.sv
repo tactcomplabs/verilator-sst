@@ -1,3 +1,11 @@
+// tests/integration_test/uart/vsrc/RAM.sv
+//
+// Copyright (C) 2017-2024 Tactical Computing Laboratories, LLC
+// All Rights Reserved
+// contact@tactcomplabs.com
+//
+// See LICENSE in the top level directory for licensing details
+
 module RAM #(parameter ADDR_WIDTH, parameter DATA_WIDTH)(
     input clk,
     input rst_l,

@@ -1,5 +1,11 @@
+// tests/integration_test/scratchpad/vsrc/Scratchpad.sv
+//
+// Copyright (C) 2017-2024 Tactical Computing Laboratories, LLC
+// All Rights Reserved
+// contact@tactcomplabs.com
+//
+// See LICENSE in the top level directory for licensing details
 
-// CHUNK_SIZE: size per chunk in bytes
 `ifndef CHUNK_SIZE
 `define CHUNK_SIZE 4
 `endif
@@ -9,6 +15,7 @@
 `ifndef SCRATCHPAD_BASE
 `define SCRATCHPAD_BASE 16
 `endif
+// CHUNK_SIZE: size per chunk in bytes
 // NUM_CHUNKS: number of chunks
 // SCRATCHPAD_BASE: base address
 /* len:

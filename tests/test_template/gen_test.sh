@@ -1,3 +1,11 @@
+# tests/test_template/gen_test.sh
+#
+# Copyright (C) 2017-2024 Tactical Computing Laboratories, LLC
+# All Rights Reserved
+# contact@tactcomplabs.com
+#
+# See LICENSE in the top level directory for licensing details
+
 #!/bin/bash
 
 # ./gen_test.sh [test_category] [test_name]

@@ -1,3 +1,11 @@
+// tests/integration_test/counter/vsrc/Counter.sv
+//
+// Copyright (C) 2017-2024 Tactical Computing Laboratories, LLC
+// All Rights Reserved
+// contact@tactcomplabs.com
+//
+// See LICENSE in the top level directory for licensing details
+
 `ifndef STOP_WIDTH
 `define STOP_WIDTH 1
 `endif
