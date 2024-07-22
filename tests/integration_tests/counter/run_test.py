@@ -7,7 +7,7 @@ testBench.addParams({
     "numCycles" : 5000
 })
 
-dut = testBench.setSubComponent("dut", "verilatorsstDUT.VerilatorSSTDUT")
+dut = testBench.setSubComponent("dut", "verilatorsstCounter.VerilatorSSTCounter")
 dut.addParams({
     "clockFreq" : "1GHz"
 })

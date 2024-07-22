@@ -13,10 +13,12 @@ class TestHarness : public SST::Component {
   // Called on every SST cycle. 
   // Must be defined by derived test bench class.
   virtual void runTestSuite(SST::Cycle_t currentCycle) = 0;
+  std::vector<uint8_t> generateRandomData(unsigned width, unsigned depth);
 
   uint32_t numCycles; // TestHarness: number of cycles to execute
 
 protected:
+  void testDefault();
   SST::Output    *output;                   // TestHarness: SST output
   SST::VerilatorSST::VerilatorSSTBase *dut; // TestHarness: subcomponent dut
 
@@ -44,7 +46,7 @@ public:
   // -------------------------------------------------------
   // clang-format off
   SST_ELI_DOCUMENT_PARAMS(
-    {"verbosity",     "Sets the verbosity",       "0"},
+    {"verbose",     "Sets the verbosity",       "0"},
     {"clockFreq",   "Clock frequency",          "1GHz"},
     {"numCycles",   "Number of cycles to exec", "1000"},
   )
