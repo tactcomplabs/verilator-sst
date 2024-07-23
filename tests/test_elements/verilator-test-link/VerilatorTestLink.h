@@ -119,7 +119,7 @@ public:
   SST_ELI_REGISTER_COMPONENT(
     VerilatorTestLink,    // component class
     "verilatortestlink",  // component library
-    "VerilatorTestlink",  // component name
+    "VerilatorTestLink",  // component name
     SST_ELI_ELEMENT_VERSION( 1, 0, 0 ),
     "VerilatorSST Link Infrastructure Test Component",
     COMPONENT_CATEGORY_UNCATEGORIZED
@@ -133,7 +133,7 @@ public:
     {"verbose",     "Sets the verbosity",       "0"},
     {"clockFreq",   "Clock frequency",          "1GHz"},
     {"num_ports",   "Number of ports",          "0"},
-    {"portMap",     "portname:id pairings",     "" },
+    {"portMap",     "portname:id:size:direction pairings",     "" },
     {"testFile",    "name of file holding test ops", ""},
     {"testOps",     "List of 'portname:vals:tick' strings to drive testing", ""},
     {"numCycles",   "Number of cycles to exec", "1000"},
