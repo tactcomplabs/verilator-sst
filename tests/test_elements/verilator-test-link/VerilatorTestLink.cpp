@@ -70,10 +70,11 @@ void VerilatorTestLink::InitPortMap( const SST::Params& params ) {
   std::vector<std::string> optList;
   params.find_array( "portMap", optList );
   for( unsigned i=0; i<optList.size(); i++ ){
+    output.verbose( CALL_INFO, 1, 0, "Port map entry: %s\n", optList[i].c_str() );
     std::vector<std::string> vstr;
     std::string s = optList[i];
     splitStr(s, ':', vstr);
-    if( vstr.size() != 3 ){
+    if( vstr.size() != 4 ){
       output.fatal(CALL_INFO, -1,
                     "Error in reading value from portMap parameter:%s\n",
                     s.c_str() );
@@ -164,9 +165,14 @@ bool VerilatorTestLink::ExecTestOp() {
       Data.push_back( *currPtr );
     }
     if ( writing ) {
+      output.verbose( CALL_INFO, 4, 0, "Sending write on port%d: size=%d\n", portId, InfoVec[portId].Size );
       PortEvent * opEvent = new PortEvent( Data );
       Links[portId]->send( opEvent );
     } else {
+      output.verbose( CALL_INFO, 4, 0, "Data to be checked: size=%d\n", Data.size() );
+      for (int i=0; i<Data.size(); i++) {
+        output.verbose( CALL_INFO, 4, 0, "byte %d: %x\n", i, Data[i] );
+      }
       ReadDataCheck.emplace( Data );
       PortEvent * opEvent = new PortEvent();
       Links[portId]->send( opEvent );
@@ -203,6 +209,10 @@ void VerilatorTestLink::RecvPortEvent( SST::Event* ev, unsigned portId ) {
   PortEvent * readEvent = reinterpret_cast<PortEvent *>( ev );
   std::vector<uint8_t> ValidData = ReadDataCheck.front();
   std::vector<uint8_t> ReadData = readEvent->getPacket();
+  output.verbose( CALL_INFO, 4, 0, "Read data: size=%d\n", ReadData.size() );
+  for (int i=0; i<ReadData.size(); i++) {
+    output.verbose( CALL_INFO, 4, 0, "byte %d: %x\n", i, ReadData[i] );
+  }
   if ( ValidData.size() != ReadData.size() ) {
     output.fatal(CALL_INFO, -1,
                   "Error: Read data from port%d has incorrect size at tick %ld\n",
