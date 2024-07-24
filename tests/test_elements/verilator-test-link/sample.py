@@ -50,7 +50,7 @@ class PortDef:
      def getPortName(self, index):
           return( self.PortNames[index] )
 
-scratchAddrBase = 0x0300000000000000
+scratchAddrBase = 0x0300_0000_0000_0000
 
 class Test:
      """ Class for building and exporting tests """
