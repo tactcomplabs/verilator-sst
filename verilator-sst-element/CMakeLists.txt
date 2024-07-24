@@ -189,8 +189,9 @@ function(generate_verilator_component VERILOG_SOURCE VERILOG_TOP VERILOG_TOP_SOU
   set(verilatorSSTSrcs
   ${VERILOG_SOURCE}/${VERILOG_DEVICE}/verilatorSSTSubcomponent.cpp
   ${VERILOG_SOURCE}/${VERILOG_DEVICE}/verilatorSSTSubcomponent.h
- ${CMAKE_CURRENT_SOURCE_DIR}/../verilator-sst-element/Signal.cpp
- ${CMAKE_CURRENT_SOURCE_DIR}/../verilator-sst-element/Signal.h
+${VERILATORSST_EXTERNAL_INCLUDE}/Signal.h
+${VERILATORSST_EXTERNAL_INCLUDE}/Signal.cpp
+${VERILATORSST_EXTERNAL_INCLUDE}/SST.h
 )
 
   add_library(${targetName} SHARED ${verilatorSSTSrcs})
@@ -204,12 +205,21 @@ function(generate_verilator_component VERILOG_SOURCE VERILOG_TOP VERILOG_TOP_SOU
   target_link_libraries(${targetName}
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/${VERILOG_DEVICE}/libVTop.a
           ${CMAKE_CURRENT_SOURCE_DIR}/${VERILOG_DEVICE}/libverilated.a
+
 )
 
+  # -----------------------------------------------------------------
+  # Install the source
+  # -----------------------------------------------------------------
+  install(TARGETS ${targetName} DESTINATION ${CMAKE_SOURCE_DIR}/install)
+  install(CODE "execute_process(COMMAND sst-register ${targetName} ${targetName}_LIBDIR=${CMAKE_SOURCE_DIR}/install)")
+
   set(verilatorCompSrcs
-  ${CMAKE_CURRENT_SOURCE_DIR}/../verilator-sst-element/verilatorComponent.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/../verilator-sst-element/verilatorComponent.h
+  ${VERILATORSST_EXTERNAL_INCLUDE}/verilatorComponent.cpp
+  ${VERILATORSST_EXTERNAL_INCLUDE}/verilatorComponent.h
+  ${VERILATORSST_EXTERNAL_INCLUDE}/Signal.cpp
 )
+  include_directories(${VERILATORSST_EXTERNAL_INCLUDE})
   add_library(verilatorcomponent SHARED ${verilatorCompSrcs})
   set_property(TARGET verilatorcomponent PROPERTY CXX_STANDARD 17)
   target_include_directories(verilatorcomponent
@@ -218,12 +228,6 @@ function(generate_verilator_component VERILOG_SOURCE VERILOG_TOP VERILOG_TOP_SOU
                           PUBLIC ${SST_INSTALL_DIR}/include
                                  ${VERILATOR_INCLUDE}
                                  ${VERILATOR_INCLUDE}/vltstd)
-
-  # -----------------------------------------------------------------
-  # Install the source
-  # -----------------------------------------------------------------
-  install(TARGETS ${targetName} DESTINATION ${CMAKE_SOURCE_DIR}/install)
-  install(CODE "execute_process(COMMAND sst-register ${targetName} ${targetName}_LIBDIR=${CMAKE_SOURCE_DIR}/install)")
 
   install(TARGETS verilatorcomponent DESTINATION ${CMAKE_SOURCE_DIR}/install)
   install(CODE "execute_process(COMMAND sst-register verilatorcomponent verilatorcomponent_LIBDIR=${CMAKE_SOURCE_DIR}/install)")
