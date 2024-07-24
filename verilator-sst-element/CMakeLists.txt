@@ -213,6 +213,7 @@ ${VERILATORSST_EXTERNAL_INCLUDE}/SST.h
   ${VERILATORSST_EXTERNAL_INCLUDE}/Signal.cpp
 )
   include_directories(${VERILATORSST_EXTERNAL_INCLUDE})
+  include_directories(${VERILOG_SOURCE}/${VERILOG_DEVICE})
   add_library(verilatorcomponent SHARED ${verilatorCompSrcs})
   set_property(TARGET verilatorcomponent PROPERTY CXX_STANDARD 17)
   target_include_directories(verilatorcomponent
