@@ -113,16 +113,6 @@ elif ( sub == "Scratchpad" ):
      print("Basic test for Scratchpad:")
      print("Scratchpad base addr 0x0300.0000.0000.0000 = %d" % scratchAddrBase)
      basicScratchTest.printTest()
-     """
-     testOps = ["clk:0:1", \
-                    "en:1:2", "write:1:2", "addr:44:2", "len:2:2", "wdata:44:2", \
-                    "clk:1:3",  \
-                    "clk:0:4", "en:0:4", \
-                    "clk:1:5", \
-                    "clk:0:6", "en:1:6", "write:0:6", "addr:4:6", "len:2:6", "rdata:44:6", "clk:1:6",  \
-                    "clk:0:7", "en:1:7", "clk:1:7","clk:0:7",\
-                    "en:0:8", "rdata:44:8", "clk:1:8"]
-     """
 
 tester = sst.Component("vtestLink0", "verilatortestlink.VerilatorTestLink")
 tester.addParams({
@@ -131,15 +121,28 @@ tester.addParams({
   "num_ports" : ports.getNumPorts(),
   "portMap" : ports.getPortMap(),
   "testOps" : testOps,
-  "numCycles" : 5000
+  "numCycles" : 20
 })
 
+verilatorsst = sst.Component("vsst", "verilatorcomponent.VerilatorComponent") # and verilatorsst component
+verilatorsst.addParams({
+     "numCycles" : 20
+})
+model = verilatorsst.setSubComponent("model", "verilatorsstScratchpad.VerilatorSSTScratchpad") # and verilatorsst subcomponent
+model.addParams({
+    "useVPI" : 0,
+    "clockFreq" : "2.0GHz",
+    "clockPort" : "clk"
+})
+
+"""
 model = tester.setSubComponent("model", subName)
 model.addParams({
   "useVPI" : 1,
   "clockFreq" : "1GHz",
   "clockPort" : "clk",
 })
+"""
 
 Links = [ ]
 for i in range(ports.getNumPorts()):
