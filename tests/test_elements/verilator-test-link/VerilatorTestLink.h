@@ -92,11 +92,11 @@ public:
   const TestOp ConvertToTestOp( const std::string& StrOp ) {
     std::vector<std::string> op;
     splitStr( StrOp, ':', op );
-    PortDef portInfo = PortMap[op[0]];
-    uint32_t id = portInfo.PortId;
+    const PortDef portInfo = PortMap[op[0]];
+    const uint32_t id = portInfo.PortId;
     uint32_t size = portInfo.Size;
     uint32_t nvals = size / 8;
-    uint32_t rem = (size % 8 == 0) ? 0 : 1;
+    const  uint32_t rem = (size % 8 == 0) ? 0 : 1;
     uint64_t * values = new uint64_t[nvals+rem];
     for (size_t i=0; i<nvals; i++) {
       uint64_t val = std::stoul( op[1+i] );
