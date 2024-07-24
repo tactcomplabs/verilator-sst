@@ -120,15 +120,16 @@ set(CXXFLAGS "${SST_CXXFLAGS}")
 set(LDFLAGS "${SST_LDFLAGS}")
 
 set(VERILATORSST_EXTERNAL_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/verilator-sst-element")
+set(VERILATORSST_SCRIPTS "${CMAKE_CURRENT_SOURCE_DIR}/scripts")
 
 #------------------------------------------------------------------
 # ADD THE SUBDIRECTORIES
 #------------------------------------------------------------------
 add_subdirectory(verilator-sst-element)
 
-if(VERILATORSST_ENABLE_TESTING)
-  add_subdirectory(tests)
-endif()
+# if(VERILATORSST_ENABLE_TESTING)
+add_subdirectory(tests)
+# endif()
 
 
 # EOF
