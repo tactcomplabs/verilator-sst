@@ -166,6 +166,9 @@ bool VerilatorTestLink::ExecTestOp() {
     }
     if ( writing ) {
       output.verbose( CALL_INFO, 4, 0, "Sending write on port%d: size=%d\n", portId, InfoVec[portId].Size );
+      for (int i=0; i<Data.size(); i++) {
+        output.verbose( CALL_INFO, 4, 0, "byte %d: %x\n", i, Data[i] );
+      }
       PortEvent * opEvent = new PortEvent( Data );
       Links[portId]->send( opEvent );
     } else {
@@ -230,7 +233,9 @@ void VerilatorTestLink::RecvPortEvent( SST::Event* ev, unsigned portId ) {
 }
 
 bool VerilatorTestLink::clock(SST::Cycle_t currentCycle){
+  output.verbose( CALL_INFO, 4, 0, "Clocking cycle %ld\n", currentCycle );
   if( currentCycle > NumCycles ){
+    output.verbose( CALL_INFO, 4, 0, "Cycle limit reached; ending sim\n" );
     primaryComponentOKToEndSim();
     return true;
   }
