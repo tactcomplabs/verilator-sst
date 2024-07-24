@@ -89,16 +89,26 @@ class Test:
      def printTest(self):
           print(self.TestOps)
 
-
+ports = PortDef()
 if ( sub == "Counter" ):
-     numPorts = 4
+     ports.addPort("clk",     1, WRITE_PORT)
+     ports.addPort("reset_l", 1, WRITE_PORT)
+     ports.addPort("stop",    1, WRITE_PORT)
+     ports.addPort("done",    1, READ_PORT)
 elif ( sub == "Accum" ):
-     numPorts = 6
+     ports.addPort("clk",     1,  WRITE_PORT)
+     ports.addPort("reset_l", 1,  WRITE_PORT)
+     ports.addPort("en",      1,  WRITE_PORT)
+     ports.addPort("add",     8,  WRITE_PORT)
+     ports.addPort("accum",   16, READ_PORT)
+     ports.addPort("done",    1,  READ_PORT)
 elif ( sub == "UART" ):
-     numPorts = 5
+     ports.addPort("clk",       1,  WRITE_PORT)
+     ports.addPort("rst_l",     1,  WRITE_PORT)
+     ports.addPort("RX",        1,  WRITE_PORT)
+     ports.addPort("TX",        1,  READ_PORT)
+     ports.addPort("mem_debug", 1,  READ_PORT)
 elif ( sub == "Scratchpad" ):
-     numPorts = 7
-     ports = PortDef()
      ports.addPort("clk",   1, WRITE_PORT)
      ports.addPort("en",    1, WRITE_PORT)
      ports.addPort("write", 1, WRITE_PORT)
