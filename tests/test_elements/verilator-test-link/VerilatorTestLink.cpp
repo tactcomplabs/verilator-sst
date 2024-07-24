@@ -69,7 +69,7 @@ void VerilatorTestLink::init( unsigned int phase ){
 void VerilatorTestLink::InitPortMap( const SST::Params& params ) {
   std::vector<std::string> optList;
   params.find_array( "portMap", optList );
-  for( unsigned i=0; i<optList.size(); i++ ){
+  for( size_t i=0; i<optList.size(); i++ ){
     output.verbose( CALL_INFO, 1, 0, "Port map entry: %s\n", optList[i].c_str() );
     std::vector<std::string> vstr;
     std::string s = optList[i];
@@ -95,7 +95,7 @@ void VerilatorTestLink::InitLinkConfig( const SST::Params& params ) {
     Links = new SST::Link *[NumPorts];
     for (size_t i=0; i<NumPorts; i++) {
       char PortName[8];
-      std::snprintf(PortName, 7, "port%d", i);
+      std::snprintf(PortName, 7, "port%zu", i);
       Links[i] = configureLink( PortName, "0ns", new Event::Handler<VerilatorTestLink, unsigned>( this, &VerilatorTestLink::RecvPortEvent, i ) );
       if ( Links[i] == nullptr ) {
         output.fatal( CALL_INFO, -1, "Error: Link for port %s failed to be configured\n", PortName );
@@ -141,7 +141,7 @@ bool VerilatorTestLink::ExecTestOp() {
       return false;
     } else if ( currOp.AtTick < currTick ) {
       output.fatal(CALL_INFO, -1,
-                    "Error: TestOp detected past when it should've been executed. PortId=%d, Tick=%ld\n",
+                    "Error: TestOp detected past when it should've been executed. PortId=%" PRIu32 ", Tick=%" PRIu64 "\n",
                     portId, tick );
     }
     uint64_t * vals = currOp.Values;
@@ -165,16 +165,16 @@ bool VerilatorTestLink::ExecTestOp() {
       Data.push_back( *currPtr );
     }
     if ( writing ) {
-      output.verbose( CALL_INFO, 4, 0, "Sending write on port%d: size=%d\n", portId, InfoVec[portId].Size );
-      for (int i=0; i<Data.size(); i++) {
-        output.verbose( CALL_INFO, 4, 0, "byte %d: %x\n", i, Data[i] );
+      output.verbose( CALL_INFO, 4, 0, "Sending write on port%" PRIu32 ": size=%" PRIu32 "\n", portId, InfoVec[portId].Size );
+      for (size_t i=0; i<Data.size(); i++) {
+        output.verbose( CALL_INFO, 4, 0, "byte %zu: %" PRIx8 "\n", i, Data[i] );
       }
       PortEvent * opEvent = new PortEvent( Data );
       Links[portId]->send( opEvent );
     } else {
-      output.verbose( CALL_INFO, 4, 0, "Data to be checked: size=%d\n", Data.size() );
-      for (int i=0; i<Data.size(); i++) {
-        output.verbose( CALL_INFO, 4, 0, "byte %d: %x\n", i, Data[i] );
+      output.verbose( CALL_INFO, 4, 0, "Data to be checked: size=%" PRIu32 "\n", Data.size() );
+      for (size_t i=0; i<Data.size(); i++) {
+        output.verbose( CALL_INFO, 4, 0, "byte %zu: %" PRIx8 "\n", i, Data[i] );
       }
       ReadDataCheck.emplace( Data );
       PortEvent * opEvent = new PortEvent();
@@ -212,19 +212,19 @@ void VerilatorTestLink::RecvPortEvent( SST::Event* ev, unsigned portId ) {
   PortEvent * readEvent = reinterpret_cast<PortEvent *>( ev );
   std::vector<uint8_t> ValidData = ReadDataCheck.front();
   std::vector<uint8_t> ReadData = readEvent->getPacket();
-  output.verbose( CALL_INFO, 4, 0, "Read data: size=%d\n", ReadData.size() );
-  for (int i=0; i<ReadData.size(); i++) {
-    output.verbose( CALL_INFO, 4, 0, "byte %d: %x\n", i, ReadData[i] );
+  output.verbose( CALL_INFO, 4, 0, "Read data: size=%zu\n", ReadData.size() );
+  for (size_t i=0; i<ReadData.size(); i++) {
+    output.verbose( CALL_INFO, 4, 0, "byte %zu: %" PRIx8 "\n", i, ReadData[i] );
   }
   if ( ValidData.size() != ReadData.size() ) {
     output.fatal(CALL_INFO, -1,
-                  "Error: Read data from port%d has incorrect size at tick %ld\n",
+                  "Error: Read data from port%" PRIu32 " has incorrect size at tick %" PRIu64 "\n",
                   portId, currTick );
   }
   for (size_t i=0; i<ValidData.size(); i++) {
     if ( ValidData[i] != ReadData[i] ) {
       output.fatal(CALL_INFO, -1,
-                    "Error: Read data from port%d has incorrect value (%d, should be %d) at tick %ld\n",
+                    "Error: Read data from port%" PRIu32 " has incorrect value (%" PRIu8 ", should be %" PRIu8 ") at tick %" PRIu64 "\n",
                     portId, ReadData[i], ValidData[i], currTick );
     }
   }
@@ -233,7 +233,7 @@ void VerilatorTestLink::RecvPortEvent( SST::Event* ev, unsigned portId ) {
 }
 
 bool VerilatorTestLink::clock(SST::Cycle_t currentCycle){
-  output.verbose( CALL_INFO, 4, 0, "Clocking cycle %ld\n", currentCycle );
+  output.verbose( CALL_INFO, 4, 0, "Clocking cycle %" PRIu64 "\n", currentCycle );
   if( currentCycle > NumCycles ){
     output.verbose( CALL_INFO, 4, 0, "Cycle limit reached; ending sim\n" );
     primaryComponentOKToEndSim();
