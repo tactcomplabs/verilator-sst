@@ -50,6 +50,45 @@ class PortDef:
      def getPortName(self, index):
           return( self.PortNames[index] )
 
+scratchAddrBase = 0x0300000000000000
+
+class Test:
+     """ Class for building and exporting tests """
+     def __init__(self):
+          self.TestOps = [ ]
+     
+     def addTestOp(self, portName, value, tick):
+          tmp = portName + ":" + str(value) + ":" + str(tick)
+          self.TestOps.append(tmp)
+     
+     def buildScratchTest(self, numCycles):
+          global scratchAddrBase
+          for i in range(numCycles):
+               self.addTestOp("clk", 1, i)
+               if (i % 7 == 1):
+                    self.addTestOp("write", 1, i)
+                    self.addTestOp("addr", scratchAddrBase + 4, i)
+                    self.addTestOp("len", 2, i)
+                    self.addTestOp("wdata", 44, i)
+                    self.addTestOp("en", 1, i)
+               elif (i % 7 == 2):
+                    self.addTestOp("en", 0, i)
+               elif (i % 7 == 3):
+                    self.addTestOp("write", 0, i)
+                    self.addTestOp("addr", scratchAddrBase + 4, i)
+                    self.addTestOp("len", 2, i)
+                    self.addTestOp("en", 1, i)
+               elif (i % 7 == 4):
+                    self.addTestOp("rdata", 44, i)
+                    self.addTestOp("en", 0, i)
+               self.addTestOp("clk", 0, i)
+     
+     def getTest(self):
+          return(self.TestOps)
+     
+     def printTest(self):
+          print(self.TestOps)
+
 
 if ( sub == "Counter" ):
      numPorts = 4
@@ -67,14 +106,23 @@ elif ( sub == "Scratchpad" ):
      ports.addPort("len",   1, WRITE_PORT)
      ports.addPort("wdata", 8, WRITE_PORT)
      ports.addPort("rdata", 8, READ_PORT)
+     basicScratchTest = Test()
+     basicScratchTest.buildScratchTest(10)
+     testOps = basicScratchTest.getTest()
+     print(ports.getPortMap())
+     print("Basic test for Scratchpad:")
+     print("Scratchpad base addr 0x0300.0000.0000.0000 = %d" % scratchAddrBase)
+     basicScratchTest.printTest()
+     """
      testOps = ["clk:0:1", \
-                    "en:1:2", "write:1:2", "addr:4:2", "len:2:2", "wdata:44:2", \
+                    "en:1:2", "write:1:2", "addr:44:2", "len:2:2", "wdata:44:2", \
                     "clk:1:3",  \
                     "clk:0:4", "en:0:4", \
                     "clk:1:5", \
                     "clk:0:6", "en:1:6", "write:0:6", "addr:4:6", "len:2:6", "rdata:44:6", "clk:1:6",  \
                     "clk:0:7", "en:1:7", "clk:1:7","clk:0:7",\
                     "en:0:8", "rdata:44:8", "clk:1:8"]
+     """
 
 tester = sst.Component("vtestLink0", "verilatortestlink.VerilatorTestLink")
 tester.addParams({
@@ -92,8 +140,6 @@ model.addParams({
   "clockFreq" : "1GHz",
   "clockPort" : "clk",
 })
-
-print(ports.getPortMap())
 
 Links = [ ]
 for i in range(ports.getNumPorts()):
