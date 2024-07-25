@@ -28,7 +28,7 @@
 #include "SST.h"
 
 // -- Verilator SST Headers
-#include "verilatorSSTSubcomponent.h"
+#include "verilatorSSTAPI.h"
 
 namespace SST::VerilatorSST {
 
