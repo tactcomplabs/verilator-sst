@@ -72,18 +72,18 @@ void VerilatorTestLink::InitPortMap( const SST::Params& params ) {
   for( size_t i=0; i<optList.size(); i++ ){
     output.verbose( CALL_INFO, 1, 0, "Port map entry: %s\n", optList[i].c_str() );
     std::vector<std::string> vstr;
-    std::string s = optList[i];
+    const std::string s = optList[i];
     splitStr(s, ':', vstr);
     if( vstr.size() != 4 ){
       output.fatal(CALL_INFO, -1,
                     "Error in reading value from portMap parameter:%s\n",
                     s.c_str() );
     }
-    long unsigned portId = std::stoul( vstr[1] );
-    long unsigned portSize = std::stoul( vstr[2] );
-    long unsigned portDirection = std::stoul( vstr[3] );
+    const long unsigned portId = std::stoul( vstr[1] );
+    const long unsigned portSize = std::stoul( vstr[2] );
+    const long unsigned portDirection = std::stoul( vstr[3] );
     PortMap[vstr[0]] = PortDef( portId, portSize, portDirection != 0 ); // 0 should mean reading, 1 should mean writing
-    InfoVec[portId].PortId = portId; //PortDef( portId, portSize, portDirection != 0 );
+    InfoVec[portId].PortId = portId;
     InfoVec[portId].Size = portSize; 
     InfoVec[portId].Write = ( portDirection != 0 );
   }
@@ -107,7 +107,7 @@ void VerilatorTestLink::InitLinkConfig( const SST::Params& params ) {
 }
 
 void VerilatorTestLink::InitTestOps( const SST::Params& params ) {
-  std::string fileName = params.find<std::string>( "testFile", "" );
+  const std::string fileName = params.find<std::string>( "testFile", "" );
   // test operations should have the form portname:value:tick
   if ( fileName == "" ) {
     // try load test ops from param here
@@ -131,12 +131,12 @@ void VerilatorTestLink::InitTestOps( const SST::Params& params ) {
 
 bool VerilatorTestLink::ExecTestOp() {
   if ( !OpQueue.empty() ) {
-    TestOp currOp = OpQueue.front();
-    uint32_t portId = currOp.PortId;
-    bool writing = InfoVec[portId].Write;
+    const TestOp currOp = OpQueue.front();
+    const uint32_t portId = currOp.PortId;
+    const bool writing = InfoVec[portId].Write;
     uint32_t size = InfoVec[portId].Size;
-    uint32_t nvals = size / 8;
-    uint64_t tick = currOp.AtTick; 
+    const uint32_t nvals = size / 8;
+    const uint64_t tick = currOp.AtTick; 
     if ( currOp.AtTick > currTick ) {
       return false;
     } else if ( currOp.AtTick < currTick ) {
@@ -144,20 +144,20 @@ bool VerilatorTestLink::ExecTestOp() {
                     "Error: TestOp detected past when it should've been executed. PortId=%" PRIu32 ", Tick=%" PRIu64 "\n",
                     portId, tick );
     }
-    uint64_t * vals = currOp.Values;
+    const uint64_t * vals = currOp.Values;
     std::vector<uint8_t> Data;
     for ( size_t i=0; i<nvals; i++ ) {
       AddToPacket<uint64_t>( vals[i], Data );
       size -= 8;
     }
-    uint8_t * currPtr = reinterpret_cast<uint8_t *>( vals ) + ( 8 * nvals );
+    const uint8_t * currPtr = reinterpret_cast<const uint8_t *>( vals ) + ( 8 * nvals );
     if ( size > 4 ) {
-      AddToPacket<uint32_t>( *reinterpret_cast<uint32_t *>( currPtr ), Data );
+      AddToPacket<uint32_t>( *reinterpret_cast<const uint32_t *>( currPtr ), Data );
       currPtr += 4;
       size -= 4;
     }
     if ( size > 2) {
-      AddToPacket<uint16_t>( *reinterpret_cast<uint16_t *>( currPtr ), Data );
+      AddToPacket<uint16_t>( *reinterpret_cast<const uint16_t *>( currPtr ), Data );
       currPtr += 2;
       size -= 2;
     }
@@ -169,7 +169,7 @@ bool VerilatorTestLink::ExecTestOp() {
       for (size_t i=0; i<Data.size(); i++) {
         output.verbose( CALL_INFO, 4, 0, "byte %zu: %" PRIx8 "\n", i, Data[i] );
       }
-      PortEvent * opEvent = new PortEvent( Data );
+      PortEvent * const opEvent = new PortEvent( Data );
       Links[portId]->send( opEvent );
     } else {
       output.verbose( CALL_INFO, 4, 0, "Data to be checked: size=%" PRIu32 "\n", Data.size() );
@@ -177,7 +177,7 @@ bool VerilatorTestLink::ExecTestOp() {
         output.verbose( CALL_INFO, 4, 0, "byte %zu: %" PRIx8 "\n", i, Data[i] );
       }
       ReadDataCheck.emplace( Data );
-      PortEvent * opEvent = new PortEvent();
+      PortEvent * const opEvent = new PortEvent();
       Links[portId]->send( opEvent );
     }
     OpQueue.pop();
@@ -210,8 +210,8 @@ void VerilatorTestLink::splitStr(const std::string& s,
 void VerilatorTestLink::RecvPortEvent( SST::Event* ev, unsigned portId ) {
   // should only be receiving read data
   PortEvent * readEvent = reinterpret_cast<PortEvent *>( ev );
-  std::vector<uint8_t> ValidData = ReadDataCheck.front();
-  std::vector<uint8_t> ReadData = readEvent->getPacket();
+  const std::vector<uint8_t>& ValidData = ReadDataCheck.front();
+  const std::vector<uint8_t>& ReadData = readEvent->getPacket();
   output.verbose( CALL_INFO, 4, 0, "Read data: size=%zu\n", ReadData.size() );
   for (size_t i=0; i<ReadData.size(); i++) {
     output.verbose( CALL_INFO, 4, 0, "byte %zu: %" PRIx8 "\n", i, ReadData[i] );
