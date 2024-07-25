@@ -21,7 +21,11 @@
 # -----------------------------------------------------------------
 # Generate the signals from the Verilator top
 # -----------------------------------------------------------------
-function(generate_verilator_component VERILOG_SOURCE VERILOG_TOP VERILOG_TOP_SOURCES VERILATOR_OPTIONS VERILOG_DEVICE)
+function(generate_verilator_component VERILOG_SOURCE
+                                      VERILOG_TOP
+                                      VERILOG_TOP_SOURCES
+                                      VERILATOR_OPTIONS
+                                      VERILOG_DEVICE)
   # Print out the values of the variables
   message(STATUS "*** VERILOG_SOURCE: ${VERILOG_SOURCE}")
   message(STATUS "*** VERILOG_TOP: ${VERILOG_TOP}")
@@ -109,8 +113,8 @@ function(generate_verilator_component VERILOG_SOURCE VERILOG_TOP VERILOG_TOP_SOU
   Top->eval();"
   OUTPUT_VARIABLE VERILATOR_SST_CLOCK_TICK
   OUTPUT_STRIP_TRAILING_WHITESPACE )
-else()
-  execute_process(COMMAND echo "// do nothing; link interface in use"
+  else()
+    execute_process(COMMAND echo "// do nothing; link interface in use"
   OUTPUT_VARIABLE VERILATOR_SST_CLOCK_TICK
   OUTPUT_STRIP_TRAILING_WHITESPACE
                     WORKING_DIRECTORY ${VERILOG_SOURCE}/${VERILOG_DEVICE})
@@ -135,8 +139,8 @@ else()
   # -----------------------------------------------------------------
   if( CLANG_FORMAT )
     message(STATUS "[CLANG-FORMAT] Executing clang-format on generated source files")
-    execute_process(COMMAND ${CLANG_FORMAT} -i --assume-filename=${CMAKE_CURRENT_SOURCE_DIR}/.clang-format ${CMAKE_CURRENT_SOURCE_DIR}/${VERILOG_SOURCE}/${VERILOG_DEVICE}/verilatorSSTSubcomponent.cpp)
-    execute_process(COMMAND ${CLANG_FORMAT} -i --assume-filename=${CMAKE_CURRENT_SOURCE_DIR}/.clang-format ${CMAKE_CURRENT_SOURCE_DIR}/${VERILOG_SOURCE}/${VERILOG_DEVICE}/verilatorSSTSubcomponent.h)
+    execute_process(COMMAND ${CLANG_FORMAT} -i --assume-filename=${CMAKE_CURRENT_SOURCE_DIR}/.clang-format ${VERILOG_SOURCE}/${VERILOG_DEVICE}/verilatorSSTSubcomponent.cpp)
+    execute_process(COMMAND ${CLANG_FORMAT} -i --assume-filename=${CMAKE_CURRENT_SOURCE_DIR}/.clang-format ${VERILOG_SOURCE}/${VERILOG_DEVICE}/verilatorSSTSubcomponent.h)
   endif()
 
   # -----------------------------------------------------------------
@@ -200,21 +204,8 @@ ${VERILATORSST_EXTERNAL_INCLUDE}/SST.h
           ${VERILOG_SOURCE}/${VERILOG_DEVICE}/libverilated.a
 )
 
-  set(verilatorCompSrcs
-  ${VERILATORSST_EXTERNAL_INCLUDE}/verilatorComponent.cpp
-  ${VERILATORSST_EXTERNAL_INCLUDE}/verilatorComponent.h
-  ${VERILATORSST_EXTERNAL_INCLUDE}/Signal.cpp
-)
   include_directories(${VERILATORSST_EXTERNAL_INCLUDE})
   include_directories(${VERILOG_SOURCE}/${VERILOG_DEVICE})
-  add_library(verilatorcomponent SHARED ${verilatorCompSrcs})
-  set_property(TARGET verilatorcomponent PROPERTY CXX_STANDARD 17)
-  target_include_directories(verilatorcomponent
-                          PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-                                  ${CMAKE_CURRENT_SOURCE_DIR}/${VERILOG_SOURCE}/${VERILOG_DEVICE}
-                          PUBLIC ${SST_INSTALL_DIR}/include
-                                 ${VERILATOR_INCLUDE}
-                                 ${VERILATOR_INCLUDE}/vltstd)
 
   # -----------------------------------------------------------------
   # Install the source
@@ -222,10 +213,26 @@ ${VERILATORSST_EXTERNAL_INCLUDE}/SST.h
   install(TARGETS ${targetName} DESTINATION ${CMAKE_SOURCE_DIR}/install)
   install(CODE "execute_process(COMMAND sst-register ${targetName} ${targetName}_LIBDIR=${CMAKE_SOURCE_DIR}/install)")
 
-  install(TARGETS verilatorcomponent DESTINATION ${CMAKE_SOURCE_DIR}/install)
-  install(CODE "execute_process(COMMAND sst-register verilatorcomponent verilatorcomponent_LIBDIR=${CMAKE_SOURCE_DIR}/install)")
 
 endfunction()
+
+set(verilatorCompSrcs
+  ${VERILATORSST_EXTERNAL_INCLUDE}/verilatorComponent.cpp
+  ${VERILATORSST_EXTERNAL_INCLUDE}/verilatorComponent.h
+  ${VERILATORSST_EXTERNAL_INCLUDE}/Signal.cpp
+)
+add_library(verilatorcomponent SHARED ${verilatorCompSrcs})
+set_property(TARGET verilatorcomponent PROPERTY CXX_STANDARD 17)
+target_include_directories(verilatorcomponent
+                        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+                                # ${CMAKE_CURRENT_SOURCE_DIR}/${VERILOG_SOURCE}/${VERILOG_DEVICE}
+                        PUBLIC ${SST_INSTALL_DIR}/include
+                                ${VERILATOR_INCLUDE}
+                                ${VERILATOR_INCLUDE}/vltstd)
+
+
+install(TARGETS verilatorcomponent DESTINATION ${CMAKE_SOURCE_DIR}/install)
+install(CODE "execute_process(COMMAND sst-register verilatorcomponent verilatorcomponent_LIBDIR=${CMAKE_SOURCE_DIR}/install)")
 
 
 
