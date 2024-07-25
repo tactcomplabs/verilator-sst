@@ -108,16 +108,9 @@ function(generate_verilator_component VERILOG_SOURCE VERILOG_TOP VERILOG_TOP_SOU
   ContextP->timeInc(1);
   Top->eval();"
   OUTPUT_VARIABLE VERILATOR_SST_CLOCK_TICK
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-                    WORKING_DIRECTORY ${VERILOG_SOURCE}/${VERILOG_DEVICE})
-  else()
-    #execute_process(COMMAND echo "// apply queued writes
-    #pollWriteQueue();
-    #ContextP->timeInc(1);
-    #Top->eval();"
-    #OUTPUT_VARIABLE VERILATOR_SST_CLOCK_TICK
-    #OUTPUT_STRIP_TRAILING_WHITESPACE )
-    execute_process(COMMAND echo "// do nothing; link interface in use"
+  OUTPUT_STRIP_TRAILING_WHITESPACE )
+else()
+  execute_process(COMMAND echo "// do nothing; link interface in use"
   OUTPUT_VARIABLE VERILATOR_SST_CLOCK_TICK
   OUTPUT_STRIP_TRAILING_WHITESPACE
                     WORKING_DIRECTORY ${VERILOG_SOURCE}/${VERILOG_DEVICE})

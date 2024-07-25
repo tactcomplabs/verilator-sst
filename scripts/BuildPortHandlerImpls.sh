@@ -35,8 +35,8 @@ for IN in $INPUTS;do
     echo "writePortAtTick(\"${SIGNAME}\",p->getPacket(),p->getAtTick());"
     echo "}else{"
     echo "writePort(\"${SIGNAME}\",p->getPacket());"
+    #echo "Top->eval();"
     echo "}"
-    #echo "Top->${SIGNAME}.eval();" #Causes error (TODO)
   fi
   echo "delete ev;"
   echo "}"

@@ -7,7 +7,7 @@
 `define NUM_CHUNKS 1024
 `endif
 `ifndef SCRATCHPAD_BASE
-`define SCRATCHPAD_BASE 64'h300000000000000
+`define SCRATCHPAD_BASE 64'h0300_0000_0000_0000
 `endif
 // NUM_CHUNKS: number of chunks
 // SCRATCHPAD_BASE: base address

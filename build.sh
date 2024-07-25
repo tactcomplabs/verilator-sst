@@ -102,7 +102,11 @@ make VERBOSE=1 | tee make.log
 make VERBOSE=1 install | tee make.install.log
 if [ -n "$TEST_MOD" ]; then
     echo "To test the generated module using the built-in test component, run:"
-    echo "sst --model-options='-m $VTOP' tests/test_elements/verilator-test-direct/sample.py"
+    if [ "$LINKHANDLE" = "-DENABLE_LINK_HANDLING=ON" ]; then
+        echo "sst --model-options='-m $VTOP' tests/test_elements/verilator-test-link/sample.py"
+    else
+        echo "sst --model-options='-m $VTOP' tests/test_elements/verilator-test-direct/sample.py"
+    fi
 fi
 cd ..
 exit 0
