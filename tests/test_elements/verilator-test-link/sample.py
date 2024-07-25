@@ -139,7 +139,7 @@ verilatorsst = sst.Component("vsst", "verilatorcomponent.VerilatorComponent") # 
 verilatorsst.addParams({
      "numCycles" : 20
 })
-model = verilatorsst.setSubComponent("model", "verilatorsstScratchpad.VerilatorSSTScratchpad") # and verilatorsst subcomponent
+model = verilatorsst.setSubComponent("model", subName) # and verilatorsst subcomponent
 model.addParams({
     "useVPI" : 0,
     "clockFreq" : "2.0GHz",
