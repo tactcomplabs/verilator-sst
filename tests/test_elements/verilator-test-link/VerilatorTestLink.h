@@ -97,18 +97,18 @@ public:
     uint32_t size = portInfo.Size;
     uint32_t nvals = size / 8;
     const  uint32_t rem = (size % 8 == 0) ? 0 : 1;
-    uint64_t * values = new uint64_t[nvals+rem];
+    uint64_t * const values = new uint64_t[nvals+rem];
     for (size_t i=0; i<nvals; i++) {
       uint64_t val = std::stoul( op[1+i] );
       values[i] = val;
       size -= 8;
     }
     if ( rem ) {
-      uint64_t val = std::stoul( op[1+nvals] );
+      const uint64_t val = std::stoul( op[1+nvals] );
       values[nvals] = val;
       nvals++;
     }
-    uint64_t tick = std::stoul( op[1+nvals] );
+    const uint64_t tick = std::stoul( op[1+nvals] );
     const TestOp toRet( id, values, tick );
     return toRet;
   }
