@@ -45,4 +45,26 @@ generate_verilator_component(
 )
 add_subdirectory(test_elements)
 
+# ------------------------------------------------ #
+# Tests
+# ------------------------------------------------ #
+function(add_verilatorsst_test SUBDIRECTORY)
+  # Set the VTOP variable based on the subdirectory name passed as an argument
+  set(VTOP ${SUBDIRECTORY})
+
+  add_test(NAME VerilatorTestLink_${SUBDIRECTORY}
+                  COMMAND sst --model-options='-m ${VTOP}'
+                  ${CMAKE_CURRENT_SOURCE_DIR}/test_elements/verilator-test-link/sample.py)
+  message("sst --model-options='-m ${VTOP}' ${CMAKE_CURRENT_SOURCE_DIR}/test_elements/verilator-test-link/sample.py")
+  add_test(NAME VerilatorTestDirect_${SUBDIRECTORY}
+                  COMMAND sst --model-options='-m ${VTOP}'
+                  ${CMAKE_CURRENT_SOURCE_DIR}/test_elements/verilator-test-direct/sample.py)
+  message("sst --model-options='-m ${VTOP}' ${CMAKE_CURRENT_SOURCE_DIR}/test_elements/verilator-test-direct/sample.py")
+endfunction()
+
+add_verilatorsst_test(Counter)
+add_verilatorsst_test(Accum)
+add_verilatorsst_test(Accum1D)
+add_verilatorsst_test(Scratchpad)
+add_verilatorsst_test(UART)
 # EOF

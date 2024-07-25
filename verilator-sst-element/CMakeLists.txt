@@ -219,6 +219,7 @@ endfunction()
 set(verilatorCompSrcs
   ${VERILATORSST_EXTERNAL_INCLUDE}/verilatorComponent.cpp
   ${VERILATORSST_EXTERNAL_INCLUDE}/verilatorComponent.h
+  ${VERILATORSST_EXTERNAL_INCLUDE}/verilatorSSTAPI.h
   ${VERILATORSST_EXTERNAL_INCLUDE}/Signal.cpp
 )
 add_library(verilatorcomponent SHARED ${verilatorCompSrcs})
@@ -236,11 +237,6 @@ install(CODE "execute_process(COMMAND sst-register verilatorcomponent verilatorc
 
 
 
-#if( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-#  install(CODE "execute_process(COMMAND_ERROR_IS_FATAL ANY COMMAND_ECHO STDERR COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/test_undefined_symbols.sh ${CMAKE_CURRENT_SOURCE_DIR}/librevcpu.dylib)")
-#else()
-#  install(CODE "execute_process(COMMAND_ERROR_IS_FATAL ANY COMMAND_ECHO STDERR COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/test_undefined_symbols.sh ${CMAKE_CURRENT_SOURCE_DIR}/librevcpu.so)")
-#endif()
 
 
 # -- EOF

@@ -128,6 +128,8 @@ set(VERILATORSST_SCRIPTS "${CMAKE_CURRENT_SOURCE_DIR}/scripts")
 add_subdirectory(verilator-sst-element)
 
 # if(VERILATORSST_ENABLE_TESTING)
+# TODO: Make this optinal
+enable_testing()
 add_subdirectory(tests)
 # endif()
 
