@@ -15,6 +15,7 @@ import sst
 WRITE_PORT = "1"
 READ_PORT = "0"
 
+testOps = [ ]
 examples = ["Counter", "Accum", "UART", "Scratchpad"]
 if (len(sys.argv) > 2 and sys.argv[1] == "-m"):
      sub = sys.argv[2]
