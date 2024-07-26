@@ -52,7 +52,7 @@ execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/BuildPortIOImpls.
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
 message(STATUS "Building port handler implementations...")
 if( ENABLE_LINK_HANDLING )
-  execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/BuildPortHandlerImpls.sh ${VTOP} ${VERILOG_DEVICE} 1
+  execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/BuildPortHandlerImpls.sh ${VTOP} ${VERILOG_DEVICE} 1 ${CLOCK_PORT_NAME}
                   OUTPUT_VARIABLE VERILATOR_SST_PORT_HANDLER_IMPLS
                   OUTPUT_STRIP_TRAILING_WHITESPACE)
   message(STATUS "Building link definitions...")
@@ -64,7 +64,7 @@ if( ENABLE_LINK_HANDLING )
                   OUTPUT_VARIABLE VERILATOR_SST_LINK_CONFIGS
                   OUTPUT_STRIP_TRAILING_WHITESPACE)
 else()
-  execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/BuildPortHandlerImpls.sh ${VTOP} ${VERILOG_DEVICE} 0
+  execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../scripts/BuildPortHandlerImpls.sh ${VTOP} ${VERILOG_DEVICE} 0 ${CLOCK_PORT_NAME}
                   OUTPUT_VARIABLE VERILATOR_SST_PORT_HANDLER_IMPLS
                   OUTPUT_STRIP_TRAILING_WHITESPACE)
   set(VERILATOR_SST_LINK_DEFS "")
@@ -87,10 +87,7 @@ if ( ENABLE_CLK_HANDLING )
   OUTPUT_VARIABLE VERILATOR_SST_CLOCK_TICK
   OUTPUT_STRIP_TRAILING_WHITESPACE )
 else()
-  execute_process(COMMAND echo "// apply queued writes
-  pollWriteQueue();
-  ContextP->timeInc(1);
-  Top->eval();"
+  execute_process(COMMAND echo "// do nothing; link interface in use"
   OUTPUT_VARIABLE VERILATOR_SST_CLOCK_TICK
   OUTPUT_STRIP_TRAILING_WHITESPACE )
 endif()

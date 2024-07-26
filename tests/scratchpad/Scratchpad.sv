@@ -1,13 +1,13 @@
 
 // CHUNK_SIZE: size per chunk in bytes
 `ifndef CHUNK_SIZE
-`define CHUNK_SIZE 4
+`define CHUNK_SIZE 512
 `endif
 `ifndef NUM_CHUNKS
-`define NUM_CHUNKS 16
+`define NUM_CHUNKS 1024
 `endif
 `ifndef SCRATCHPAD_BASE
-`define SCRATCHPAD_BASE 16
+`define SCRATCHPAD_BASE 64'h0300_0000_0000_0000
 `endif
 // NUM_CHUNKS: number of chunks
 // SCRATCHPAD_BASE: base address

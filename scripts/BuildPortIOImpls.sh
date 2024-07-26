@@ -239,12 +239,7 @@ build_read () {
     if (( $DEPTH > 1 )); then
       echo "// wider than 64 bits"
       REMWIDTH=$((WIDTH % 32))
-      #WORDS=$((WIDTH / 32 + 1))
       WORDS=$((WIDTH / 32))
-      #jif ((REMWIDTH != 0)); then
-        # Case where there is a partial word
-        #WORDS=$((WIDTH / 32))
-      #fi
       echo "for (int j=0; j<$DEPTH; j++) {"
       echo "uint8_t tmp = 0;"
       echo "for (int i=0; i<$WORDS; i++) {"
@@ -272,12 +267,7 @@ build_read () {
       echo "}"
     else
       echo "// wider than 64 bits"
-      REMWIDTH=$((WIDTH % 32))
-      WORDS=$((WIDTH / 32 + 1))
-      if ((REMWIDTH != 0)); then
-        # Case where there is a partial word
-        WORDS=$((WIDTH / 32))
-      fi
+      WORDS=$((WIDTH / 32))
       echo "uint8_t tmp = 0;"
       echo "for (int i=0; i<$WORDS; i++) {"
       LOOPI=0

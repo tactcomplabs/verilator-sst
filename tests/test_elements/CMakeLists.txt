@@ -5,5 +5,6 @@
 # See LICENSE in the top level directory for licensing details
 
 add_subdirectory(verilator-test-direct)
+add_subdirectory(verilator-test-link)
 
 # EOF
