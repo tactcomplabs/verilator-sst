@@ -21,8 +21,5 @@ target_include_directories(verilatortestlink
                        ${VERILATOR_INCLUDE}
                        ${VERILATOR_INCLUDE}/vltstd)
 
-target_compile_options(verilatortestlink PRIVATE ${SST_CXXFLAGS_LIST})
-target_link_options(verilatortestlink PRIVATE ${SST_LDFLAGS_LIST})
-
 install(TARGETS verilatortestlink DESTINATION ${CMAKE_SOURCE_DIR}/install)
 install(CODE "execute_process(COMMAND sst-register verilatortestlink verilatortestlink_LIBDIR=${CMAKE_SOURCE_DIR}/install)")
