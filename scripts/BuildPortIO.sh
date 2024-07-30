@@ -19,7 +19,7 @@ for IN in $INPUTS;do
   NOPAREN2=`echo $NOPAREN | sed 's/)//'`
   REMDEPTH=`echo $NOPAREN2 | sed 's/\[[0-9]*\]//'`
   SIGNAME=`echo $REMDEPTH | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g"`
-  echo "static void DirectWrite$SIGNAME(VTop *,std::vector<uint8_t>);"
+  echo "static void DirectWrite$SIGNAME(VTop *, const std::vector<uint8_t>&);"
   echo "static std::vector<uint8_t> DirectRead$SIGNAME(VTop *);"
 done;
 
@@ -29,7 +29,7 @@ for OUT in $OUTPUTS;do
   NOPAREN2=`echo $NOPAREN | sed 's/)//'`
   REMDEPTH=`echo $NOPAREN2 | sed 's/\[[0-9]*\]//'`
   SIGNAME=`echo $REMDEPTH | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g"`
-  echo "static void DirectWrite$SIGNAME(VTop *,std::vector<uint8_t>);"
+  echo "static void DirectWrite$SIGNAME(VTop *, const std::vector<uint8_t>&);"
   echo "static std::vector<uint8_t> DirectRead$SIGNAME(VTop *);"
 done;
 

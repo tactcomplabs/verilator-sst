@@ -134,13 +134,7 @@ void VerilatorSST@VERILOG_DEVICE@::initResetValues(const Params& params){
                     vstr[0].c_str());
     }
 
-    //UnitAlgebra ua;
-    //ua.init(vstr[1]);
-    //printf("%s: port %s has reset value %lx\n", __func__, vstr[0].data(), ua.getValue().toUnsignedLong());
     long unsigned val = std::stoul(vstr[1]);
-    printf("%s: port %s has reset value %lx\n", __func__, vstr[0].data(), val);
-
-    //ResetVals.push_back(std::make_pair(vstr[0],ua.getValue().toUnsignedLong()));
     ResetVals.push_back(std::make_pair(vstr[0],val));
   }
 }
@@ -149,7 +143,7 @@ void VerilatorSST@VERILOG_DEVICE@::init(unsigned int phase){
   for (auto ele : ResetVals) {
     std::vector<uint8_t> d;
     // convert uint64 to byte vector
-    printf("%s: initializing port %s to %lx\n", __func__, ele.first.data(), ele.second);
+    output->verbose(CALL_INFO, 1, 0, "initializing port %s to %" PRIu64 "\n", ele.first.data(), ele.second);
     for (int i=0; i<8; i++) {
       uint8_t tmp = (ele.second >> (i*8)) & 255;
       d.push_back(tmp);
@@ -272,14 +266,13 @@ std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPortVPI(std::string PortN
   auto vpiTypeVal = vpi_get(vpiType, vh1);
   auto vpiSizeVal = vpi_get(vpiSize, vh1);
 
-  std::vector<uint8_t> d;
   if(vpiTypeVal == vpiReg){
     s_vpi_value val{vpiVectorVal};
     vpi_get_value(vh1, &val);
     
     auto signalFactory = SignalFactory(vpiSizeVal,1);
     auto signalPtr = signalFactory(val);
-    d = signalPtr->getUIntVector(true);
+    const std::vector<uint8_t>& d = signalPtr->getUIntVector(true);
     delete signalPtr;
     return d;
   }
@@ -305,19 +298,19 @@ std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPortVPI(std::string PortN
       i++;
     }
 
-    //Signal signal = *signalPtr;
-    d = signalPtr->getUIntVector(true);
+    const std::vector<uint8_t>& d = signalPtr->getUIntVector(true);
     delete signalPtr;
     delete signalFactory;
     return d;
   }
 
   assert(false && "unsupported vpiType");
+  std::vector<uint8_t> d;
   return d;
 }
 
 void VerilatorSST@VERILOG_DEVICE@::writePortVPI(std::string PortName,
-                                                std::vector<uint8_t> Packet){
+                                                const std::vector<uint8_t>& Packet){
   vpiHandle vh1 = vpi_handle_by_name(PortName.data(), NULL);
   assert(vh1 && "vpi should return a handle (port not found)");
 
@@ -362,7 +355,7 @@ void VerilatorSST@VERILOG_DEVICE@::writePortVPI(std::string PortName,
 }
 
 void VerilatorSST@VERILOG_DEVICE@::writePort(std::string PortName,
-                                             std::vector<uint8_t> Packet){
+                                             const std::vector<uint8_t>& Packet){
   // sanity check
   if( !isNamedPort(PortName) ){
     output->fatal(CALL_INFO, -1, "Could not find port with name=%s\n",
@@ -380,7 +373,7 @@ void VerilatorSST@VERILOG_DEVICE@::writePort(std::string PortName,
 }
 
 void VerilatorSST@VERILOG_DEVICE@::writePortAtTick(std::string PortName,
-                                                   std::vector<uint8_t> Packet,
+                                                   const std::vector<uint8_t>& Packet,
                                                    uint64_t Tick){
   // sanity check
   if( !isNamedPort(PortName) ){
@@ -394,7 +387,6 @@ void VerilatorSST@VERILOG_DEVICE@::writePortAtTick(std::string PortName,
 }
 
 std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPort(std::string PortName){
-  std::vector<uint8_t> data;
 
   // sanity check
   if( !isNamedPort(PortName) ){
@@ -404,14 +396,14 @@ std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPort(std::string PortName
 
   // determine which write to use
   if( UseVPI ){
-    data = readPortVPI(PortName);
+    const std::vector<uint8_t>& data = readPortVPI(PortName);
+    return data;
   }else{
     unsigned Idx = PortMap.at(PortName);
     DirectReadFunc Func = std::get<V_READFUNC>(Ports[Idx]);
-    data = (*Func)(Top);
+    const std::vector<uint8_t>& data = (*Func)(Top);
+    return data;
   }
-
-  return data;
 }
 
 @VERILATOR_SST_PORT_IO_IMPLS@

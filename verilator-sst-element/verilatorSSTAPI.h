@@ -1,5 +1,4 @@
 #include "SST.h"
-#include "SST.h"
 namespace SST::VerilatorSST {
 
 enum class VPortType : uint8_t {
@@ -62,11 +61,11 @@ public:
 
   /// VerilatorSSTBase: write to the target port
   virtual void writePort(std::string portName,
-                         std::vector<uint8_t> packet) = 0;
+                         const std::vector<uint8_t>& packet) = 0;
 
   /// VerilatorSSTBase: write to the target port at the target clock cycle
   virtual void writePortAtTick(std::string portName,
-                               std::vector<uint8_t> packet,
+                               const std::vector<uint8_t>& packet,
                                uint64_t tick) = 0;
 
   /// VerilatorSSTBase: read from the target port
