@@ -130,11 +130,20 @@ set(VERILATORSST_SCRIPTS "${CMAKE_CURRENT_SOURCE_DIR}/scripts")
 # ADD THE SUBDIRECTORIES
 #------------------------------------------------------------------
 add_subdirectory(verilator-sst-element)
+#
+# option to enable testing (default is ON)
+option(ENABLE_TESTING "Enable testing" ON)
+# Also allows users to pass -DDISABLE_TESTING
+if(DISABLE_TESTING)
+  set(ENABLE_TESTING OFF)
+endif()
 
-# if(VERILATORSST_ENABLE_TESTING)
-# TODO: Make this optinal
-enable_testing()
-add_subdirectory(tests)
+# Check if testing is enabled and add the tests subdirectory if it is
+if(ENABLE_TESTING)
+  enable_testing()
+  add_subdirectory(tests)
+endif()
+
 # endif()
 
 
