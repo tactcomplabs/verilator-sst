@@ -53,13 +53,9 @@ function(add_verilatorsst_test SUBDIRECTORY)
   set(VTOP ${SUBDIRECTORY})
 
   add_test(NAME VerilatorTestLink_${SUBDIRECTORY}
-                  COMMAND sst --model-options='-m ${VTOP}'
-                  ${CMAKE_CURRENT_SOURCE_DIR}/test_elements/verilator-test-link/sample.py)
-  message("sst --model-options='-m ${VTOP}' ${CMAKE_CURRENT_SOURCE_DIR}/test_elements/verilator-test-link/sample.py")
+                  COMMAND sst ${CMAKE_CURRENT_SOURCE_DIR}/test_elements/verilator-test-link/sample.py -- -m ${VTOP})
   add_test(NAME VerilatorTestDirect_${SUBDIRECTORY}
-                  COMMAND sst --model-options='-m ${VTOP}'
-                  ${CMAKE_CURRENT_SOURCE_DIR}/test_elements/verilator-test-direct/sample.py)
-  message("sst --model-options='-m ${VTOP}' ${CMAKE_CURRENT_SOURCE_DIR}/test_elements/verilator-test-direct/sample.py")
+                  COMMAND sst ${CMAKE_CURRENT_SOURCE_DIR}/test_elements/verilator-test-direct/sample.py -- -m ${VTOP})
 endfunction()
 
 add_verilatorsst_test(Counter)
