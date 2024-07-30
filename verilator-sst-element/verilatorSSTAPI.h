@@ -1,10 +1,143 @@
 #include "SST.h"
 namespace SST::VerilatorSST {
 
+// ---------------------------------------------------------------
+// Macros
+// ---------------------------------------------------------------
+#ifdef _VERILATORSST_DEBUG_
+#define VL_DEBUG 1
+#else
+#define VL_DEBUG 0
+#endif
+
+// ---------------------------------------------------------------
+// Data Structures
+// ---------------------------------------------------------------
+
 enum class VPortType : uint8_t {
   V_INPUT = 0b00000000,  /// VPortType: input port
   V_OUTPUT = 0b00000001, /// VPortType: output port
 };
+
+#define V_NAME            0
+#define V_TYPE            1
+#define V_WIDTH           2
+#define V_DEPTH           3
+#define V_WRITEFUNC       4
+#define V_READFUNC        5
+
+typedef std::pair<std::string,
+                  uint64_t> PortReset;
+
+struct QueueEntry {
+  std::string PortName;
+  uint64_t AtTick;
+  std::vector<uint8_t> Packet;
+  QueueEntry(std::string PortName, uint64_t AtTick, std::vector<uint8_t> Packet)
+      : PortName(PortName), AtTick(AtTick), Packet(Packet) { }
+};
+
+
+// ---------------------------------------------------------------
+// PortEvent
+// ---------------------------------------------------------------
+class PortEvent : public SST::Event{
+public:
+  /// PortEvent: default constructor
+  explicit PortEvent()
+    : Event(), AtTick(0x00ull) {
+  }
+
+  explicit PortEvent(uint64_t Tick)
+    : Event(), AtTick(Tick) {
+  }
+
+  explicit PortEvent(std::vector<uint8_t> P)
+    : Event(), AtTick(0x00ull) {
+    std::copy(P.begin(), P.end(),
+              std::back_inserter(Packet));
+  }
+
+  explicit PortEvent(std::vector<uint8_t> P, uint64_t Tick)
+    : Event(), AtTick(Tick) {
+    std::copy(P.begin(), P.end(),
+              std::back_inserter(Packet));
+  }
+
+  /// PortEvent: virtual clone function
+  virtual Event* clone(void) override{
+    PortEvent *pe = new PortEvent(*this);
+    return pe;
+  }
+
+  /// PortEvent: retrieve the target clock tick
+  uint64_t getAtTick() { return AtTick; }
+
+  /// PortEvent: retrieve the packet payload
+  const std::vector<uint8_t> getPacket() { return Packet; }
+
+  /// PortEvent: set the target clock tick
+  void setAtTick(uint64_t T) { AtTick = T; }
+
+  /// PortEvent: set the payload
+  void setPayload(const std::vector<uint8_t> P){
+    std::copy(P.begin(), P.end(),
+              std::back_inserter(Packet));
+  }
+
+private:
+  std::vector<uint8_t> Packet;  /// event packet
+  uint64_t AtTick;              /// event at clock tick
+
+public:
+  // PortEvent: event serializer
+  void serialize_order(SST::Core::Serialization::serializer &ser) override{
+    // we only serialize the raw packet
+    Event::serialize_order(ser);
+    ser & Packet;
+    ser & AtTick;
+  }
+
+  // PortEvent: implements the nic serialization
+  ImplementSerializable(SST::VerilatorSST::PortEvent);
+};
+
+// ---------------------------------------------------------------
+// SignalHelper
+// ---------------------------------------------------------------
+class SignalHelper{
+private:
+  unsigned Width; ///< signal width
+
+public:
+
+  /// SignalHelper Constructor
+  SignalHelper() : Width(1){};
+
+  /// SignalHelper Overloaded Constructor
+  SignalHelper(unsigned W) : Width(W){};
+
+  /// SignalHelper destructor
+  ~SignalHelper() {}
+
+  /// retrieve the width
+  unsigned getWidth() { return Width; }
+
+  /// set the width
+  void setWidth(unsigned W) { Width = W; }
+
+  /// template class to generate scalar masks
+  template<typename T>
+  T getMask(){
+    T ret = 0x00;
+    for( unsigned i=0; i<Width; i++ ){
+      ret |= (1<<i);
+    }
+    return ret;
+  }
+
+}; // SignalHelper
+
 // ---------------------------------------------------------------
 // VerilatorSSTBase
 // ---------------------------------------------------------------
