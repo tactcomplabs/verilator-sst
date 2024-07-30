@@ -11,26 +11,17 @@
 import os
 import sys
 import sst
-import argparse
 
 examples = ["Counter", "Accum", "UART", "Scratchpad"]
-
-# Set up the argument parser
-parser = argparse.ArgumentParser(description="Select a model for verilatorsst.")
-parser.add_argument("-m", "--model", choices=examples, help="The model to use")
-
-# Parse the arguments
-args = parser.parse_args()
-
-# Determine the subName based on the input
-if args.model:
-    sub = args.model
-    subName = "verilatorsst{}.VerilatorSST{}".format(sub, sub)
+if (len(sys.argv) > 2 and sys.argv[1] == "-m"):
+     sub = sys.argv[2]
+     if sub not in examples:
+          raise Exception("Unknown model selected")
+     subName = "verilatorsst{}.VerilatorSST{}".format(sub, sub)
 else:
-    # Default to accum because it is a relatively robust example
-    subName = "verilatorsstAccum.VerilatorSSTAccum"
+     # Default to accum because it is a relatively robust example
+     subName = "verilatorsstAccum.VerilatorSSTAccum"
 
-print(subName)
 top = sst.Component("top0", "verilatortestdirect.VerilatorTestDirect")
 top.addParams({
   "verbose" : 1,
