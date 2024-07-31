@@ -36,33 +36,33 @@ do
 done
 if [ "$TEST_MOD" = "counter" ]; then
     echo "Generating example module counter"
-    VSOURCE="$PWD/tests/counter/"
+    VSOURCE="$PWD/test/counter/"
     VDEVICE="Counter"
-    VSRCS="$PWD/tests/counter/Counter.v"
+    VSRCS="$PWD/test/counter/Counter.v"
     VTOP="Counter"
 elif [ "$TEST_MOD" = "accum" ]; then
     echo "Generating example module accum"
-    VSOURCE="$PWD/tests/accum/"
+    VSOURCE="$PWD/test/accum/"
     VDEVICE="Accum"
-    VSRCS="$PWD/tests/accum/Accum.sv"
+    VSRCS="$PWD/test/accum/Accum.sv"
     VTOP="Accum"
 elif [ "$TEST_MOD" = "accum1D" ]; then
     echo "Generating example module accum1D"
-    VSOURCE="$PWD/tests/accum/"
-    VDEVICE="Accum"
-    VSRCS="$PWD/tests/accum/Accum1D.sv"
-    VTOP="Accum"
+    VSOURCE="$PWD/test/accum1d/"
+    VDEVICE="Accum1D"
+    VSRCS="$PWD/test/accum1d/Accum1D.sv"
+    VTOP="Accum1D"
 elif [ "$TEST_MOD" = "uart" ]; then
     echo "Generating example module uart"
-    VSOURCE="$PWD/tests/uart_mem/"
+    VSOURCE="$PWD/test/uart_mem/"
     VDEVICE="UART"
-    VSRCS="$PWD/tests/uart_mem/*"
+    VSRCS="$PWD/test/uart_mem/*"
     VTOP="UART"
 elif [ "$TEST_MOD" = "scratchpad" ]; then
     echo "Generating example module scratchpad"
-    VSOURCE="$PWD/tests/scratchpad/"
+    VSOURCE="$PWD/test/scratchpad/"
     VDEVICE="Scratchpad"
-    VSRCS="$PWD/tests/scratchpad/*"
+    VSRCS="$PWD/test/scratchpad/*"
     VTOP="Scratchpad"
 elif [ -z "$TEST_MOD" ]; then
     echo "Generating custom module. . ."
@@ -103,9 +103,9 @@ make VERBOSE=1 install | tee make.install.log
 if [ -n "$TEST_MOD" ]; then
     echo "To test the generated module using the built-in test component, run:"
     if [ "$LINKHANDLE" = "-DENABLE_LINK_HANDLING=ON" ]; then
-        echo "sst --model-options='-m $VTOP' tests/test_elements/verilator-test-link/sample.py"
+        echo "sst --model-options='-m $VTOP' test/test_elements/verilator-test-link/sample.py"
     else
-        echo "sst --model-options='-m $VTOP' tests/test_elements/verilator-test-direct/sample.py"
+        echo "sst --model-options='-m $VTOP' test/test_elements/verilator-test-direct/sample.py"
     fi
 fi
 cd ..

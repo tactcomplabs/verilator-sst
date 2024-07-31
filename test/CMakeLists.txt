@@ -21,8 +21,8 @@ generate_verilator_component(
 )
 
 generate_verilator_component(
-  ${CMAKE_CURRENT_SOURCE_DIR}/accum
-  "Accum"
+  ${CMAKE_CURRENT_SOURCE_DIR}/accum1D
+  "Accum1D"
   "${CMAKE_CURRENT_SOURCE_DIR}/accum1D/Accum1D.sv"
   "$PWD/tests/accum1D/Accum1D.sv"
   "Accum1D"
