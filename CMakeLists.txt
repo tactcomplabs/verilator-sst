@@ -141,7 +141,7 @@ endif()
 # Check if testing is enabled and add the tests subdirectory if it is
 if(ENABLE_TESTING)
   enable_testing()
-  add_subdirectory(tests)
+  add_subdirectory(test)
 endif()
 
 # endif()

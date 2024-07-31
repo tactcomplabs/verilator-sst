@@ -92,7 +92,7 @@ def run_direct(subName):
     #"resetVals" : ["reset_l:0", "clk:0", "add:16", "en:0"]
     })
 
-def run_link(subName, testOps):
+def run_links(subName, testOps):
     ports = PortDef()
     if ( subName == "Counter" ):
         ports.addPort("clk",     1, WRITE_PORT)
@@ -125,17 +125,17 @@ def run_link(subName, testOps):
         testOps = basicScratchTest.getTest()
         print(ports.getPortMap())
         print("Basic test for Scratchpad:")
-        print("Scratchpad base addr 0x0300.0000.0000.0000 = %d" % scratchAddrBase)
+        print(f"Scratchpad base addr 0x0300.0000.0000.0000 = {scratchAddrBase}")
         basicScratchTest.printTest()
 
     tester = sst.Component("vtestLink0", "verilatortestlink.VerilatorTestLink")
     tester.addParams({
-    "verbose" : 4,
-    "clockFreq" : "1GHz",
-    "num_ports" : ports.getNumPorts(),
-    "portMap" : ports.getPortMap(),
-    "testOps" : testOps,
-    "numCycles" : 20
+        "verbose" : 4,
+        "clockFreq" : "1GHz",
+        "num_ports" : ports.getNumPorts(),
+        "portMap" : ports.getPortMap(),
+        "testOps" : testOps,
+        "numCycles" : 20
     })
 
     verilatorsst = sst.Component("vsst", "verilatorcomponent.VerilatorComponent") # and verilatorsst component
@@ -152,16 +152,16 @@ def run_link(subName, testOps):
     """
     model = tester.setSubComponent("model", subName)
     model.addParams({
-    "useVPI" : 1,
-    "clockFreq" : "1GHz",
-    "clockPort" : "clk",
-    })
+        "useVPI" : 1,
+        "clockFreq" : "1GHz",
+        "clockPort" : "clk",
+        })
     """
 
     Links = [ ]
     for i in range(ports.getNumPorts()):
         Links.append( sst.Link( f"link{i}" ) )
-        Links[i].connect( ( model, ports.getPortName( i ), "0ps" ), ( tester, "port"+str(i), "0ps" ) )
+        Links[i].connect( ( model, ports.getPortName( i ), "0ps" ), ( tester, f"port{i}", "0ps" ) )
 
 def main():
 
@@ -169,7 +169,7 @@ def main():
     examples = ["Counter", "Accum", "UART", "Scratchpad"]
     parser = argparse.ArgumentParser(description="Sample script to run verilator SST examples")
     parser.add_argument("-m", "--model", choices=examples, default="Accum", help="Select model from examples: Counter, Accum, UART, Scratchpad")
-    parser.add_argument("-i", "--interface", choices="links, direct", default="link", help="Select the direct testing method or the SST::Link method")
+    parser.add_argument("-i", "--interface", choices=["links", "direct"], default="links", help="Select the direct testing method or the SST::Link method")
 
     args = parser.parse_args()
 
@@ -180,6 +180,10 @@ def main():
 
     subName = f"verilatorsst{args.model}.VerilatorSST{args.model}"
 
-if __name__ == "__main__":
+    if args.interface == "direct":
+        run_direct(subName)
+    elif args.interface == "links":
+        run_links(subName, testOps)
 
+if __name__ == "__main__":
     main()
