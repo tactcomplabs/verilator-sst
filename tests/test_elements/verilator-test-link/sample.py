@@ -147,6 +147,29 @@ class Test:
                     self.addTestOp("done", 1, i)
                     self.addTestOp("en", 0, i)
                self.addTestOp("clk", 0, i) # cycle clock every cycle
+     
+     def buildCounterTest(self, numCycles):
+          self.addTestOp("reset_l", 0, 1)
+          self.addTestOp("reset_l", 1, 3)
+          stopCycle = 4
+          currStopVal = 0
+          self.addTestOp("stop", currStopVal, 3)
+          self.addTestOp("clk", 1, 3)
+          self.addTestOp("clk", 0, 3)
+          for i in range(4, numCycles):
+               self.addTestOp("clk", 1, i) # cycle clock every cycle
+               if (i < 11):
+                    currStopVal += 1
+                    self.addTestOp("done", 1, i)
+                    self.addTestOp("stop", currStopVal, i)
+                    stopCycle = i + 8
+               elif (i == stopCycle):
+                    stopCycle = i + 8
+                    self.addTestOp("done", 1, i)
+               else:
+                    self.addTestOp("done", 0, i)
+               self.addTestOp("clk", 0, i) # cycle clock every cycle
+
 
      
      def getTest(self):
@@ -164,6 +187,9 @@ if ( sub == "Counter" ):
      ports.addPort("reset_l", 1, WRITE_PORT)
      ports.addPort("stop",    1, WRITE_PORT)
      ports.addPort("done",    1, READ_PORT)
+     testScheme.buildCounterTest(numCycles)
+     print(ports.getPortMap())
+     print("Basic test for Counter:")
 elif ( sub == "Accum" ):
      ports.addPort("clk",     1,  WRITE_PORT)
      ports.addPort("reset_l", 1,  WRITE_PORT)

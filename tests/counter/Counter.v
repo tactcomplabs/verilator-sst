@@ -1,5 +1,5 @@
 `ifndef STOP_WIDTH
-`define STOP_WIDTH 1
+`define STOP_WIDTH 3
 `endif
 
 
