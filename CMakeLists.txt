@@ -129,7 +129,7 @@ set(VERILATORSST_EXTERNAL_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/verilator-sst-ele
 add_subdirectory(verilator-sst-element)
 
 if(VERILATORSST_ENABLE_TESTING)
-  add_subdirectory(tests)
+  add_subdirectory(test)
 endif()
 
 
