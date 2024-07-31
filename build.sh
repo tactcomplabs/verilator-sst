@@ -48,10 +48,10 @@ elif [ "$TEST_MOD" = "accum" ]; then
     VTOP="Accum"
 elif [ "$TEST_MOD" = "accum1D" ]; then
     echo "Generating example module accum1D"
-    VSOURCE="$PWD/tests/accum/"
-    VDEVICE="Accum"
-    VSRCS="$PWD/tests/accum/Accum1D.sv"
-    VTOP="Accum"
+    VSOURCE="$PWD/tests/accum1d/"
+    VDEVICE="Accum1D"
+    VSRCS="$PWD/tests/accum1d/Accum1D.sv"
+    VTOP="Accum1D"
 elif [ "$TEST_MOD" = "uart" ]; then
     echo "Generating example module uart"
     VSOURCE="$PWD/tests/uart_mem/"

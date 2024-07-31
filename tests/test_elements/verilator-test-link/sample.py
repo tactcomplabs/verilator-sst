@@ -18,16 +18,14 @@ WRITE_PORT = "1"
 READ_PORT = "0"
 UINT64_MAX = 0xffff_ffff_ffff_ffff
 
-examples = ["Counter", "Accum", "UART", "Scratchpad"]
+examples = ["Counter", "Accum", "Accum1D", "UART", "Scratchpad"]
 if (len(sys.argv) > 2 and sys.argv[1] == "-m"):
      sub = sys.argv[2]
      if sub not in examples:
           raise Exception("Unknown model selected")
      subName = "verilatorsst{}.VerilatorSST{}".format(sub, sub)
 else:
-     # Default to accum because it is a relatively robust example
-     sub = "Accum"
-     subName = "verilatorsstAccum.VerilatorSSTAccum"
+     raise Exception("Unknown model selected")
 
 class PortDef:
      """ Wrapper class to make port definitions cleaner """
@@ -158,7 +156,7 @@ class Test:
           print(self.TestOps)
 
 scratchAddrBase = 0x0300_0000_0000_0000
-numCycles = 10
+numCycles = 50 
 testScheme = Test()
 ports = PortDef()
 if ( sub == "Counter" ):
@@ -167,18 +165,18 @@ if ( sub == "Counter" ):
      ports.addPort("stop",    1, WRITE_PORT)
      ports.addPort("done",    1, READ_PORT)
 elif ( sub == "Accum" ):
-     """
      ports.addPort("clk",     1,  WRITE_PORT)
      ports.addPort("reset_l", 1,  WRITE_PORT)
      ports.addPort("en",      1,  WRITE_PORT)
      ports.addPort("add",     8,  WRITE_PORT)
      ports.addPort("accum",   16, READ_PORT)
      ports.addPort("done",    1,  READ_PORT)
-     """
+     print(ports.getPortMap())
+elif ( sub == "Accum1D" ):
      ports.addPort("clk",     1,  WRITE_PORT)
      ports.addPort("reset_l", 1,  WRITE_PORT)
      ports.addPort("en",      1,  WRITE_PORT)
-     ports.addPort("add",     16,  WRITE_PORT)
+     ports.addPort("add",     16, WRITE_PORT)
      ports.addPort("accum",   32, READ_PORT)
      ports.addPort("done",    1,  READ_PORT)
      testScheme.buildAccum1DTest(numCycles)
