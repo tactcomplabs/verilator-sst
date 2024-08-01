@@ -17,6 +17,7 @@ WRITE_PORT = "1"
 READ_PORT = "0"
 UINT64_MAX = 0xffff_ffff_ffff_ffff
 SCRATCH_ADDR_BASE = 0x0300_0000_0000_0000
+SCRATCH_SIZE = 512 * 1024
 
 class PortDef:
      """ Wrapper class to make port definitions cleaner """
@@ -68,6 +69,7 @@ class Test:
      
      def buildScratchTest(self, numCycles):
           global SCRATCH_ADDR_BASE
+          global SCRATCH_SIZE
           for i in range(numCycles):
                self.addTestOp("clk", 1, i) # cycle clock every cycle
                # setup different params based on cycles
@@ -86,7 +88,7 @@ class Test:
                # setup different operations based on cycles (overlapping with the params)
                if (i % 5 == 1):
                     self.addTestOp("write", 1, i)
-                    randAddr = randIntBySize(8) # address is always 64 bit
+                    randAddr = randIntBySize(8) % SCRATCH_SIZE # address is always 64 bit
                     self.randValues.put(randAddr)
                     self.addTestOp("addr", SCRATCH_ADDR_BASE + randAddr, i)
                     self.addTestOp("len", length, i)
@@ -170,22 +172,22 @@ class Test:
      def printTest(self):
           print(self.TestOps)
 
-def run_direct(subName):
+def run_direct(subName, verbosity, vpi):
     top = sst.Component("top0", "verilatortestdirect.VerilatorTestDirect")
     top.addParams({
-    "verbose" : 1,
+    "verbose" : verbosity,
     "clockFreq" : "1GHz",
     "numCycles" : 5000
     })
     model = top.setSubComponent("model", subName)
     model.addParams({
-    "useVPI" : 1,
+    "useVPI" : vpi,
     "clockFreq" : "1GHz",
     "clockPort" : "clk",
     #"resetVals" : ["reset_l:0", "clk:0", "add:16", "en:0"]
     })
 
-def run_links(subName):
+def run_links(subName, verbosity, vpi):
     numCycles = 50
     testScheme = Test()
     ports = PortDef()
@@ -237,7 +239,7 @@ def run_links(subName):
 
     tester = sst.Component("vtestLink0", "verilatortestlink.VerilatorTestLink")
     tester.addParams({
-        "verbose" : 4,
+        "verbose" : verbosity,
         "clockFreq" : "1GHz",
         "num_ports" : ports.getNumPorts(),
         "portMap" : ports.getPortMap(),
@@ -252,7 +254,7 @@ def run_links(subName):
     subCompName  = f"verilatorsst{subName}.VerilatorSST{subName}"
     model = verilatorsst.setSubComponent("model", subCompName) # and verilatorsst subcomponent
     model.addParams({
-        "useVPI" : 0,
+        "useVPI" : vpi,
         "clockFreq" : "2.0GHz",
         "clockPort" : "clk"
     })
@@ -266,8 +268,10 @@ def main():
 
     examples = ["Counter", "Accum", "Accum1D", "UART", "Scratchpad"]
     parser = argparse.ArgumentParser(description="Sample script to run verilator SST examples")
-    parser.add_argument("-m", "--model", choices=examples, default="Accum", help="Select model from examples: Counter, Accum, UART, Scratchpad")
+    parser.add_argument("-m", "--model", choices=examples, default="Accum", help="Select model from examples: Counter, Accum(1D), UART, Scratchpad")
     parser.add_argument("-i", "--interface", choices=["links", "direct"], default="links", help="Select the direct testing method or the SST::Link method")
+    parser.add_argument("-v", "--verbose", choices=range(15), default=4, help="Set the level of verbosity used by the test components")
+    parser.add_argument("-a", "--access", choices=["vpi", "direct"], default="direct", help="Select the method used by the subcomponent to read/write the verilated model's ports")
 
     args = parser.parse_args()
 
@@ -275,13 +279,18 @@ def main():
         raise Exception("Unknown model selected")
 
     sub = args.model
+    verbosity = args.verbose
+    if (args.access == "vpi"):
+        vpi = 1
+    else:
+        vpi = 0
 
     subName = f"verilatorsst{args.model}.VerilatorSST{args.model}"
 
     if args.interface == "direct":
-        run_direct(subName)
+        run_direct(subName, verbosity, vpi)
     elif args.interface == "links":
-        run_links(sub)
+        run_links(sub, verbosity, vpi)
 
 if __name__ == "__main__":
     main()
