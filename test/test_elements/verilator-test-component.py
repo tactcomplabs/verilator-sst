@@ -138,6 +138,38 @@ class Test:
                     self.addTestOp("en", 0, i)
                self.addTestOp("clk", 0, i) # cycle clock every cycle
      
+     def buildAccumTest(self, numCycles):
+          global UINT64_MAX
+          self.addTestOp("reset_l", 0, 1)
+          self.addTestOp("reset_l", 1, 3)
+          self.addTestOp("clk", 1, 3)
+          self.addTestOp("clk", 0, 3)
+          accum = [0, 0, 0, 0]  # 32 bit each
+          bigAccum = [0, 0] # 64 bit each
+          add = [0, 0, 0, 0] # 16 bit each
+          bigAdd = 0 # 64 bits
+          for i in range(4, numCycles):
+               self.addTestOp("clk", 1, i) # cycle clock every cycle
+               if (i % 3 == 1):
+                    add[0] = randIntBySize(2)
+                    add[1] = randIntBySize(2)
+                    add[2] = randIntBySize(2)
+                    add[3] = randIntBySize(2)
+                    bigAdd = (add[3] << 48) + (add[2] << 32) + (add[1] << 16) + add[0]
+                    accum[0] += add[0]
+                    accum[1] += add[1]
+                    accum[2] += add[2]
+                    accum[3] += add[3]
+                    bigAccum[0] = accum[0] + (accum[1] << 32)
+                    bigAccum[1] = accum[2] + (accum[3] << 32)
+                    self.addTestOp("add", bigAdd, i)
+                    self.addTestOp("en", 1, i)
+               elif (i % 3 == 2):
+                    self.addBigTestOp("accum", bigAccum, i)
+                    self.addTestOp("done", 1, i)
+                    self.addTestOp("en", 0, i)
+               self.addTestOp("clk", 0, i) # cycle clock every cycle
+     
      def buildCounterTest(self, numCycles):
           self.addTestOp("reset_l", 0, 1)
           self.addTestOp("reset_l", 1, 3)
@@ -202,7 +234,9 @@ def run_links(subName, verbosity, vpi):
          ports.addPort("add",     8,  WRITE_PORT)
          ports.addPort("accum",   16, READ_PORT)
          ports.addPort("done",    1,  READ_PORT)
+         testScheme.buildAccumTest(numCycles)
          print(ports.getPortMap())
+         print("Basic test for Accum:")
     elif ( subName == "Accum1D" ):
          ports.addPort("clk",     1,  WRITE_PORT)
          ports.addPort("reset_l", 1,  WRITE_PORT)
