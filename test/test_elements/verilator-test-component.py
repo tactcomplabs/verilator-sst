@@ -117,23 +117,19 @@ class Test:
           self.addTestOp("clk", 1, 3)
           self.addTestOp("clk", 0, 3)
           accum = [0, 0, 0, 0] 
+          bigAccum = 0
           for i in range(4, numCycles):
                self.addTestOp("clk", 1, i) # cycle clock every cycle
                if (i % 3 == 1):
                     randDataLower = randIntBySize(8)
                     randDataUpper = randIntBySize(8)
-                    #bigAdd = [randDataLower, randDataUpper]
-                    bigAdd = [0, 0]
-                    #accum[0] += randDataLower
-                    #accum[1] += randDataUpper
-                    for j in range(4):
-                         ele = accum[j]
-                         # python can have ints bigger than 64bit but the C++ side can't
-                         # carry over, if a "64bit" integer "overflowed"
-                         if ele > UINT64_MAX and j < 3:
-                              diff = ele - UINT64_MAX
-                              accum[j] = UINT64_MAX
-                              accum[j+1] += diff
+                    bigRandData = (randDataUpper << 64) + randDataLower
+                    bigAccum += bigRandData
+                    bigAdd = [randDataLower, randDataUpper]
+                    accum[0] = bigAccum & 0x0000_ffff_ffff_ffff_ffff
+                    accum[1] = (bigAccum >> 64) & 0x0000_ffff_ffff_ffff_ffff
+                    accum[2] = (bigAccum >> 128) & 0x0000_ffff_ffff_ffff_ffff
+                    accum[3] = (bigAccum >> 192) & 0x0000_ffff_ffff_ffff_ffff
                     self.addBigTestOp("add", bigAdd, i)
                     self.addTestOp("en", 1, i)
                elif (i % 3 == 2):
