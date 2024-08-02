@@ -10,6 +10,16 @@ generate_verilator_component(
   "${CMAKE_CURRENT_SOURCE_DIR}/counter/Counter.v"
   "$PWD/tests/counter/Counter.v"
   "Counter"
+  "Direct"
+)
+
+generate_verilator_component(
+  ${CMAKE_CURRENT_SOURCE_DIR}/counter
+  "Counter"
+  "${CMAKE_CURRENT_SOURCE_DIR}/counter/Counter.v"
+  "$PWD/tests/counter/Counter.v"
+  "Counter"
+  "Links"
 )
 
 generate_verilator_component(
@@ -18,6 +28,15 @@ generate_verilator_component(
   "${CMAKE_CURRENT_SOURCE_DIR}/accum/Accum.sv"
   "$PWD/tests/accum/Accum.sv"
   "Accum"
+  "Direct"
+)
+generate_verilator_component(
+  ${CMAKE_CURRENT_SOURCE_DIR}/accum
+  "Accum"
+  "${CMAKE_CURRENT_SOURCE_DIR}/accum/Accum.sv"
+  "$PWD/tests/accum/Accum.sv"
+  "Accum"
+  "Links"
 )
 
 generate_verilator_component(
@@ -26,6 +45,16 @@ generate_verilator_component(
   "${CMAKE_CURRENT_SOURCE_DIR}/accum1D/Accum1D.sv"
   "$PWD/tests/accum1D/Accum1D.sv"
   "Accum1D"
+  "Direct"
+)
+
+generate_verilator_component(
+  ${CMAKE_CURRENT_SOURCE_DIR}/accum1D
+  "Accum1D"
+  "${CMAKE_CURRENT_SOURCE_DIR}/accum1D/Accum1D.sv"
+  "$PWD/tests/accum1D/Accum1D.sv"
+  "Accum1D"
+  "Links"
 )
 
 generate_verilator_component(
@@ -34,6 +63,16 @@ generate_verilator_component(
   "${CMAKE_CURRENT_SOURCE_DIR}/scratchpad/Scratchpad.sv"
   "$PWD/tests/scratchpad/*.sv"
   "Scratchpad"
+  "Direct"
+)
+
+generate_verilator_component(
+  ${CMAKE_CURRENT_SOURCE_DIR}/scratchpad
+  "Scratchpad"
+  "${CMAKE_CURRENT_SOURCE_DIR}/scratchpad/Scratchpad.sv"
+  "$PWD/tests/scratchpad/*.sv"
+  "Scratchpad"
+  "Links"
 )
 
 generate_verilator_component(
@@ -42,6 +81,16 @@ generate_verilator_component(
   "${CMAKE_CURRENT_SOURCE_DIR}/uart_mem/*.sv"
   "$PWD/tests/uart_mem/UART.sv"
   "UART"
+  "Direct"
+)
+
+generate_verilator_component(
+  ${CMAKE_CURRENT_SOURCE_DIR}/uart_mem
+  "UART"
+  "${CMAKE_CURRENT_SOURCE_DIR}/uart_mem/*.sv"
+  "$PWD/tests/uart_mem/UART.sv"
+  "UART"
+  "Links"
 )
 add_subdirectory(test_elements)
 
@@ -49,6 +98,7 @@ add_subdirectory(test_elements)
 # Tests
 # ------------------------------------------------ #
 function(add_verilatorsst_test SUBDIRECTORY)
+
   # Set the VTOP variable based on the subdirectory name passed as an argument
   set(VTOP ${SUBDIRECTORY})
 
