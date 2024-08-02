@@ -53,12 +53,12 @@ class Test:
      def __init__(self):
           self.TestOps = [ ]
           self.randValues = queue.Queue()
-     
+
      # Used for test ops that have a value <=64bit
      def addTestOp(self, portName, value, tick):
           tmp = portName + ":" + str(value) + ":" + str(tick)
           self.TestOps.append(tmp)
-     
+
      # Used for test ops that have values >64bit, requires a list of 64 bit values
      def addBigTestOp(self, portName, values, tick):
           tmp = portName + ":"
@@ -66,7 +66,7 @@ class Test:
                tmp += str(val) + ":"
           tmp += str(tick)
           self.TestOps.append(tmp)
-     
+
      def buildScratchTest(self, numCycles):
           global SCRATCH_ADDR_BASE
           global SCRATCH_SIZE
@@ -109,14 +109,14 @@ class Test:
                     self.addTestOp("rdata", randData, i)
                     self.addTestOp("en", 0, i)
                self.addTestOp("clk", 0, i)
-     
+
      def buildAccum1DTest(self, numCycles):
           global UINT64_MAX
           self.addTestOp("reset_l", 0, 1)
           self.addTestOp("reset_l", 1, 3)
           self.addTestOp("clk", 1, 3)
           self.addTestOp("clk", 0, 3)
-          accum = [0, 0, 0, 0] 
+          accum = [0, 0, 0, 0]
           bigAccum = 0
           for i in range(4, numCycles):
                self.addTestOp("clk", 1, i) # cycle clock every cycle
@@ -193,26 +193,27 @@ class Test:
                self.addTestOp("clk", 0, i) # cycle clock every cycle
 
 
-     
+
      def getTest(self):
           return(self.TestOps)
-     
+
      def printTest(self):
           print(self.TestOps)
 
 def run_direct(subName, verbosity, vpi):
     top = sst.Component("top0", "verilatortestdirect.VerilatorTestDirect")
     top.addParams({
-    "verbose" : verbosity,
-    "clockFreq" : "1GHz",
-    "numCycles" : 5000
+        "verbose" : verbosity,
+        "clockFreq" : "1GHz",
+        "numCycles" : 5000
     })
-    model = top.setSubComponent("model", subName)
+    print(f"Running direct test for {subName}Direct")
+    model = top.setSubComponent("model", f"{subName}Direct")
     model.addParams({
-    "useVPI" : vpi,
-    "clockFreq" : "1GHz",
-    "clockPort" : "clk",
-    #"resetVals" : ["reset_l:0", "clk:0", "add:16", "en:0"]
+        "useVPI" : vpi,
+        "clockFreq" : "1GHz",
+        "clockPort" : "clk",
+        #"resetVals" : ["reset_l:0", "clk:0", "add:16", "en:0"]
     })
 
 def run_links(subName, verbosity, vpi):
@@ -315,11 +316,12 @@ def main():
     else:
         vpi = 0
 
-    subName = f"verilatorsst{args.model}.VerilatorSST{args.model}"
 
     if args.interface == "direct":
+        subName = f"verilatorsst{args.model}Direct.VerilatorSST{args.model}"
         run_direct(subName, verbosity, vpi)
     elif args.interface == "links":
+        subName = f"verilatorsst{args.model}.VerilatorSST{args.model}"
         run_links(sub, verbosity, vpi)
 
 if __name__ == "__main__":
