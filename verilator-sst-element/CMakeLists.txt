@@ -18,6 +18,8 @@
 # -----------------------------------------------------------------
 
 
+# NOTE: Link handling MUST be used for verilator direct
+# NOTE: Cannot use clock handling AND link handling at the same time
 # -----------------------------------------------------------------
 # Generate the signals from the Verilator top
 # -----------------------------------------------------------------
@@ -25,7 +27,17 @@ function(generate_verilator_component VERILOG_SOURCE
                                       VERILOG_TOP
                                       VERILOG_TOP_SOURCES
                                       VERILATOR_OPTIONS
-                                      VERILOG_DEVICE)
+                                      VERILOG_DEVICE
+                                      SST_INTERFACE)
+  # Check if INTERFACE = "Direct"
+  if(SST_INTERFACE STREQUAL "Direct")
+    set(ENABLE_LINK_HANDLING 0)
+    set(ENABLE_CLK_HANDLING 1)
+    set(VERILOG_DEVICE "${VERILOG_DEVICE}Direct")
+  else()
+    set(ENABLE_LINK_HANDLING 1)
+    set(ENABLE_CLK_HANDLING 0)
+  endif()
   # Print out the values of the variables
   message(STATUS "*** VERILOG_SOURCE: ${VERILOG_SOURCE}")
   message(STATUS "*** VERILOG_TOP: ${VERILOG_TOP}")
@@ -42,6 +54,7 @@ function(generate_verilator_component VERILOG_SOURCE
                             ${VERILOG_DEVICE} ${VERILOG_TOP} ${VERILOG_TOP_SOURCES}
                     OUTPUT_VARIABLE VERILATOR_OUT
                     WORKING_DIRECTORY ${VERILOG_SOURCE})
+
   message(STATUS "Building port definitions...")
   execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortDef.sh ${VTOP}
                     OUTPUT_VARIABLE VERILATOR_SST_PORT_DEF
@@ -125,7 +138,6 @@ function(generate_verilator_component VERILOG_SOURCE
   # -----------------------------------------------------------------
   configure_file(
     "${CMAKE_SOURCE_DIR}/verilator-sst-element/verilatorSSTSubcomponent.h.in"
-    # TODO: Fix this to be the right path
     "${VERILOG_SOURCE}/${VERILOG_DEVICE}/verilatorSSTSubcomponent.h"
   )
 
