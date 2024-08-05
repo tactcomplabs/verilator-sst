@@ -16,6 +16,19 @@ function(print_verilator_variables VERILOG_SOURCE VERILOG_TOP VERILOG_TOP_SOURCE
   message(STATUS "==> VERILATORSST_SCRIPTS: ${VERILATORSST_SCRIPTS}")
 endfunction()
 
+function(print_encapsulated_message MESSAGE)
+  # Calculate the length of the message
+  string(LENGTH "${MESSAGE}" MESSAGE_LENGTH)
+
+  # Create a separator line of equals signs
+  string(REPEAT "=" ${MESSAGE_LENGTH} SEPARATOR)
+
+  # Print the encapsulated message
+  message(STATUS "${SEPARATOR}")
+  message(STATUS "${MESSAGE}")
+  message(STATUS "${SEPARATOR}")
+endfunction()
+
 # -----------------------------------------------------------------
 # Generate the Verilator source
 # Relevant CMake variables:
@@ -51,9 +64,8 @@ function(generate_verilator_component VERILOG_SOURCE
   print_verilator_variables(${VERILOG_SOURCE} ${VERILOG_TOP} ${VERILOG_TOP_SOURCES} ${VERILATOR_OPTIONS} ${VERILOG_DEVICE} ${VERILATOR_INCLUDE} ${VERILATORSST_SCRIPTS})
   find_program(CLANG_FORMAT "clang-format")
   set(VTOP "${VERILOG_SOURCE}/${VERILOG_DEVICE}/VTop.h")
-  message(STATUS "===================================================================================================================== ")
-  message(STATUS "GENERATING SST COMPONENT FOR VERILOG MODULE: ${VTOP} ")
-  message(STATUS "===================================================================================================================== ")
+  set(MESSAGE "GENERATING SST COMPONENT FOR VERILOG MODULE: ${VERILOG_TOP}")
+  print_encapsulated_message(${MESSAGE})
   message(STATUS "Building verilator source...")
   execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildVerilatorSrc.sh
                             ${VERILOG_DEVICE} ${VERILOG_TOP} ${VERILOG_TOP_SOURCES}
