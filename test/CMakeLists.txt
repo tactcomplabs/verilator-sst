@@ -3,7 +3,10 @@
 # All Rights Reserved
 # contact@tactcomplabs.com
 # See LICENSE in the top level directory for licensing details
-
+#
+# ------------------------------------------------ #
+# Build the test components
+# ------------------------------------------------ #
 generate_verilator_component(
   ${CMAKE_CURRENT_SOURCE_DIR}/counter
   "Counter"
@@ -30,6 +33,7 @@ generate_verilator_component(
   "Accum"
   "Direct"
 )
+
 generate_verilator_component(
   ${CMAKE_CURRENT_SOURCE_DIR}/accum
   "Accum"
@@ -92,11 +96,19 @@ generate_verilator_component(
   "UART"
   "Links"
 )
+
+# ---------------------------------------------------------------------- #
+# Add the subdirectory containing the standalone elements used to test
+# the generated ones
+# ---------------------------------------------------------------------- #
 add_subdirectory(test_elements)
 
-# ------------------------------------------------ #
-# Tests
-# ------------------------------------------------ #
+# ---------------------------------------------------------------------- #
+# Add the test commands to CTest
+# ---------------------------------------------------------------------- #
+# - One test will run the link based, SST interface
+# - One test will run the direct interface which does not use SST::Link
+#---------------------- ------------------------------------------------ #
 function(add_verilatorsst_test SUBDIRECTORY)
 
   # Set the VTOP variable based on the subdirectory name passed as an argument

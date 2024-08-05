@@ -6,6 +6,15 @@
 #
 # See LICENSE in the top level directory for licensing details
 #
+function(print_verilator_variables VERILOG_SOURCE VERILOG_TOP VERILOG_TOP_SOURCES VERILATOR_OPTIONS VERILOG_DEVICE VERILATOR_INCLUDE VERILATORSST_SCRIPTS)
+  message(STATUS "==> VERILOG_SOURCE: ${VERILOG_SOURCE}")
+  message(STATUS "==> VERILOG_TOP: ${VERILOG_TOP}")
+  message(STATUS "==> VERILATOR_OPTIONS: ${VERILATOR_OPTIONS}")
+  message(STATUS "==> VERILOG_DEVICE: ${VERILOG_DEVICE}")
+  message(STATUS "==> VERILOG_TOP_SOURCES: ${VERILOG_TOP_SOURCES}")
+  message(STATUS "==> VERILATOR_INCLUDE: ${VERILATOR_INCLUDE}")
+  message(STATUS "==> VERILATORSST_SCRIPTS: ${VERILATORSST_SCRIPTS}")
+endfunction()
 
 # -----------------------------------------------------------------
 # Generate the Verilator source
@@ -16,12 +25,10 @@
 # - VERILATOR_OPTIONS : verilator compilation options
 # - VERILOG_DEVICE : device name of the target verilog module
 # -----------------------------------------------------------------
-
-
 # NOTE: Link handling MUST be used for verilator direct
 # NOTE: Cannot use clock handling AND link handling at the same time
 # -----------------------------------------------------------------
-# Generate the signals from the Verilator top
+# Generate the signals from the Verilator top module
 # -----------------------------------------------------------------
 function(generate_verilator_component VERILOG_SOURCE
                                       VERILOG_TOP
@@ -34,21 +41,19 @@ function(generate_verilator_component VERILOG_SOURCE
     set(ENABLE_LINK_HANDLING 0)
     set(ENABLE_CLK_HANDLING 1)
     set(VERILOG_DEVICE "${VERILOG_DEVICE}Direct")
-  else()
+  elseif(SST_INTERFACE STREQUAL "Links")
     set(ENABLE_LINK_HANDLING 1)
     set(ENABLE_CLK_HANDLING 0)
+  else()
+    message(FATAL_ERROR "Invalid SST_INTERFACE: ${SST_INTERFACE}")
   endif()
   # Print out the values of the variables
-  message(STATUS "*** VERILOG_SOURCE: ${VERILOG_SOURCE}")
-  message(STATUS "*** VERILOG_TOP: ${VERILOG_TOP}")
-  message(STATUS "*** VERILATOR_OPTIONS: ${VERILATOR_OPTIONS}")
-  message(STATUS "*** VERILOG_DEVICE: ${VERILOG_DEVICE}")
-  message(STATUS "*** VERILOG_TOP_SOURCES: ${VERILOG_TOP_SOURCES}")
-  message(STATUS "*** VERILATOR_INCLUDE: ${VERILATOR_INCLUDE}")
-  message(STATUS "*** VERILATORSST_SCRIPTS: ${VERILATORSST_SCRIPTS}")
+  print_verilator_variables(${VERILOG_SOURCE} ${VERILOG_TOP} ${VERILOG_TOP_SOURCES} ${VERILATOR_OPTIONS} ${VERILOG_DEVICE} ${VERILATOR_INCLUDE} ${VERILATORSST_SCRIPTS})
   find_program(CLANG_FORMAT "clang-format")
   set(VTOP "${VERILOG_SOURCE}/${VERILOG_DEVICE}/VTop.h")
-  message(STATUS "====> VTOP: ${VTOP}")
+  message(STATUS "===================================================================================================================== ")
+  message(STATUS "GENERATING SST COMPONENT FOR VERILOG MODULE: ${VTOP} ")
+  message(STATUS "===================================================================================================================== ")
   message(STATUS "Building verilator source...")
   execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildVerilatorSrc.sh
                             ${VERILOG_DEVICE} ${VERILOG_TOP} ${VERILOG_TOP_SOURCES}
@@ -196,12 +201,12 @@ function(generate_verilator_component VERILOG_SOURCE
   # -----------------------------------------------------------------
   set(targetName "verilatorsst${VERILOG_DEVICE}")
   set(verilatorSSTSrcs
-  ${VERILOG_SOURCE}/${VERILOG_DEVICE}/verilatorSSTSubcomponent.cpp
-  ${VERILOG_SOURCE}/${VERILOG_DEVICE}/verilatorSSTSubcomponent.h
-${VERILATORSST_EXTERNAL_INCLUDE}/Signal.h
-${VERILATORSST_EXTERNAL_INCLUDE}/Signal.cpp
-${VERILATORSST_EXTERNAL_INCLUDE}/SST.h
-)
+    ${VERILOG_SOURCE}/${VERILOG_DEVICE}/verilatorSSTSubcomponent.cpp
+    ${VERILOG_SOURCE}/${VERILOG_DEVICE}/verilatorSSTSubcomponent.h
+    ${VERILATORSST_EXTERNAL_INCLUDE}/Signal.h
+    ${VERILATORSST_EXTERNAL_INCLUDE}/Signal.cpp
+    ${VERILATORSST_EXTERNAL_INCLUDE}/SST.h
+  )
 
   add_library(${targetName} SHARED ${verilatorSSTSrcs})
   set_property(TARGET ${targetName} PROPERTY CXX_STANDARD 17)
@@ -228,6 +233,9 @@ ${VERILATORSST_EXTERNAL_INCLUDE}/SST.h
 
 endfunction()
 
+# -----------------------------------------------------------------
+# Compile the actual component (Holds the generated subcomponent)
+# -----------------------------------------------------------------
 set(verilatorCompSrcs
   ${VERILATORSST_EXTERNAL_INCLUDE}/verilatorComponent.cpp
   ${VERILATORSST_EXTERNAL_INCLUDE}/verilatorComponent.h
@@ -238,17 +246,11 @@ add_library(verilatorcomponent SHARED ${verilatorCompSrcs})
 set_property(TARGET verilatorcomponent PROPERTY CXX_STANDARD 17)
 target_include_directories(verilatorcomponent
                         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-                                # ${CMAKE_CURRENT_SOURCE_DIR}/${VERILOG_SOURCE}/${VERILOG_DEVICE}
                         PUBLIC ${SST_INSTALL_DIR}/include
                                 ${VERILATOR_INCLUDE}
                                 ${VERILATOR_INCLUDE}/vltstd)
 
-
 install(TARGETS verilatorcomponent DESTINATION ${CMAKE_SOURCE_DIR}/install)
 install(CODE "execute_process(COMMAND sst-register verilatorcomponent verilatorcomponent_LIBDIR=${CMAKE_SOURCE_DIR}/install)")
-
-
-
-
 
 # -- EOF
