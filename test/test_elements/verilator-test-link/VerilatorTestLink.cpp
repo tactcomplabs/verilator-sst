@@ -172,7 +172,7 @@ bool VerilatorTestLink::ExecTestOp() {
       PortEvent * const opEvent = new PortEvent( Data );
       Links[portId]->send( opEvent );
     } else {
-      output.verbose( CALL_INFO, 4, 0, "Data to be checked: size=%" PRIu32 "\n", Data.size() );
+      output.verbose( CALL_INFO, 4, 0, "Data to be checked: size=%zu\n", Data.size() );
       for (size_t i=0; i<Data.size(); i++) {
         output.verbose( CALL_INFO, 4, 0, "byte %zu: %" PRIx8 "\n", i, Data[i] );
       }
@@ -218,8 +218,8 @@ void VerilatorTestLink::RecvPortEvent( SST::Event* ev, unsigned portId ) {
   }
   if ( ValidData.size() != ReadData.size() ) {
     output.fatal(CALL_INFO, -1,
-                  "Error: Read data from port%" PRIu32 " has incorrect size at tick %" PRIu64 "\n",
-                  portId, currTick );
+                  "Error: Read data from port%" PRIu32 " has incorrect size (%zu, should be %zu) at tick %" PRIu64 "\n",
+                  portId, ValidData.size(), ReadData.size(), currTick );
   }
   for (size_t i=0; i<ValidData.size(); i++) {
     if ( ValidData[i] != ReadData[i] ) {

@@ -35,7 +35,7 @@ option(VERILATORSST_ENABLE_TESTING "Enable Testing" ON)
 
 option(ENABLE_CLK_HANDLING "Allows subcomponent to handle the clock port automatically" OFF)
 
-option(ENABLE_LINK_HANDLING "Automatically adds SST link definitions and configurations" OFF)
+option(ENABLE_LINK_HANDLING "Automatically adds SST link definitions and configurations" ON)
 
 set(CLOCK_PORT_NAME "clk" CACHE STRING "Name of the top-level module's clock port") #Defaults to "clk"
 
@@ -124,15 +124,24 @@ add_compile_options("${SST_CXXFLAGS_LIST}")
 add_link_options("${SST_LDFLAGS_LIST}")
 
 set(VERILATORSST_EXTERNAL_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/verilator-sst-element")
+set(VERILATORSST_SCRIPTS "${CMAKE_CURRENT_SOURCE_DIR}/scripts")
 
 #------------------------------------------------------------------
 # ADD THE SUBDIRECTORIES
 #------------------------------------------------------------------
 add_subdirectory(verilator-sst-element)
-
-if(VERILATORSST_ENABLE_TESTING)
-  add_subdirectory(tests)
+#
+# option to enable testing (default is ON)
+option(ENABLE_TESTING "Enable testing" ON)
+# Also allows users to pass -DDISABLE_TESTING
+if(DISABLE_TESTING)
+  set(ENABLE_TESTING OFF)
 endif()
 
+# Check if testing is enabled and add the tests subdirectory if it is
+if(ENABLE_TESTING)
+  enable_testing()
+  add_subdirectory(test)
+endif()
 
 # EOF

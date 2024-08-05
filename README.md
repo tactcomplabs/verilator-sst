@@ -1,26 +1,65 @@
 # VERILATOR-SST
 
-### Dependencies
+Verilator-SST is a framework for generating SST subcomponents based on provided
+(System)Verilog code. It uses Verilator to produce a C++ RTL simulator program
+which is then managed by the generated SST Subcomponent. The generated subcomponents
+can be created with one of two supported interfaces.
 
-- Verilator v5.022 https://github.com/verilator/verilator/releases/tag/v5.022
-- SST 13.0.0 https://github.com/sstsimulator/sst-core/releases/tag/v13.0.0_Final
+1. Link interface: generate links for each input or output port in the Verilog top
+   module which can written or read respectively using the
+`SST::VerilatorSST::PortEvent` class
+2. C++ API: write/read input/output ports using the exposed
+`writePort`, `writePortAtTick`, and
+   `readPort` functions from a parent component
+
+Subcomponents can only be generated with one of these interfaces
+exposed. When using the link
+interface, the VerilatorComponent class should be used as the parent component.
+When using the
+C++ API, certain options must be set to avoid errors (see Build Options).
+
+## Dependencies
+
+- [Verilator v5.022](https://github.com/verilator/verilator/releases/tag/v5.022)
+- [SST 13.1.0](https://github.com/sstsimulator/sst-core/releases/tag/v13.1.0_Final)
+- CMake
 
 ## Build
-```
+
+```bash
 git clone git@github.com:tactcomplabs/verilator-sst.git
-cd verilator-sst/src
+cd verilator-sst/
+mkdir build && cd build
+cmake ../
 make
-make verify
 ```
 
-## Run
+To verify the installation works properly, run
+
+```bash
+make test
 ```
-cd verilator-sst/scripts
-sst basicVerilogCounter.py
+This will generate subcomponents for each included example Verilog code
+and use the included test component to verify their functionality.
+
+### Build Options
+
+```bash
+-DVERILOG_SOURCE=<path to verilog source tree>
+-DVERILOG_DEVICE=<name of verilog device to simulate>
+-DVERILOG_TOP=<name of the top level verilog module>
+-DVERILOG_TOP_SOURCES=<list of verilog top source files>
+-DVERILATOR_OPTIONS=<additional verilator compilation options>
+-DVERILATOR_INCLUDE=<verilator include path>
+-DVERILATORSST_ENABLE_TESTING=ON # Enables testing (on by default; use OFF to disable)
+-DENABLE_CLK_HANDLING=ON # Generates automatic clock port handling (for C++ API interface)
+-DENABLE_LINK_HANDLING=ON # Generates links and link handlers (on by default)
+-DCLOCK_PORT_NAME=<name of clock port> # Defaults to "clk", used with ENABLE_LINK_HANDLING
 ```
 
 ## Debug
-```
+
+```bash
 cd verilator-sst/scripts
 DEBUG=1 sst basicVerilogCounter.py
 ```

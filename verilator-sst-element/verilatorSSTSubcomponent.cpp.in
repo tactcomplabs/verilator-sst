@@ -143,7 +143,7 @@ void VerilatorSST@VERILOG_DEVICE@::init(unsigned int phase){
   for (auto ele : ResetVals) {
     std::vector<uint8_t> d;
     // convert uint64 to byte vector
-    output->verbose(CALL_INFO, 1, 0, "initializing port %s to %lx\n", ele.first.data(), ele.second);
+    output->verbose(CALL_INFO, 1, 0, "initializing port %s to %" PRIu64 "\n", ele.first.data(), ele.second);
     for (int i=0; i<8; i++) {
       uint8_t tmp = (ele.second >> (i*8)) & 255;
       d.push_back(tmp);
