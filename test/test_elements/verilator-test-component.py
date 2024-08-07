@@ -140,6 +140,7 @@ class Test:
      
      def buildAccumTest(self, numCycles):
           global UINT64_MAX
+          self.addTestOp("reset_l", 1, 0)
           self.addTestOp("reset_l", 0, 1)
           self.addTestOp("reset_l", 1, 3)
           self.addTestOp("clk", 1, 3)
@@ -171,6 +172,7 @@ class Test:
                self.addTestOp("clk", 0, i) # cycle clock every cycle
      
      def buildCounterTest(self, numCycles):
+          self.addTestOp("reset_l", 1, 0)
           self.addTestOp("reset_l", 0, 1)
           self.addTestOp("reset_l", 1, 3)
           stopCycle = 4
@@ -232,7 +234,7 @@ def run_direct(subName, verbosity, vpi):
     model = top.setSubComponent("model", f"{fullName}Direct")
     model.addParams({
         "useVPI" : vpi,
-        "clockFreq" : "1GHz",
+        "clockFreq" : "2GHz",
         "clockPort" : "clk",
         #"resetVals" : ["reset_l:0", "clk:0", "add:16", "en:0"]
     })
