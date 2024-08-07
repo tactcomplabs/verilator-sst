@@ -201,14 +201,35 @@ class Test:
           print(self.TestOps)
 
 def run_direct(subName, verbosity, vpi):
+    numCycles = 50
+    testScheme = Test()
+    if ( subName == "Counter" ):
+         testScheme.buildCounterTest(numCycles)
+         print("Basic test for Counter:")
+    elif ( subName == "Accum" ):
+         testScheme.buildAccumTest(numCycles)
+         print("Basic test for Accum:")
+    elif ( subName == "Accum1D" ):
+         testScheme.buildAccum1DTest(numCycles)
+         print("Basic test for Accum1D:")
+    elif ( subName == "UART" ):
+         print("No test for UART yet. . . ")
+         # nothing yet
+    elif ( subName == "Scratchpad" ):
+         testScheme.buildScratchTest(numCycles)
+         print("Basic test for Scratchpad:")
+
+    testScheme.printTest()
     top = sst.Component("top0", "verilatortestdirect.VerilatorTestDirect")
     top.addParams({
         "verbose" : verbosity,
         "clockFreq" : "1GHz",
-        "numCycles" : 5000
+        "testOps" : testScheme.getTest(),
+        "numCycles" : numCycles
     })
     print(f"Running direct test for {subName}Direct")
-    model = top.setSubComponent("model", f"{subName}Direct")
+    fullName = f"verilatorsst{subName}Direct.VerilatorSST{subName}"
+    model = top.setSubComponent("model", f"{fullName}Direct")
     model.addParams({
         "useVPI" : vpi,
         "clockFreq" : "1GHz",
@@ -319,9 +340,9 @@ def main():
 
     if args.interface == "direct":
         subName = f"verilatorsst{args.model}Direct.VerilatorSST{args.model}"
-        run_direct(subName, verbosity, vpi)
+        run_direct(sub, verbosity, vpi)
     elif args.interface == "links":
-        subName = f"verilatorsst{args.model}.VerilatorSST{args.model}"
+        #subName = f"verilatorsst{args.model}.VerilatorSST{args.model}"
         run_links(sub, verbosity, vpi)
 
 if __name__ == "__main__":
