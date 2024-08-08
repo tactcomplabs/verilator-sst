@@ -189,8 +189,8 @@ const std::vector<std::string> VerilatorSST@VERILOG_DEVICE@::getPortsNames(){
   return Names;
 }
 
-bool VerilatorSST@VERILOG_DEVICE@::getPortType(std::string PortName,
-                                               SST::VerilatorSST::VPortType& Type){
+bool VerilatorSST@VERILOG_DEVICE@::getPortDirection(std::string PortName,
+                                               SST::VerilatorSST::VPortDirection& direction){
   unsigned Idx = 0;
   try{
     Idx = PortMap.at(PortName);
@@ -200,7 +200,7 @@ bool VerilatorSST@VERILOG_DEVICE@::getPortType(std::string PortName,
     return false;
   }
 
-  Type = std::get<V_TYPE>(Ports[Idx]);
+  direction = std::get<V_DIR>(Ports[Idx]);
   return true;
 }
 

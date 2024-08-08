@@ -85,7 +85,7 @@ bool VerilatorTestDirect::clock(SST::Cycle_t currentCycle){
   std::vector<std::string> Ports = model->getPortsNames();
   unsigned Width;
   unsigned Depth;
-  SST::VerilatorSST::VPortType Type;
+  SST::VerilatorSST::VPortDirection direction;
   for( auto i : Ports ){
     if( !model->getPortWidth(i, Width) ){
       output.fatal(CALL_INFO, -1, "Could not retrieve width of port=%s\n",
@@ -95,13 +95,13 @@ bool VerilatorTestDirect::clock(SST::Cycle_t currentCycle){
       output.fatal(CALL_INFO, -1, "Could not retrieve depth of port=%s\n",
                    i.c_str());
     }
-    if( !model->getPortType(i, Type) ){
-      output.fatal(CALL_INFO, -1, "Could not retrieve type of port=%s\n",
+    if( !model->getPortDirection(i, direction) ){
+      output.fatal(CALL_INFO, -1, "Could not retrieve direction of port=%s\n",
                    i.c_str());
     }
     uint32_t bits = Width * Depth;
     std::vector<uint8_t> data;
-    if (Type == SST::VerilatorSST::VPortType::V_INPUT) {
+    if (direction == SST::VerilatorSST::VPortDirection::V_INPUT) {
       // write to the port
       data = generateData(Width, Depth);
       if (bits < 9) {
