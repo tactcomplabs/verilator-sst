@@ -13,8 +13,9 @@ import argparse
 import queue
 import random
 
-WRITE_PORT = "1"
-READ_PORT = "0"
+INOUT_PORT = "3"
+WRITE_PORT = "2"
+READ_PORT = "1"
 UINT64_MAX = 0xffff_ffff_ffff_ffff
 SCRATCH_ADDR_BASE = 0x0300_0000_0000_0000
 SCRATCH_SIZE = 512 * 1024
@@ -27,7 +28,7 @@ class PortDef:
           self.PortNames = [ ]
 
      # portName is a string, portSize is an int (measured in bytes), portDir
-     # should use READ_PORT or WRITE_PORT globals
+     # should use READ_PORT, WRITE_PORT, or INOUT_PORT globals
      def addPort(self, portName, portSize, portDir):
         tmp = f"{portName}:{self.PortId}:{portSize}:{portDir}"
         self.PortList.append(tmp)
@@ -273,6 +274,7 @@ def run_links(subName, verbosity, vpi):
          ports.addPort("direction",  1,  WRITE_PORT)
          ports.addPort("data_write", 8,  WRITE_PORT)
          ports.addPort("data_read",  8,  READ_PORT)
+         ports.addPort("io_port",    8,  INOUT_PORT)
          testScheme.buildPinTest(numCycles)
          print(ports.getPortMap())
          print("Basic test for Pin:")
