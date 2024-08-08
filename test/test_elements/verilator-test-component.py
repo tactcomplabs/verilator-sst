@@ -192,7 +192,10 @@ class Test:
                     self.addTestOp("done", 0, i)
                self.addTestOp("clk", 0, i) # cycle clock every cycle
 
-
+     def buildPinTest(self, numCycles):
+          for i in range(numCycles):
+               self.addTestOp("clk", 1, i) # cycle clock every cycle
+               self.addTestOp("clk", 0, i) # cycle clock every cycle
 
      def getTest(self):
           return(self.TestOps)
@@ -265,7 +268,14 @@ def run_links(subName, verbosity, vpi):
          testScheme.buildScratchTest(numCycles)
          print(ports.getPortMap())
          print("Basic test for Scratchpad:")
-
+    elif ( subName == "Pin" ):
+         ports.addPort("clk",        1,  WRITE_PORT)
+         ports.addPort("direction",  1,  WRITE_PORT)
+         ports.addPort("data_write", 8,  WRITE_PORT)
+         ports.addPort("data_read",  8,  READ_PORT)
+         testScheme.buildPinTest(numCycles)
+         print(ports.getPortMap())
+         print("Basic test for Pin:")
     testScheme.printTest()
 
     tester = sst.Component("vtestLink0", "verilatortestlink.VerilatorTestLink")
@@ -297,9 +307,9 @@ def run_links(subName, verbosity, vpi):
 
 def main():
 
-    examples = ["Counter", "Accum", "Accum1D", "UART", "Scratchpad"]
+    examples = ["Counter", "Accum", "Accum1D", "UART", "Scratchpad", "Pin"]
     parser = argparse.ArgumentParser(description="Sample script to run verilator SST examples")
-    parser.add_argument("-m", "--model", choices=examples, default="Accum", help="Select model from examples: Counter, Accum(1D), UART, Scratchpad")
+    parser.add_argument("-m", "--model", choices=examples, default="Accum", help="Select model from examples: Counter, Accum(1D), UART, Scratchpad, Pin")
     parser.add_argument("-i", "--interface", choices=["links", "direct"], default="links", help="Select the direct testing method or the SST::Link method")
     parser.add_argument("-v", "--verbose", choices=range(15), default=4, help="Set the level of verbosity used by the test components")
     parser.add_argument("-a", "--access", choices=["vpi", "direct"], default="direct", help="Select the method used by the subcomponent to read/write the verilated model's ports")
