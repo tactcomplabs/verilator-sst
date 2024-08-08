@@ -295,7 +295,6 @@ for IN in $INPUTS; do
 
   echo "void VerilatorSST$Device::DirectWrite${SIGNAME}(VTop *T, const std::vector<uint8_t>& Packet){"
   #echo "output->verbose( CALL_INFO, 4, 0, \"writing port ${SIGNAME}\" );"
-  echo "printf( \"writing port ${SIGNAME}\n\" ); fflush(NULL);"
   build_write $SIGNAME $WIDTH $DEPTH
   echo "T->eval();"
   echo "}"
@@ -324,7 +323,6 @@ for OUT in $OUTPUTS; do
   echo "}"
   echo "std::vector<uint8_t> VerilatorSST$Device::DirectRead${SIGNAME}(VTop *T){"
   echo "std::vector<uint8_t> d;"
-  echo "printf( \"reading port ${SIGNAME}\n\" ); fflush(NULL);"
   build_read $SIGNAME $WIDTH $DEPTH
   echo "return d;"
   echo "}"
