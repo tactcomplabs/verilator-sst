@@ -15,8 +15,9 @@ namespace SST::VerilatorSST {
 // ---------------------------------------------------------------
 
 enum class VPortDirection : uint8_t {
-  V_INPUT = 0b00000000,  /// VPortDirection: input port
-  V_OUTPUT = 0b00000001, /// VPortDirection: output port
+  V_INOUT  = 0b00000011,  /// VPortDirection: inout port
+  V_INPUT  = 0b00000010,  /// VPortDirection: input port
+  V_OUTPUT = 0b00000001,  /// VPortDirection: output port
 };
 
 #define V_NAME            0
