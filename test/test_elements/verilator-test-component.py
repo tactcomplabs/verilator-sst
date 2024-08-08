@@ -192,7 +192,7 @@ class Test:
                if (resetDelay != 0 and i == 4):
                     self.addTestOp("reset_l", 1, 3+resetDelay)
                     self.addTestOp("stop", currStopVal, 3+resetDelay)
-               if (i < 11+resetDelay): # 11->12 might break link test
+               if (i < 11+resetDelay):
                     if (i < 11):
                          currStopVal += 1
                          self.addTestOp("done", 1, i)
