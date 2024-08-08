@@ -82,10 +82,11 @@ void VerilatorTestLink::InitPortMap( const SST::Params& params ) {
     const long unsigned portId = std::stoul( vstr[1] );
     const long unsigned portSize = std::stoul( vstr[2] );
     const long unsigned portDirection = std::stoul( vstr[3] );
-    PortMap[vstr[0]] = PortDef( portId, portSize, portDirection != 0 ); // 0 should mean reading, 1 should mean writing
+    const bool portIsWriteable = (static_cast<uint8_t>(portDirection) & static_cast<uint8_t>(VPortDirection::V_INPUT)) > 0;
+    PortMap[vstr[0]] = PortDef( portId, portSize, portIsWriteable ); 
     InfoVec[portId].PortId = portId;
     InfoVec[portId].Size = portSize; 
-    InfoVec[portId].Write = ( portDirection != 0 );
+    InfoVec[portId].Write = portIsWriteable;
   }
 }
 
