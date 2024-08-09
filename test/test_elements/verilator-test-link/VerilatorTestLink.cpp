@@ -83,10 +83,12 @@ void VerilatorTestLink::InitPortMap( const SST::Params& params ) {
     const long unsigned portSize = std::stoul( vstr[2] );
     const long unsigned portDirection = std::stoul( vstr[3] );
     const bool portIsWriteable = (static_cast<uint8_t>(portDirection) & static_cast<uint8_t>(VPortDirection::V_INPUT)) > 0;
-    PortMap[vstr[0]] = PortDef( portId, portSize, portIsWriteable ); 
+    const bool portIsReadable = (static_cast<uint8_t>(portDirection) & static_cast<uint8_t>(VPortDirection::V_OUTPUT)) > 0;
+    PortMap[vstr[0]] = PortDef( portId, portSize, portIsWriteable, portIsReadable ); 
     InfoVec[portId].PortId = portId;
     InfoVec[portId].Size = portSize; 
     InfoVec[portId].Write = portIsWriteable;
+    InfoVec[portId].Read = portIsReadable;
   }
 }
 
@@ -134,10 +136,10 @@ bool VerilatorTestLink::ExecTestOp() {
   if ( !OpQueue.empty() ) {
     const TestOp currOp = OpQueue.front();
     const uint32_t portId = currOp.PortId;
-    const bool writing = InfoVec[portId].Write;
+    const bool writing = currOp.isWrite;
     uint32_t size = InfoVec[portId].Size;
     const uint32_t nvals = size / 8;
-    const uint64_t tick = currOp.AtTick; 
+    const uint64_t tick = currOp.AtTick;
     if ( currOp.AtTick > currTick ) {
       return false;
     } else if ( currOp.AtTick < currTick ) {
@@ -171,7 +173,7 @@ bool VerilatorTestLink::ExecTestOp() {
         output.verbose( CALL_INFO, 4, 0, "byte %zu: %" PRIx8 "\n", i, Data[i] );
       }
       PortEvent * const opEvent = new PortEvent( Data );
-      Links[portId]->send( opEvent );
+      Links[portId]->send( opEvent );//TODO need to know when we are reading or writing to a port
     } else {
       output.verbose( CALL_INFO, 4, 0, "Data to be checked: size=%zu\n", Data.size() );
       for (size_t i=0; i<Data.size(); i++) {
@@ -242,7 +244,7 @@ bool VerilatorTestLink::clock(SST::Cycle_t currentCycle){
   }
   // drive the test links (including the clock)
   while ( ExecTestOp() ); 
-  currTick++;
+  currTick++; //TODO SST cycle !+ verilog tick
 
   return false;
 }
