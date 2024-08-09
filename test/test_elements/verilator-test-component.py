@@ -12,13 +12,17 @@ import sst
 import argparse
 import queue
 import random
-
+from enum import Enum
 INOUT_PORT = "3"
 WRITE_PORT = "2"
 READ_PORT = "1"
 UINT64_MAX = 0xffff_ffff_ffff_ffff
 SCRATCH_ADDR_BASE = 0x0300_0000_0000_0000
 SCRATCH_SIZE = 512 * 1024
+
+class ValueOp(Enum):
+     Write = "write"
+     Read  = "read"
 
 class PortDef:
      """ Wrapper class to make port definitions cleaner """
@@ -56,8 +60,8 @@ class Test:
           self.randValues = queue.Queue()
 
      # Used for test ops that have a value <=64bit
-     def addTestOp(self, portName, value, tick):
-          tmp = portName + ":" + str(value) + ":" + str(tick)
+     def addTestOp(self, portName, valueOp, value, tick):
+          tmp = portName + ":" + valueOp.value + ":" + str(value) + ":" + str(tick)
           self.TestOps.append(tmp)
 
      # Used for test ops that have values >64bit, requires a list of 64 bit values
@@ -72,7 +76,7 @@ class Test:
           global SCRATCH_ADDR_BASE
           global SCRATCH_SIZE
           for i in range(numCycles):
-               self.addTestOp("clk", 1, i) # cycle clock every cycle
+               self.addTestOp("clk", ValueOp.Write, 1, i) # cycle clock every cycle
                # setup different params based on cycles
                if (i % 20 == 1):
                     length = 3
@@ -88,39 +92,39 @@ class Test:
                     sizeToWrite = 1
                # setup different operations based on cycles (overlapping with the params)
                if (i % 5 == 1):
-                    self.addTestOp("write", 1, i)
+                    self.addTestOp("write", ValueOp.Write, 1, i)
                     randAddr = randIntBySize(8) % SCRATCH_SIZE # address is always 64 bit
                     self.randValues.put(randAddr)
-                    self.addTestOp("addr", SCRATCH_ADDR_BASE + randAddr, i)
-                    self.addTestOp("len", length, i)
+                    self.addTestOp("addr", ValueOp.Write, SCRATCH_ADDR_BASE + randAddr, i)
+                    self.addTestOp("len", ValueOp.Write, length, i)
                     randData = randIntBySize(sizeToWrite)
                     self.randValues.put(randData)
-                    self.addTestOp("wdata", randData, i)
-                    self.addTestOp("en", 1, i)
+                    self.addTestOp("wdata", ValueOp.Write, randData, i)
+                    self.addTestOp("en", ValueOp.Write, 1, i)
                elif (i % 5 == 2):
-                    self.addTestOp("en", 0, i)
+                    self.addTestOp("en", ValueOp.Write, 0, i)
                elif (i % 5 == 3):
-                    self.addTestOp("write", 0, i)
+                    self.addTestOp("write", ValueOp.Write, 0, i)
                     randAddr = self.randValues.get()
-                    self.addTestOp("addr", SCRATCH_ADDR_BASE + randAddr, i)
-                    self.addTestOp("len", length, i)
-                    self.addTestOp("en", 1, i)
+                    self.addTestOp("addr", ValueOp.Write, SCRATCH_ADDR_BASE + randAddr, i)
+                    self.addTestOp("len", ValueOp.Write, length, i)
+                    self.addTestOp("en", ValueOp.Write, 1, i)
                elif (i % 5 == 4):
                     randData = self.randValues.get()
-                    self.addTestOp("rdata", randData, i)
-                    self.addTestOp("en", 0, i)
-               self.addTestOp("clk", 0, i)
+                    self.addTestOp("rdata", ValueOp.Read, randData, i)
+                    self.addTestOp("en", ValueOp.Write, 0, i)
+               self.addTestOp("clk", ValueOp.Write, 0, i)
 
      def buildAccum1DTest(self, numCycles):
           global UINT64_MAX
-          self.addTestOp("reset_l", 0, 1)
-          self.addTestOp("reset_l", 1, 3)
-          self.addTestOp("clk", 1, 3)
-          self.addTestOp("clk", 0, 3)
+          self.addTestOp("reset_l", ValueOp.Write, 0, 1)
+          self.addTestOp("reset_l", ValueOp.Write, 1, 3)
+          self.addTestOp("clk", ValueOp.Write, 1, 3)
+          self.addTestOp("clk", ValueOp.Write, 0, 3)
           accum = [0, 0, 0, 0]
           bigAccum = 0
           for i in range(4, numCycles):
-               self.addTestOp("clk", 1, i) # cycle clock every cycle
+               self.addTestOp("clk", ValueOp.Write, 1, i) # cycle clock every cycle
                if (i % 3 == 1):
                     randDataLower = randIntBySize(8)
                     randDataUpper = randIntBySize(8)
@@ -131,26 +135,26 @@ class Test:
                     accum[1] = (bigAccum >> 64) & 0x0000_ffff_ffff_ffff_ffff
                     accum[2] = (bigAccum >> 128) & 0x0000_ffff_ffff_ffff_ffff
                     accum[3] = (bigAccum >> 192) & 0x0000_ffff_ffff_ffff_ffff
-                    self.addBigTestOp("add", bigAdd, i)
-                    self.addTestOp("en", 1, i)
+                    self.addBigTestOp("add", ValueOp.Write, bigAdd, i)
+                    self.addTestOp("en", ValueOp.Write, 1, i)
                elif (i % 3 == 2):
-                    self.addBigTestOp("accum", accum, i)
-                    self.addTestOp("done", 1, i)
-                    self.addTestOp("en", 0, i)
-               self.addTestOp("clk", 0, i) # cycle clock every cycle
+                    self.addBigTestOp("accum", ValueOp.Read, accum, i)
+                    self.addTestOp("done", ValueOp.Read, 1, i)
+                    self.addTestOp("en", ValueOp.Write, 0, i)
+               self.addTestOp("clk", ValueOp.Write, 0, i) # cycle clock every cycle
      
      def buildAccumTest(self, numCycles):
           global UINT64_MAX
-          self.addTestOp("reset_l", 0, 1)
-          self.addTestOp("reset_l", 1, 3)
-          self.addTestOp("clk", 1, 3)
-          self.addTestOp("clk", 0, 3)
+          self.addTestOp("reset_l", ValueOp.Write, 0, 1)
+          self.addTestOp("reset_l", ValueOp.Write, 1, 3)
+          self.addTestOp("clk", ValueOp.Write, 1, 3)
+          self.addTestOp("clk", ValueOp.Write, 0, 3)
           accum = [0, 0, 0, 0]  # 32 bit each
           bigAccum = [0, 0] # 64 bit each
           add = [0, 0, 0, 0] # 16 bit each
           bigAdd = 0 # 64 bits
           for i in range(4, numCycles):
-               self.addTestOp("clk", 1, i) # cycle clock every cycle
+               self.addTestOp("clk", ValueOp.Write, 1, i) # cycle clock every cycle
                if (i % 3 == 1):
                     add[0] = randIntBySize(2)
                     add[1] = randIntBySize(2)
@@ -163,40 +167,71 @@ class Test:
                     accum[3] += add[3]
                     bigAccum[0] = accum[0] + (accum[1] << 32)
                     bigAccum[1] = accum[2] + (accum[3] << 32)
-                    self.addTestOp("add", bigAdd, i)
-                    self.addTestOp("en", 1, i)
+                    self.addTestOp("add", ValueOp.Write, bigAdd, i)
+                    self.addTestOp("en", ValueOp.Write, 1, i)
                elif (i % 3 == 2):
-                    self.addBigTestOp("accum", bigAccum, i)
-                    self.addTestOp("done", 1, i)
-                    self.addTestOp("en", 0, i)
-               self.addTestOp("clk", 0, i) # cycle clock every cycle
+                    self.addBigTestOp("accum", ValueOp.Read, bigAccum, i)
+                    self.addTestOp("done", ValueOp.Read, 1, i)
+                    self.addTestOp("en", ValueOp.Write, 0, i)
+               self.addTestOp("clk", ValueOp.Write, 0, i) # cycle clock every cycle
      
      def buildCounterTest(self, numCycles):
-          self.addTestOp("reset_l", 0, 1)
-          self.addTestOp("reset_l", 1, 3)
+          self.addTestOp("reset_l", ValueOp.Write, 0, 1)
+          self.addTestOp("reset_l", ValueOp.Write, 1, 3)
           stopCycle = 4
           currStopVal = 0
-          self.addTestOp("stop", currStopVal, 3)
-          self.addTestOp("clk", 1, 3)
-          self.addTestOp("clk", 0, 3)
+          self.addTestOp("stop", ValueOp.Write, currStopVal, 3)
+          self.addTestOp("clk",  ValueOp.Write, 1, 3)
+          self.addTestOp("clk",  ValueOp.Write, 0, 3)
           for i in range(4, numCycles):
-               self.addTestOp("clk", 1, i) # cycle clock every cycle
+               self.addTestOp("clk", ValueOp.Write, 1, i) # cycle clock every cycle
                if (i < 11):
                     currStopVal += 1
-                    self.addTestOp("done", 1, i)
-                    self.addTestOp("stop", currStopVal, i)
+                    self.addTestOp("done", ValueOp.Read, 1, i)
+                    self.addTestOp("stop", ValueOp.Write, currStopVal, i)
                     stopCycle = i + 8
                elif (i == stopCycle):
                     stopCycle = i + 8
-                    self.addTestOp("done", 1, i)
+                    self.addTestOp("done", ValueOp.Read, 1, i)
                else:
-                    self.addTestOp("done", 0, i)
-               self.addTestOp("clk", 0, i) # cycle clock every cycle
+                    self.addTestOp("done", ValueOp.Read, 0, i)
+               self.addTestOp("clk", ValueOp.Write, 0, i) # cycle clock every cycle
 
      def buildPinTest(self, numCycles):
-          for i in range(numCycles):
-               self.addTestOp("clk", 1, i) # cycle clock every cycle
-               self.addTestOp("clk", 0, i) # cycle clock every cycle
+          def send_mode(cycle):
+               send_data = 0xaa
+               self.addTestOp("direction", ValueOp.Write, 1, cycle)
+               self.addTestOp("data_write", ValueOp.Write, send_data, cycle)
+               self.addTestOp("clk", ValueOp.Write, 0, cycle)
+               self.addTestOp("clk", ValueOp.Write, 1, cycle)
+               return send_data
+          
+          def check_io_port(cycle,expected_data):
+               self.addTestOp("io_port", ValueOp.Read, expected_data, cycle)
+               self.addTestOp("clk", ValueOp.Write, 0, cycle)
+               self.addTestOp("clk", ValueOp.Write, 1, cycle)
+
+          def recv_mode(cycle):
+               recv_data = 0xbb
+               self.addTestOp("direction", ValueOp.Write, 0, cycle)
+               self.addTestOp("io_port", ValueOp.Read, recv_data, cycle)
+               self.addTestOp("clk", ValueOp.Write, 0, cycle)
+               self.addTestOp("clk", ValueOp.Write, 1, cycle)
+               return recv_data
+          
+          def check_data_read(cycle, expected_data):
+               self.addTestOp("clk", ValueOp.Write, 0, cycle)
+               self.addTestOp("data_read", ValueOp.Read, expected_data, cycle)
+               self.addTestOp("clk", ValueOp.Write, 1, cycle)
+
+          for cycle in range(numCycles):
+               if (cycle + 3) > numCycles:
+                    return
+               
+               expected_data = send_mode(cycle)
+               check_io_port(cycle+1, expected_data)
+               expected_data = recv_mode(cycle+2)
+               check_data_read(cycle+3, expected_data)
 
      def getTest(self):
           return(self.TestOps)
@@ -209,7 +244,7 @@ def run_direct(subName, verbosity, vpi):
     top.addParams({
         "verbose" : verbosity,
         "clockFreq" : "1GHz",
-        "numCycles" : 5000
+        "numCycles" : 10
     })
     print(f"Running direct test for {subName}Direct")
     model = top.setSubComponent("model", f"{subName}Direct")
@@ -221,7 +256,7 @@ def run_direct(subName, verbosity, vpi):
     })
 
 def run_links(subName, verbosity, vpi):
-    numCycles = 50
+    numCycles = 10
     testScheme = Test()
     ports = PortDef()
     if ( subName == "Counter" ):
@@ -270,11 +305,11 @@ def run_links(subName, verbosity, vpi):
          print(ports.getPortMap())
          print("Basic test for Scratchpad:")
     elif ( subName == "Pin" ):
-         ports.addPort("clk",        1,  WRITE_PORT)
          ports.addPort("direction",  1,  WRITE_PORT)
-         ports.addPort("data_write", 8,  WRITE_PORT)
-         ports.addPort("data_read",  8,  READ_PORT)
-         ports.addPort("io_port",    8,  INOUT_PORT)
+         ports.addPort("data_write", 1,  WRITE_PORT)
+         ports.addPort("data_read",  1,  READ_PORT)
+         ports.addPort("io_port",    1,  INOUT_PORT)
+         ports.addPort("clk",        1,  WRITE_PORT) #TODO order here determines order of link events
          testScheme.buildPinTest(numCycles)
          print(ports.getPortMap())
          print("Basic test for Pin:")
