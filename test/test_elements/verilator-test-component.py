@@ -53,11 +53,14 @@ class Test:
      def __init__(self):
           self.TestOps = [ ]
           self.randValues = queue.Queue()
+          self.directMode = 0
+          # direct mode ignores clk writes
 
      # Used for test ops that have a value <=64bit
      def addTestOp(self, portName, value, tick):
-          tmp = portName + ":" + str(value) + ":" + str(tick)
-          self.TestOps.append(tmp)
+          if (self.directMode == 0 or portName != "clk"):
+               tmp = portName + ":" + str(value) + ":" + str(tick)
+               self.TestOps.append(tmp)
 
      # Used for test ops that have values >64bit, requires a list of 64 bit values
      def addBigTestOp(self, portName, values, tick):
@@ -66,6 +69,9 @@ class Test:
                tmp += str(val) + ":"
           tmp += str(tick)
           self.TestOps.append(tmp)
+
+     def setDirectMode(self):
+          self.directMode = 1
 
      def buildScratchTest(self, numCycles):
           global SCRATCH_ADDR_BASE
@@ -140,6 +146,7 @@ class Test:
      
      def buildAccumTest(self, numCycles):
           global UINT64_MAX
+          self.addTestOp("reset_l", 1, 0)
           self.addTestOp("reset_l", 0, 1)
           self.addTestOp("reset_l", 1, 3)
           self.addTestOp("clk", 1, 3)
@@ -170,19 +177,25 @@ class Test:
                     self.addTestOp("en", 0, i)
                self.addTestOp("clk", 0, i) # cycle clock every cycle
      
-     def buildCounterTest(self, numCycles):
+     def buildCounterTest(self, numCycles, resetDelay):
+          self.addTestOp("reset_l", 1, 0)
           self.addTestOp("reset_l", 0, 1)
-          self.addTestOp("reset_l", 1, 3)
           stopCycle = 4
           currStopVal = 0
-          self.addTestOp("stop", currStopVal, 3)
           self.addTestOp("clk", 1, 3)
           self.addTestOp("clk", 0, 3)
+          if (resetDelay == 0):
+               self.addTestOp("reset_l", 1, 3+resetDelay)
+               self.addTestOp("stop", currStopVal, 3+resetDelay)
           for i in range(4, numCycles):
                self.addTestOp("clk", 1, i) # cycle clock every cycle
-               if (i < 11):
-                    currStopVal += 1
-                    self.addTestOp("done", 1, i)
+               if (resetDelay != 0 and i == 4):
+                    self.addTestOp("reset_l", 1, 3+resetDelay)
+                    self.addTestOp("stop", currStopVal, 3+resetDelay)
+               if (i < 11+resetDelay):
+                    if (i < 11):
+                         currStopVal += 1
+                         self.addTestOp("done", 1, i)
                     self.addTestOp("stop", currStopVal, i)
                     stopCycle = i + 8
                elif (i == stopCycle):
@@ -201,14 +214,37 @@ class Test:
           print(self.TestOps)
 
 def run_direct(subName, verbosity, vpi):
+    numCycles = 50
+    testScheme = Test()
+    # tell Test to ignore clk writes
+    testScheme.setDirectMode()
+    if ( subName == "Counter" ):
+         testScheme.buildCounterTest(numCycles, 1)
+         print("Basic test for Counter:")
+    elif ( subName == "Accum" ):
+         testScheme.buildAccumTest(numCycles)
+         print("Basic test for Accum:")
+    elif ( subName == "Accum1D" ):
+         testScheme.buildAccum1DTest(numCycles)
+         print("Basic test for Accum1D:")
+    elif ( subName == "UART" ):
+         print("No test for UART yet. . . ")
+         # nothing yet
+    elif ( subName == "Scratchpad" ):
+         testScheme.buildScratchTest(numCycles)
+         print("Basic test for Scratchpad:")
+
+    testScheme.printTest()
     top = sst.Component("top0", "verilatortestdirect.VerilatorTestDirect")
     top.addParams({
         "verbose" : verbosity,
         "clockFreq" : "1GHz",
-        "numCycles" : 5000
+        "testOps" : testScheme.getTest(),
+        "numCycles" : numCycles
     })
     print(f"Running direct test for {subName}Direct")
-    model = top.setSubComponent("model", f"{subName}Direct")
+    fullName = f"verilatorsst{subName}Direct.VerilatorSST{subName}"
+    model = top.setSubComponent("model", f"{fullName}Direct")
     model.addParams({
         "useVPI" : vpi,
         "clockFreq" : "1GHz",
@@ -225,7 +261,7 @@ def run_links(subName, verbosity, vpi):
          ports.addPort("reset_l", 1, WRITE_PORT)
          ports.addPort("stop",    1, WRITE_PORT)
          ports.addPort("done",    1, READ_PORT)
-         testScheme.buildCounterTest(numCycles)
+         testScheme.buildCounterTest(numCycles, 0)
          print(ports.getPortMap())
          print("Basic test for Counter:")
     elif ( subName == "Accum" ):
@@ -319,9 +355,9 @@ def main():
 
     if args.interface == "direct":
         subName = f"verilatorsst{args.model}Direct.VerilatorSST{args.model}"
-        run_direct(subName, verbosity, vpi)
+        run_direct(sub, verbosity, vpi)
     elif args.interface == "links":
-        subName = f"verilatorsst{args.model}.VerilatorSST{args.model}"
+        #subName = f"verilatorsst{args.model}.VerilatorSST{args.model}"
         run_links(sub, verbosity, vpi)
 
 if __name__ == "__main__":
