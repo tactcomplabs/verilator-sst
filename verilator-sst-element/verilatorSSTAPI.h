@@ -42,25 +42,32 @@ struct QueueEntry {
 // ---------------------------------------------------------------
 // PortEvent
 // ---------------------------------------------------------------
+
+enum class PortEventAction : uint8_t {
+  WRITE = 0b00000000,
+  READ  = 0b00000001
+};
+
 class PortEvent : public SST::Event{
 public:
   /// PortEvent: default constructor
   explicit PortEvent()
-    : Event(), AtTick(0x00ull) {
+    : Event(), AtTick(0x00ull), action(PortEventAction::READ) {
   }
 
-  explicit PortEvent(uint64_t Tick)
-    : Event(), AtTick(Tick) {
+  explicit PortEvent(uint64_t Tick, PortEventAction action)
+    : Event(), AtTick(Tick), action(action) {
   }
 
   explicit PortEvent(std::vector<uint8_t> P)
-    : Event(), AtTick(0x00ull) {
+    : Event(), AtTick(0x00ull), action(PortEventAction::WRITE) {
+    std::cout << "portevent P has size:" << P.size() << std::endl;
     std::copy(P.begin(), P.end(),
               std::back_inserter(Packet));
   }
 
   explicit PortEvent(std::vector<uint8_t> P, uint64_t Tick)
-    : Event(), AtTick(Tick) {
+    : Event(), AtTick(Tick), action(PortEventAction::WRITE) {
     std::copy(P.begin(), P.end(),
               std::back_inserter(Packet));
   }
@@ -71,11 +78,14 @@ public:
     return pe;
   }
 
+  /// PortEvent: retrieve the packet action
+  PortEventAction getAction() const { return action; }
+
   /// PortEvent: retrieve the target clock tick
-  uint64_t getAtTick() { return AtTick; }
+  uint64_t getAtTick() const { return AtTick; }
 
   /// PortEvent: retrieve the packet payload
-  const std::vector<uint8_t> getPacket() { return Packet; }
+  const std::vector<uint8_t> getPacket() const { return Packet; }
 
   /// PortEvent: set the target clock tick
   void setAtTick(uint64_t T) { AtTick = T; }
@@ -89,6 +99,7 @@ public:
 private:
   std::vector<uint8_t> Packet;  /// event packet
   uint64_t AtTick;              /// event at clock tick
+  PortEventAction action;            /// event action
 
 public:
   // PortEvent: event serializer
@@ -97,6 +108,7 @@ public:
     Event::serialize_order(ser);
     ser & Packet;
     ser & AtTick;
+    ser & action;
   }
 
   // PortEvent: implements the nic serialization
@@ -209,6 +221,10 @@ protected:
   SST::Output *output;        ///< VerilatorSST: SST output handler
   uint32_t verbosity;         ///< VerilatorSST: verbosity parameter
 
+private:
+
+  /// VerilatorSSTBase: handles write and read port events received from links
+  virtual void portEventHandler(const char * portName, SST::Event * ev, SST::Link * link ) = 0;
 };  // class VerilatorSST
 
 }  // namespace SST::VerilatorSST
