@@ -101,7 +101,10 @@ bool VerilatorTestDirect::clock(SST::Cycle_t currentCycle){
     }
     uint32_t bits = Width * Depth;
     std::vector<uint8_t> data;
-    if (direction == SST::VerilatorSST::VPortDirection::V_INPUT) {
+    const bool isWriteable = (static_cast<uint8_t>(direction) & static_cast<uint8_t>(SST::VerilatorSST::VPortDirection::V_INPUT)) > 0;
+    const bool isReadable = (static_cast<uint8_t>(direction) & static_cast<uint8_t>(SST::VerilatorSST::VPortDirection::V_OUTPUT)) > 0;
+
+    if (isWriteable) {
       // write to the port
       data = generateData(Width, Depth);
       if (bits < 9) {
@@ -115,7 +118,8 @@ bool VerilatorTestDirect::clock(SST::Cycle_t currentCycle){
       }
       model->writePort(i, data);
     }
-    else {
+
+    if (isReadable) {
       // read from the port
       data = model->readPort(i);
       if (bits < 9) {
