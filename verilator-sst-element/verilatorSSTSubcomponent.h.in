@@ -155,6 +155,9 @@ private:
   void writePortVPI(std::string PortName,
                     const std::vector<uint8_t>& Packet);
 
+  /// handles write and read port events received from links
+  virtual void portEventHandler(const char * portName, SST::Event * ev, SST::Link * link ) override;
+
   @VERILATOR_SST_PORT_IO_HANDLERS@
 
   @VERILATOR_SST_PORT_HANDLERS@

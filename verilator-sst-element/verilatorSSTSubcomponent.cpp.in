@@ -20,7 +20,7 @@ VerilatorSSTBase::VerilatorSSTBase( std::string DerivedName,
                                     ComponentId_t id, const Params& params )
   : SubComponent(id), output(nullptr){
   verbosity = params.find<uint32_t>("verbose");
-  std::string outStr = "[" + DerivedName + " @t]: ";
+  std::string outStr = "[" + DerivedName + " @f:@l:time=@t]: ";
   output = new SST::Output(outStr, verbosity, 0,
                            SST::Output::STDOUT);
 }
@@ -404,6 +404,32 @@ std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPort(std::string PortName
     const std::vector<uint8_t>& data = (*Func)(Top);
     return data;
   }
+}
+
+void VerilatorSST@VERILOG_DEVICE@::portEventHandler(const char * portName, SST::Event * ev, SST::Link * link ) {
+  const PortEvent * portEvent = static_cast<const PortEvent *>(ev);
+  output->output("portEventHandler portName=%s action=%llu atTick=%d\n",portName,static_cast<uint8_t>(portEvent->getAction()), portEvent->getAtTick());
+  if(portEvent->getAction() == PortEventAction::WRITE) {
+    if( portEvent->getAtTick() > 0 ){
+      writePortAtTick(portName,portEvent->getPacket(),portEvent->getAtTick());
+    }else{
+      writePort(portName,portEvent->getPacket());
+      Top->eval();
+    }
+    delete portEvent;
+    return;
+  }
+
+  if(portEvent->getAction() == PortEventAction::READ) {
+    const std::vector<uint8_t> packet = readPort(portName);
+    PortEvent * respPortEvent = new PortEvent(packet);
+    output->output("responding with packet: data=%x\n", packet[0]);
+    link->send(respPortEvent);
+    delete ev;
+    return;
+  }
+
+  output->fatal(CALL_INFO, -1, "received port event with unrecognized action. portName=%s action=%u\n",portName,static_cast<uint8_t>(portEvent->getAction()));
 }
 
 @VERILATOR_SST_PORT_IO_IMPLS@
