@@ -281,6 +281,9 @@ build_read() {
 			fi
 		fi
 	fi
+
+	# validate packet
+	echo "assert(d.size() > 0 && \"sending empty packet\");"
 }
 
 for IN in $INPUTS; do
