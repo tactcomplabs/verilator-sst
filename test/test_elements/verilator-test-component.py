@@ -273,6 +273,9 @@ def run_direct(subName, verbosity, vpi):
     elif ( subName == "Scratchpad" ):
          testScheme.buildScratchTest(numCycles)
          print("Basic test for Scratchpad:")
+    elif ( subName == "Pin" ):
+         testScheme.buildPinTest(numCycles)
+         print("Basic test for Pin:")
 
     testScheme.printTest()
     top = sst.Component("top0", "verilatortestdirect.VerilatorTestDirect")
