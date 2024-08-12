@@ -293,7 +293,7 @@ def run_direct(subName, verbosity, vpi):
     })
 
 def run_links(subName, verbosity, vpi):
-    numCycles = 10
+    numCycles = 50
     testScheme = Test()
     ports = PortDef()
     if ( subName == "Counter" ):
