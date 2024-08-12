@@ -443,7 +443,6 @@ void VerilatorSST@VERILOG_DEVICE@::portEventHandler(const char * portName, SST::
       writePortAtTick(portName,portEvent->getPacket(),portEvent->getAtTick());
     }else{
       writePort(portName,portEvent->getPacket());
-      Top->eval();
     }
     delete portEvent;
     return;
