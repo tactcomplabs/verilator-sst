@@ -61,7 +61,6 @@ public:
 
   explicit PortEvent(std::vector<uint8_t> P)
     : Event(), AtTick(0x00ull), action(PortEventAction::WRITE) {
-    std::cout << "portevent P has size:" << P.size() << std::endl;
     std::copy(P.begin(), P.end(),
               std::back_inserter(Packet));
   }
