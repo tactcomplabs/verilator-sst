@@ -227,24 +227,25 @@ class Test:
           def recv_mode(cycle):
                recv_data = 0xbb
                self.addTestOp("direction", ValueOp.Write, 0, cycle)
-               self.addTestOp("io_port", ValueOp.Read, recv_data, cycle)
+               self.addTestOp("io_port", ValueOp.Write, recv_data, cycle)
                self.addTestOp("clk", ValueOp.Write, 0, cycle)
                self.addTestOp("clk", ValueOp.Write, 1, cycle)
                return recv_data
           
           def check_data_read(cycle, expected_data):
-               self.addTestOp("clk", ValueOp.Write, 0, cycle)
                self.addTestOp("data_read", ValueOp.Read, expected_data, cycle)
+               self.addTestOp("clk", ValueOp.Write, 0, cycle)
                self.addTestOp("clk", ValueOp.Write, 1, cycle)
+          
+          # 1 iteration through all IO pin modes takes 4 cycles
+          numIterations = numCycles // 4
+          for iteration in range(1,numIterations):
+               currentCycle = iteration*4
 
-          for cycle in range(numCycles):
-               if (cycle + 3) > numCycles:
-                    return
-               
-               expected_data = send_mode(cycle)
-               check_io_port(cycle+1, expected_data)
-               expected_data = recv_mode(cycle+2)
-               check_data_read(cycle+3, expected_data)
+               expected_data = send_mode(currentCycle)
+               check_io_port(currentCycle+1, expected_data)
+               expected_data = recv_mode(currentCycle+2)
+               check_data_read(currentCycle+3, expected_data)
 
      def getTest(self):
           return(self.TestOps)
