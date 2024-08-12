@@ -220,10 +220,6 @@ protected:
   SST::Output *output;        ///< VerilatorSST: SST output handler
   uint32_t verbosity;         ///< VerilatorSST: verbosity parameter
 
-private:
-
-  /// VerilatorSSTBase: handles write and read port events received from links
-  virtual void portEventHandler(const char * portName, SST::Event * ev, SST::Link * link ) = 0;
 };  // class VerilatorSST
 
 }  // namespace SST::VerilatorSST

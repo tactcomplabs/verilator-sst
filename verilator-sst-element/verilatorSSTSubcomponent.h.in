@@ -156,7 +156,7 @@ private:
                     const std::vector<uint8_t>& Packet);
 
   /// handles write and read port events received from links
-  virtual void portEventHandler(const char * portName, SST::Event * ev, SST::Link * link ) override;
+  void portEventHandler(const char * portName, SST::Event * ev, SST::Link * link );
   
   /// check all inout __en bits match isEnabled argument 
   bool verifyInoutEnabledIs(const bool isEnabled, const std::string portName);
