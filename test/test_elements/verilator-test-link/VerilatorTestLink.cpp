@@ -173,7 +173,7 @@ bool VerilatorTestLink::ExecTestOp() {
         output.verbose( CALL_INFO, 4, 0, "byte %zu: %" PRIx8 "\n", i, Data[i] );
       }
       PortEvent * const opEvent = new PortEvent( Data );
-      Links[portId]->send( opEvent );//TODO need to know when we are reading or writing to a port
+      Links[portId]->send( opEvent );
     } else {
       output.verbose( CALL_INFO, 4, 0, "Data to be checked: size=%zu\n", Data.size() );
       for (size_t i=0; i<Data.size(); i++) {
@@ -244,7 +244,7 @@ bool VerilatorTestLink::clock(SST::Cycle_t currentCycle){
   }
   // drive the test links (including the clock)
   while ( ExecTestOp() ); 
-  currTick++; //TODO SST cycle !+ verilog tick
+  currTick++;
 
   return false;
 }
