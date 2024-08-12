@@ -37,6 +37,11 @@ option(ENABLE_CLK_HANDLING "Allows subcomponent to handle the clock port automat
 
 option(ENABLE_LINK_HANDLING "Automatically adds SST link definitions and configurations" ON)
 
+option(ENABLE_INOUT_HANDLING "Enables write/read access to verilog top module inout ports, requires Verilator 5.026" OFF)
+if(ENABLE_INOUT_HANDLING )
+  message(WARNING "Inout port handling requires Verilator 5.026 or later.")
+endif()
+
 set(CLOCK_PORT_NAME "clk" CACHE STRING "Name of the top-level module's clock port") #Defaults to "clk"
 
 #------------------------------------------------------------------

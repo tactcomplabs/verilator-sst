@@ -68,9 +68,16 @@ function(generate_verilator_component VERILOG_SOURCE
   print_encapsulated_message(${MESSAGE})
   message(STATUS "Building verilator source...")
   execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildVerilatorSrc.sh
-                            ${VERILOG_DEVICE} ${VERILOG_TOP} ${VERILOG_TOP_SOURCES}
+                            ${VERILOG_DEVICE} ${VERILOG_TOP} ${VERILOG_TOP_SOURCES} ${ENABLE_INOUT_HANDLING}
                     OUTPUT_VARIABLE VERILATOR_OUT
                     WORKING_DIRECTORY ${VERILOG_SOURCE})
+
+  execute_process(COMMAND ${VERILATORSST_SCRIPTS}/CheckInoutPorts.sh ${VTOP}
+                  TIMEOUT 1
+                  RESULT_VARIABLE CHECK_INOUT_FAIL)
+  if(CHECK_INOUT_FAIL)
+    message(WARNING "Inout ports will not be added to the subcomponent port list. Update to Verilator 5.026+ and enable ENABLE_INOUT_HANDLING.")
+  endif()
 
   message(STATUS "Building port definitions...")
   execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortDef.sh ${VTOP}
@@ -232,6 +239,10 @@ function(generate_verilator_component VERILOG_SOURCE
   PRIVATE ${VERILOG_SOURCE}/${VERILOG_DEVICE}/libVTop.a
           ${VERILOG_SOURCE}/${VERILOG_DEVICE}/libverilated.a
 )
+
+  if(ENABLE_INOUT_HANDLING)
+    add_compile_definitions(ENABLE_INOUT_HANDLING=1)
+  endif()
 
   include_directories(${VERILATORSST_EXTERNAL_INCLUDE})
   include_directories(${VERILOG_SOURCE}/${VERILOG_DEVICE})
