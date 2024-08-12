@@ -117,8 +117,8 @@ bool VerilatorTestDirect::ExecTestOp() {
     const uint32_t byteWidth = width / 8 + ( ( width % 8 == 0 ) ? 0 : 1 );
     uint32_t size = byteWidth * depth;
     //const bool writing = InfoVec[portId].Write;
-    VPortDirection portDirection;
-    model->getPortDirection(portName, portDirection);
+    VPortType portType;
+    model->getPortType(portName, portType);
     const bool writing = currOp.isWrite;
     const uint32_t nvals = size / 8;
     const uint64_t tick = currOp.AtTick; 

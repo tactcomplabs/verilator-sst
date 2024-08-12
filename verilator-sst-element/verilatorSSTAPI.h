@@ -18,14 +18,14 @@ namespace SST::VerilatorSST {
 // Data Structures
 // ---------------------------------------------------------------
 
-enum class VPortDirection : uint8_t {
-  V_INOUT  = 0b00000011,  /// VPortDirection: inout port
-  V_INPUT  = 0b00000010,  /// VPortDirection: input port
-  V_OUTPUT = 0b00000001,  /// VPortDirection: output port
+enum class VPortType : uint8_t {
+  V_INOUT  = 0b00000011,  /// VPortType: inout port
+  V_INPUT  = 0b00000010,  /// VPortType: input port
+  V_OUTPUT = 0b00000001,  /// VPortType: output port
 };
 
 #define V_NAME            0
-#define V_DIR             1
+#define V_TYPE             1
 #define V_WIDTH           2
 #define V_DEPTH           3
 #define V_WRITEFUNC       4
@@ -196,8 +196,8 @@ public:
   /// VerilatorSSTBase: retrieve a vector of all the port names
   virtual const std::vector<std::string> getPortsNames() = 0;
 
-  /// VerilatorSSTBase: retrieve the port direction of the target port
-  virtual bool getPortDirection(std::string PortName, VPortDirection& direction) = 0;
+  /// VerilatorSSTBase: retrieve the port type of the target port
+  virtual bool getPortType(std::string PortName, VPortType& direction) = 0;
 
   /// VerilatorSSTBase: retrieve the port width of the target port
   virtual bool getPortWidth(std::string PortName, unsigned& Width) = 0;

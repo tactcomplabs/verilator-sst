@@ -81,9 +81,9 @@ void VerilatorTestLink::InitPortMap( const SST::Params& params ) {
     }
     const long unsigned portId = std::stoul( vstr[1] );
     const long unsigned portSize = std::stoul( vstr[2] );
-    const long unsigned portDirection = std::stoul( vstr[3] );
-    const bool portIsWriteable = (static_cast<uint8_t>(portDirection) & static_cast<uint8_t>(VPortDirection::V_INPUT)) > 0;
-    const bool portIsReadable = (static_cast<uint8_t>(portDirection) & static_cast<uint8_t>(VPortDirection::V_OUTPUT)) > 0;
+    const long unsigned portType = std::stoul( vstr[3] );
+    const bool portIsWriteable = (static_cast<uint8_t>(portType) & static_cast<uint8_t>(VPortType::V_INPUT)) > 0;
+    const bool portIsReadable = (static_cast<uint8_t>(portType) & static_cast<uint8_t>(VPortType::V_OUTPUT)) > 0;
     PortMap[vstr[0]] = PortDef( portId, portSize, portIsWriteable, portIsReadable ); 
     InfoVec[portId].PortId = portId;
     InfoVec[portId].Size = portSize; 

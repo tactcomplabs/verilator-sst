@@ -189,8 +189,8 @@ const std::vector<std::string> VerilatorSST@VERILOG_DEVICE@::getPortsNames(){
   return Names;
 }
 
-bool VerilatorSST@VERILOG_DEVICE@::getPortDirection(std::string PortName,
-                                               SST::VerilatorSST::VPortDirection& direction){
+bool VerilatorSST@VERILOG_DEVICE@::getPortType(std::string PortName,
+                                               SST::VerilatorSST::VPortType& direction){
   unsigned Idx = 0;
   try{
     Idx = PortMap.at(PortName);
@@ -200,7 +200,7 @@ bool VerilatorSST@VERILOG_DEVICE@::getPortDirection(std::string PortName,
     return false;
   }
 
-  direction = std::get<V_DIR>(Ports[Idx]);
+  direction = std::get<V_TYPE>(Ports[Idx]);
   return true;
 }
 
@@ -363,9 +363,9 @@ void VerilatorSST@VERILOG_DEVICE@::writePort(std::string PortName,
   }
 
   // inout ports must be disabled before writing
-  VPortDirection portDirection;
-  getPortDirection(PortName, portDirection);
-  if(portDirection == VPortDirection::V_INOUT) {
+  VPortType portType;
+  getPortType(PortName, portType);
+  if(portType == VPortType::V_INOUT) {
     if(!ENABLE_INOUT_HANDLING) {
       output->output("inout port (%s) cannot be written, inout handling is disabled\n", PortName.c_str());
     }
@@ -408,9 +408,9 @@ std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPort(std::string PortName
   }
 
   // inout ports must be enabled before reading
-  VPortDirection portDirection;
-  getPortDirection(PortName, portDirection);
-  if(portDirection == VPortDirection::V_INOUT) {
+  VPortType portType;
+  getPortType(PortName, portType);
+  if(portType == VPortType::V_INOUT) {
     if(!ENABLE_INOUT_HANDLING) {
       output->output("inout port (%s) cannot be read, inout handling is disabled\n", PortName.c_str());
     }
