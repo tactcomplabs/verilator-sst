@@ -366,8 +366,12 @@ void VerilatorSST@VERILOG_DEVICE@::writePort(std::string PortName,
   VPortDirection portDirection;
   getPortDirection(PortName, portDirection);
   if(portDirection == VPortDirection::V_INOUT) {
+    if(!ENABLE_INOUT_HANDLING) {
+      output->output("inout port (%s) cannot be written, inout handling is disabled\n", PortName.c_str());
+    }
+
     if(!verifyInoutEnabledIs(false, PortName)) {
-      output->output("inout port (%s) cannot be written to, it is being driven by the top module\n",PortName.c_str());
+      output->output("inout port (%s) cannot be written, it is being driven by the top module\n", PortName.c_str());
     }
   }
 
@@ -407,8 +411,12 @@ std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPort(std::string PortName
   VPortDirection portDirection;
   getPortDirection(PortName, portDirection);
   if(portDirection == VPortDirection::V_INOUT) {
+    if(!ENABLE_INOUT_HANDLING) {
+      output->output("inout port (%s) cannot be read, inout handling is disabled\n", PortName.c_str());
+    }
+
     if(!verifyInoutEnabledIs(true, PortName)) {
-      output->output("inout port (%s) cannot be read from, it is not being driven by the top module\n",PortName.c_str());
+      output->output("inout port (%s) cannot be read, it is not being driven by the top module\n", PortName.c_str());
     }
 
     // redirect to __out port

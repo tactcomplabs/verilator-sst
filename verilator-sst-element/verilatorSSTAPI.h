@@ -10,6 +10,10 @@ namespace SST::VerilatorSST {
 #define VL_DEBUG 0
 #endif
 
+#ifndef ENABLE_INOUT_HANDLING
+#define ENABLE_INOUT_HANDLING 0
+#endif
+
 // ---------------------------------------------------------------
 // Data Structures
 // ---------------------------------------------------------------
