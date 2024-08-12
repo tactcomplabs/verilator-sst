@@ -12,10 +12,9 @@ LINK=$3
 CLKNAME=$4
 
 #-- Generate all the input signals
-INPUTS=`cat $Top | grep VL_IN | sed -n '/VL_INOUT/!p'`
-OUTPUTS=`cat $Top | grep VL_OUT`
-INOUTS=$(cat $Top | grep VL_INOUT)
-ALL="${INPUTS} ${OUTPUTS} ${INOUTS}"
+INPUTS=`cat $Top | grep VL_IN | sed -n '/VL_INOUT/!p' | sed -n '/__/!p'`
+OUTPUTS=`cat $Top | grep VL_OUT | sed -n '/__/!p'`
+ALL="${INPUTS} ${OUTPUTS}"
 
 #-- Generate all the inout signals
 for PORT in $ALL;do

@@ -8,10 +8,27 @@
 
 Top=$1
 
-#-- Generate all the input signals
-INPUTS=`cat $Top | grep VL_IN | sed -n '/VL_INOUT/!p'`
+INPUTS=`cat $Top | grep VL_IN | sed -n '/VL_INOUT/!p' | sed -n '/__/!p'`
 OUTPUTS=`cat $Top | grep VL_OUT`
-INOUTS=$(cat $Top | grep VL_INOUT)
+SAFE_OUTPUTS=$(echo $OUTPUTS | tr ' ' '\n' | sed -n '/__/!p' )
+
+#-- check for inout port pattern:
+# input  port
+# output port__out
+# output port__en
+for port in $INPUTS; do
+  port_name=$(echo $port | awk -F[\&,] '{print $2}')
+  port_out=$(echo $OUTPUTS | tr ' ' '\n' | grep "${port_name}__out")
+  port_en=$(echo $OUTPUTS | tr ' ' '\n' | grep "${port_name}__en")
+
+  if [[ ! -z "$port_out" ]] && [[ ! -z "$port_en" ]]
+  then 
+    INPUTS="${INPUTS//"$port"/}"
+    SAFE_OUTPUTS="${SAFE_OUTPUTS//"$port_out"/}"
+    SAFE_OUTPUTS="${SAFE_OUTPUTS//"$port_en"/}"
+    INOUTS="$INOUTS $port"
+  fi
+done
 
 for IN in $INPUTS;do
   NOPAREN=`sed 's/.*(\(.*\))/\1/' <<< $IN`
@@ -22,7 +39,7 @@ for IN in $INPUTS;do
 done;
 
 #-- Generate all the output signals
-for OUT in $OUTPUTS;do
+for OUT in $SAFE_OUTPUTS;do
   NOPAREN=`sed 's/.*(\(.*\))/\1/' <<< $OUT`
   NOPAREN2=`echo $NOPAREN | sed 's/)//'`
   REMDEPTH=`echo $NOPAREN2 | sed 's/\[[0-9]*\]//'`

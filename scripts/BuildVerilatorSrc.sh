@@ -11,7 +11,7 @@ SRC=$3
 
 echo "Executing verilator: "
 echo "    verilator --cc --vpi -Wall --Mdir $TARGETDIR --prefix VTop --top-module $TOP $SRC"
-verilator --cc --vpi --public-flat-rw -CFLAGS "-fPIC -std=c++17" --Mdir $TARGETDIR --prefix VTop --top-module $TOP $SRC
+verilator --cc --vpi --public-flat-rw --pins-inout-enables -CFLAGS "-fPIC -std=c++17" --Mdir $TARGETDIR --prefix VTop --top-module $TOP $SRC
 cd $TARGETDIR
 make -f VTop.mk
 

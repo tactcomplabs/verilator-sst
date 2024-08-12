@@ -9,10 +9,24 @@
 Top=$1
 Device=$2
 
-#-- Generate all the input signals
-INPUTS=$(cat $Top | grep VL_IN | sed -n '/VL_INOUT/!p' )
-OUTPUTS=$(cat $Top | grep VL_OUT)
-INOUTS=$(cat $Top | grep VL_INOUT)
+INPUTS=`cat $Top | grep VL_IN | sed -n '/VL_INOUT/!p'`
+OUTPUTS=`cat $Top | grep VL_OUT`
+
+#-- check for inout port pattern:
+# input  port
+# output port__out
+# output port__en
+for port in $INPUTS; do
+  port_name=$(echo $port | awk -F[\&,] '{print $2}')
+  port_out=$(echo $OUTPUTS | tr ' ' '\n' | grep "${port_name}__out")
+  port_en=$(echo $OUTPUTS | tr ' ' '\n' | grep "${port_name}__en")
+
+  if [[ ! -z "$port_out" ]] && [[ ! -z "$port_en" ]]
+  then 
+    INPUTS="${INPUTS//"$port"/}"
+    INOUTS="$INOUTS $port"
+  fi
+done
 
 build_write() {
 	SIGNAME=$1

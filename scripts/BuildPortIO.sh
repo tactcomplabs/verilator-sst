@@ -9,7 +9,7 @@
 Top=$1
 
 #-- Generate all the input signals
-INPUTS=`cat $Top | grep VL_IN`
+INPUTS=`cat $Top | grep VL_IN | sed -n '/VL_INOUT/!p'`
 OUTPUTS=`cat $Top | grep VL_OUT`
 
 # TODO: remove std::string param from direct read/write functions
