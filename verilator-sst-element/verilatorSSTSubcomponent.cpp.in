@@ -367,11 +367,11 @@ void VerilatorSST@VERILOG_DEVICE@::writePort(std::string PortName,
   getPortType(PortName, portType);
   if(portType == VPortType::V_INOUT) {
     if(!ENABLE_INOUT_HANDLING) {
-      output->output("inout port (%s) cannot be written, inout handling is disabled\n", PortName.c_str());
+      output->fatal(CALL_INFO,-1,"inout port (%s) cannot be written, inout handling is disabled\n", PortName.c_str());
     }
 
     if(!verifyInoutEnabledIs(false, PortName)) {
-      output->output("inout port (%s) cannot be written, it is being driven by the top module\n", PortName.c_str());
+      output->fatal(CALL_INFO,-1,"inout port (%s) cannot be written, it is being driven by the top module\n", PortName.c_str());
     }
   }
 
@@ -412,11 +412,11 @@ std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPort(std::string PortName
   getPortType(PortName, portType);
   if(portType == VPortType::V_INOUT) {
     if(!ENABLE_INOUT_HANDLING) {
-      output->output("inout port (%s) cannot be read, inout handling is disabled\n", PortName.c_str());
+      output->fatal(CALL_INFO, -1, "inout port (%s) cannot be read, inout handling is disabled\n", PortName.c_str());
     }
 
     if(!verifyInoutEnabledIs(true, PortName)) {
-      output->output("inout port (%s) cannot be read, it is not being driven by the top module\n", PortName.c_str());
+      output->fatal(CALL_INFO, -1, "inout port (%s) cannot be read, it is not being driven by the top module\n", PortName.c_str());
     }
 
     // redirect to __out port
@@ -452,7 +452,6 @@ void VerilatorSST@VERILOG_DEVICE@::portEventHandler(const char * portName, SST::
   if(portEvent->getAction() == PortEventAction::READ) {
     const std::vector<uint8_t> packet = readPort(portName);
     PortEvent * respPortEvent = new PortEvent(packet);
-    output->output("responding with packet: data=%x\n", packet[0]);
     link->send(respPortEvent);
     delete ev;
     return;
@@ -462,7 +461,6 @@ void VerilatorSST@VERILOG_DEVICE@::portEventHandler(const char * portName, SST::
 }
 
 bool VerilatorSST@VERILOG_DEVICE@::verifyInoutEnabledIs(const bool isEnabled, const std::string portName){
-  output->output("here %u\n",__LINE__);
   const std::string enPortName = portName + "__en";
   const std::vector<uint8_t> enPortData = readPort(enPortName);
   uint32_t bitCnt;
