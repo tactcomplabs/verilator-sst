@@ -20,7 +20,7 @@ UINT64_MAX = 0xffff_ffff_ffff_ffff
 SCRATCH_ADDR_BASE = 0x0300_0000_0000_0000
 SCRATCH_SIZE = 512 * 1024
 
-class ValueOp(Enum):
+class OpAction(Enum):
      Write = "write"
      Read  = "read"
 
@@ -62,14 +62,14 @@ class Test:
           # direct mode ignores clk writes
 
      # Used for test ops that have a value <=64bit
-     def addTestOp(self, portName, valueOp, value, tick):
+     def addTestOp(self, portName, action, value, tick):
           if (self.directMode == 0 or portName != "clk"):
-               tmp = portName + ":" + valueOp.value + ":" + str(value) + ":" + str(tick)
+               tmp = portName + ":" + action.value + ":" + str(value) + ":" + str(tick)
                self.TestOps.append(tmp)
 
      # Used for test ops that have values >64bit, requires a list of 64 bit values
-     def addBigTestOp(self, portName, valueOp, values, tick):
-          tmp = portName + ":" + valueOp.value + ":"
+     def addBigTestOp(self, portName, action, values, tick):
+          tmp = portName + ":" + action.value + ":"
           for val in values:
                tmp += str(val) + ":"
           tmp += str(tick)
@@ -82,7 +82,7 @@ class Test:
           global SCRATCH_ADDR_BASE
           global SCRATCH_SIZE
           for i in range(numCycles):
-               self.addTestOp("clk", ValueOp.Write, 1, i) # cycle clock every cycle
+               self.addTestOp("clk", OpAction.Write, 1, i) # cycle clock every cycle
                # setup different params based on cycles
                if (i % 20 == 1):
                     length = 3
@@ -98,39 +98,39 @@ class Test:
                     sizeToWrite = 1
                # setup different operations based on cycles (overlapping with the params)
                if (i % 5 == 1):
-                    self.addTestOp("write", ValueOp.Write, 1, i)
+                    self.addTestOp("write", OpAction.Write, 1, i)
                     randAddr = randIntBySize(8) % SCRATCH_SIZE # address is always 64 bit
                     self.randValues.put(randAddr)
-                    self.addTestOp("addr", ValueOp.Write, SCRATCH_ADDR_BASE + randAddr, i)
-                    self.addTestOp("len", ValueOp.Write, length, i)
+                    self.addTestOp("addr", OpAction.Write, SCRATCH_ADDR_BASE + randAddr, i)
+                    self.addTestOp("len", OpAction.Write, length, i)
                     randData = randIntBySize(sizeToWrite)
                     self.randValues.put(randData)
-                    self.addTestOp("wdata", ValueOp.Write, randData, i)
-                    self.addTestOp("en", ValueOp.Write, 1, i)
+                    self.addTestOp("wdata", OpAction.Write, randData, i)
+                    self.addTestOp("en", OpAction.Write, 1, i)
                elif (i % 5 == 2):
-                    self.addTestOp("en", ValueOp.Write, 0, i)
+                    self.addTestOp("en", OpAction.Write, 0, i)
                elif (i % 5 == 3):
-                    self.addTestOp("write", ValueOp.Write, 0, i)
+                    self.addTestOp("write", OpAction.Write, 0, i)
                     randAddr = self.randValues.get()
-                    self.addTestOp("addr", ValueOp.Write, SCRATCH_ADDR_BASE + randAddr, i)
-                    self.addTestOp("len", ValueOp.Write, length, i)
-                    self.addTestOp("en", ValueOp.Write, 1, i)
+                    self.addTestOp("addr", OpAction.Write, SCRATCH_ADDR_BASE + randAddr, i)
+                    self.addTestOp("len", OpAction.Write, length, i)
+                    self.addTestOp("en", OpAction.Write, 1, i)
                elif (i % 5 == 4):
                     randData = self.randValues.get()
-                    self.addTestOp("rdata", ValueOp.Read, randData, i)
-                    self.addTestOp("en", ValueOp.Write, 0, i)
-               self.addTestOp("clk", ValueOp.Write, 0, i)
+                    self.addTestOp("rdata", OpAction.Read, randData, i)
+                    self.addTestOp("en", OpAction.Write, 0, i)
+               self.addTestOp("clk", OpAction.Write, 0, i)
 
      def buildAccum1DTest(self, numCycles):
           global UINT64_MAX
-          self.addTestOp("reset_l", ValueOp.Write, 0, 1)
-          self.addTestOp("reset_l", ValueOp.Write, 1, 3)
-          self.addTestOp("clk", ValueOp.Write, 1, 3)
-          self.addTestOp("clk", ValueOp.Write, 0, 3)
+          self.addTestOp("reset_l", OpAction.Write, 0, 1)
+          self.addTestOp("reset_l", OpAction.Write, 1, 3)
+          self.addTestOp("clk", OpAction.Write, 1, 3)
+          self.addTestOp("clk", OpAction.Write, 0, 3)
           accum = [0, 0, 0, 0]
           bigAccum = 0
           for i in range(4, numCycles):
-               self.addTestOp("clk", ValueOp.Write, 1, i) # cycle clock every cycle
+               self.addTestOp("clk", OpAction.Write, 1, i) # cycle clock every cycle
                if (i % 3 == 1):
                     randDataLower = randIntBySize(8)
                     randDataUpper = randIntBySize(8)
@@ -141,27 +141,27 @@ class Test:
                     accum[1] = (bigAccum >> 64) & 0x0000_ffff_ffff_ffff_ffff
                     accum[2] = (bigAccum >> 128) & 0x0000_ffff_ffff_ffff_ffff
                     accum[3] = (bigAccum >> 192) & 0x0000_ffff_ffff_ffff_ffff
-                    self.addBigTestOp("add", ValueOp.Write, bigAdd, i)
-                    self.addTestOp("en", ValueOp.Write, 1, i)
+                    self.addBigTestOp("add", OpAction.Write, bigAdd, i)
+                    self.addTestOp("en", OpAction.Write, 1, i)
                elif (i % 3 == 2):
-                    self.addBigTestOp("accum", ValueOp.Read, accum, i)
-                    self.addTestOp("done", ValueOp.Read, 1, i)
-                    self.addTestOp("en", ValueOp.Write, 0, i)
-               self.addTestOp("clk", ValueOp.Write, 0, i) # cycle clock every cycle
+                    self.addBigTestOp("accum", OpAction.Read, accum, i)
+                    self.addTestOp("done", OpAction.Read, 1, i)
+                    self.addTestOp("en", OpAction.Write, 0, i)
+               self.addTestOp("clk", OpAction.Write, 0, i) # cycle clock every cycle
      
      def buildAccumTest(self, numCycles):
           global UINT64_MAX
-          self.addTestOp("reset_l", ValueOp.Write, 1, 0)
-          self.addTestOp("reset_l", ValueOp.Write, 0, 1)
-          self.addTestOp("reset_l", ValueOp.Write, 1, 3)
-          self.addTestOp("clk", ValueOp.Write, 1, 3)
-          self.addTestOp("clk", ValueOp.Write, 0, 3)
+          self.addTestOp("reset_l", OpAction.Write, 1, 0)
+          self.addTestOp("reset_l", OpAction.Write, 0, 1)
+          self.addTestOp("reset_l", OpAction.Write, 1, 3)
+          self.addTestOp("clk", OpAction.Write, 1, 3)
+          self.addTestOp("clk", OpAction.Write, 0, 3)
           accum = [0, 0, 0, 0]  # 32 bit each
           bigAccum = [0, 0] # 64 bit each
           add = [0, 0, 0, 0] # 16 bit each
           bigAdd = 0 # 64 bits
           for i in range(4, numCycles):
-               self.addTestOp("clk", ValueOp.Write, 1, i) # cycle clock every cycle
+               self.addTestOp("clk", OpAction.Write, 1, i) # cycle clock every cycle
                if (i % 3 == 1):
                     add[0] = randIntBySize(2)
                     add[1] = randIntBySize(2)
@@ -174,68 +174,68 @@ class Test:
                     accum[3] += add[3]
                     bigAccum[0] = accum[0] + (accum[1] << 32)
                     bigAccum[1] = accum[2] + (accum[3] << 32)
-                    self.addTestOp("add", ValueOp.Write, bigAdd, i)
-                    self.addTestOp("en", ValueOp.Write, 1, i)
+                    self.addTestOp("add", OpAction.Write, bigAdd, i)
+                    self.addTestOp("en", OpAction.Write, 1, i)
                elif (i % 3 == 2):
-                    self.addBigTestOp("accum", ValueOp.Read, bigAccum, i)
-                    self.addTestOp("done", ValueOp.Read, 1, i)
-                    self.addTestOp("en", ValueOp.Write, 0, i)
-               self.addTestOp("clk", ValueOp.Write, 0, i) # cycle clock every cycle
+                    self.addBigTestOp("accum", OpAction.Read, bigAccum, i)
+                    self.addTestOp("done", OpAction.Read, 1, i)
+                    self.addTestOp("en", OpAction.Write, 0, i)
+               self.addTestOp("clk", OpAction.Write, 0, i) # cycle clock every cycle
 
      def buildCounterTest(self, numCycles, resetDelay):
-          self.addTestOp("reset_l", ValueOp.Write, 1, 0)
-          self.addTestOp("reset_l", ValueOp.Write, 0, 1)
+          self.addTestOp("reset_l", OpAction.Write, 1, 0)
+          self.addTestOp("reset_l", OpAction.Write, 0, 1)
           stopCycle = 4
           currStopVal = 0
-          self.addTestOp("clk", ValueOp.Write, 1, 3)
-          self.addTestOp("clk", ValueOp.Write, 0, 3)
+          self.addTestOp("clk", OpAction.Write, 1, 3)
+          self.addTestOp("clk", OpAction.Write, 0, 3)
           if (resetDelay == 0):
-               self.addTestOp("reset_l", ValueOp.Write, 1, 3+resetDelay)
-               self.addTestOp("stop", ValueOp.Write, currStopVal, 3+resetDelay)
+               self.addTestOp("reset_l", OpAction.Write, 1, 3+resetDelay)
+               self.addTestOp("stop", OpAction.Write, currStopVal, 3+resetDelay)
           for i in range(4, numCycles):
-               self.addTestOp("clk", ValueOp.Write, 1, i) # cycle clock every cycle
+               self.addTestOp("clk", OpAction.Write, 1, i) # cycle clock every cycle
                if (resetDelay != 0 and i == 4):
-                    self.addTestOp("reset_l", ValueOp.Write, 1, 3+resetDelay)
-                    self.addTestOp("stop", ValueOp.Write, currStopVal, 3+resetDelay)
+                    self.addTestOp("reset_l", OpAction.Write, 1, 3+resetDelay)
+                    self.addTestOp("stop", OpAction.Write, currStopVal, 3+resetDelay)
                if (i < 11+resetDelay):
                     if (i < 11):
                          currStopVal += 1
-                         self.addTestOp("done", ValueOp.Read, 1, i)
-                    self.addTestOp("stop", ValueOp.Write, currStopVal, i)
+                         self.addTestOp("done", OpAction.Read, 1, i)
+                    self.addTestOp("stop", OpAction.Write, currStopVal, i)
                     stopCycle = i + 8
                elif (i == stopCycle):
                     stopCycle = i + 8
-                    self.addTestOp("done", ValueOp.Read, 1, i)
+                    self.addTestOp("done", OpAction.Read, 1, i)
                else:
-                    self.addTestOp("done", ValueOp.Read, 0, i)
-               self.addTestOp("clk", ValueOp.Write, 0, i) # cycle clock every cycle
+                    self.addTestOp("done", OpAction.Read, 0, i)
+               self.addTestOp("clk", OpAction.Write, 0, i) # cycle clock every cycle
 
      def buildPinTest(self, numCycles):
           def send_mode(cycle):
                send_data = 0xaa
-               self.addTestOp("direction", ValueOp.Write, 1, cycle)
-               self.addTestOp("data_write", ValueOp.Write, send_data, cycle)
-               self.addTestOp("clk", ValueOp.Write, 0, cycle)
-               self.addTestOp("clk", ValueOp.Write, 1, cycle)
+               self.addTestOp("direction", OpAction.Write, 1, cycle)
+               self.addTestOp("data_write", OpAction.Write, send_data, cycle)
+               self.addTestOp("clk", OpAction.Write, 0, cycle)
+               self.addTestOp("clk", OpAction.Write, 1, cycle)
                return send_data
           
           def check_io_port(cycle,expected_data):
-               self.addTestOp("io_port", ValueOp.Read, expected_data, cycle)
-               self.addTestOp("clk", ValueOp.Write, 0, cycle)
-               self.addTestOp("clk", ValueOp.Write, 1, cycle)
+               self.addTestOp("io_port", OpAction.Read, expected_data, cycle)
+               self.addTestOp("clk", OpAction.Write, 0, cycle)
+               self.addTestOp("clk", OpAction.Write, 1, cycle)
 
           def recv_mode(cycle):
                recv_data = 0xbb
-               self.addTestOp("direction", ValueOp.Write, 0, cycle)
-               self.addTestOp("io_port", ValueOp.Write, recv_data, cycle)
-               self.addTestOp("clk", ValueOp.Write, 0, cycle)
-               self.addTestOp("clk", ValueOp.Write, 1, cycle)
+               self.addTestOp("direction", OpAction.Write, 0, cycle)
+               self.addTestOp("io_port", OpAction.Write, recv_data, cycle)
+               self.addTestOp("clk", OpAction.Write, 0, cycle)
+               self.addTestOp("clk", OpAction.Write, 1, cycle)
                return recv_data
           
           def check_data_read(cycle, expected_data):
-               self.addTestOp("data_read", ValueOp.Read, expected_data, cycle)
-               self.addTestOp("clk", ValueOp.Write, 0, cycle)
-               self.addTestOp("clk", ValueOp.Write, 1, cycle)
+               self.addTestOp("data_read", OpAction.Read, expected_data, cycle)
+               self.addTestOp("clk", OpAction.Write, 0, cycle)
+               self.addTestOp("clk", OpAction.Write, 1, cycle)
           
           # 1 iteration through all IO pin modes takes 4 cycles
           numIterations = numCycles // 4
