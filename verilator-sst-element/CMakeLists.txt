@@ -76,7 +76,7 @@ function(generate_verilator_component VERILOG_SOURCE
                   TIMEOUT 1
                   RESULT_VARIABLE CHECK_INOUT_FAIL)
   if(CHECK_INOUT_FAIL)
-    message(WARNING "Inout ports will not be added to the subcomponent port list. Update to Verilator 5.026+ and enable ENABLE_INOUT_HANDLING.")
+    message(WARNING "Inout ports will not be added to the subcomponent port list, set ENABLE_INOUT_HANDLING to add these to the subcomponent")
   endif()
 
   message(STATUS "Building port definitions...")

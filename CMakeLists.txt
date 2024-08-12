@@ -37,10 +37,7 @@ option(ENABLE_CLK_HANDLING "Allows subcomponent to handle the clock port automat
 
 option(ENABLE_LINK_HANDLING "Automatically adds SST link definitions and configurations" ON)
 
-option(ENABLE_INOUT_HANDLING "Enables write/read access to verilog top module inout ports, requires Verilator 5.026" OFF)
-if(ENABLE_INOUT_HANDLING )
-  message(WARNING "Inout port handling requires Verilator 5.026 or later.")
-endif()
+option(ENABLE_INOUT_HANDLING "Enables write/read access to verilog top module inout ports, requires Verilator 5.026+" OFF)
 
 set(CLOCK_PORT_NAME "clk" CACHE STRING "Name of the top-level module's clock port") #Defaults to "clk"
 
@@ -74,6 +71,11 @@ string(REGEX REPLACE "^0+" " " VERILATOR_VERSION_MINOR ${VERILATOR_VERSION_MINOR
 
 if(${VERILATOR_VERSION_MAJOR} GREATER_EQUAL 5)
   if( ${VERILATOR_VERSION_MINOR} GREATER_EQUAL 22)
+    if( ENABLE_INOUT_HANDLING )
+      if (${VERILATOR_VERSION_MINOR} LESS 26)
+        message(FATAL_ERROR "[VERILATOR] ENABLE_INOUT_HANDLING requires Verilator version 5.026+, found ${VERILATOR_VERSION}")
+      endif()
+    endif()
     message(STATUS "[VERILATOR] Found verilator version ${VERILATOR_VERSION}")
   else()
     message(STATUS "[VERILATOR] Found verilator major version ${VERILATOR_VERSION_MAJOR}")
