@@ -12,6 +12,7 @@ import sst
 import argparse
 import queue
 import random
+import enum
 
 WRITE_PORT = "1"
 READ_PORT = "0"
@@ -19,6 +20,21 @@ UINT64_MAX = 0xffff_ffff_ffff_ffff
 SCRATCH_ADDR_BASE = 0x0300_0000_0000_0000
 SCRATCH_SIZE = 512 * 1024
 
+class VerboseMasking(Enum):
+     WRITE_EVENT  = 0b1
+     READ_EVENT   = 0b10
+     ALL_EVENTS   = 0b11
+     WRITE_PORT   = 0b100
+     READ_PORT    = 0b1000
+     INOUT_PORT   = 0b10000
+     ALL_PORTS    = 0b11100
+     READ_DATA    = 0b100000
+     WRITE_DATA   = 0b1000000
+     ALL_DATA     = 0b1100000
+     TEST_OP      = 0b10000000
+     WRITE_QUEUE  = 0b100000000
+     INIT         = 0b1000000000
+     FULL         = 0b1111111111
 class PortDef:
      """ Wrapper class to make port definitions cleaner """
      def __init__(self):
@@ -213,7 +229,7 @@ class Test:
      def printTest(self):
           print(self.TestOps)
 
-def run_direct(subName, verbosity, vpi):
+def run_direct(subName, verbosity, verbosityMask, vpi):
     numCycles = 50
     testScheme = Test()
     # tell Test to ignore clk writes
@@ -238,6 +254,7 @@ def run_direct(subName, verbosity, vpi):
     top = sst.Component("top0", "verilatortestdirect.VerilatorTestDirect")
     top.addParams({
         "verbose" : verbosity,
+        "verboseMask" : verbosityMask,
         "clockFreq" : "1GHz",
         "testOps" : testScheme.getTest(),
         "numCycles" : numCycles
@@ -252,7 +269,7 @@ def run_direct(subName, verbosity, vpi):
         #"resetVals" : ["reset_l:0", "clk:0", "add:16", "en:0"]
     })
 
-def run_links(subName, verbosity, vpi):
+def run_links(subName, verbosity, verbosityMask, vpi):
     numCycles = 50
     testScheme = Test()
     ports = PortDef()
@@ -307,6 +324,7 @@ def run_links(subName, verbosity, vpi):
     tester = sst.Component("vtestLink0", "verilatortestlink.VerilatorTestLink")
     tester.addParams({
         "verbose" : verbosity,
+        "verboseMask" : verbosityMask,
         "clockFreq" : "1GHz",
         "num_ports" : ports.getNumPorts(),
         "portMap" : ports.getPortMap(),
@@ -346,6 +364,7 @@ def main():
         raise Exception("Unknown model selected")
 
     sub = args.model
+    verbosityMask = VerboseMasking().FULL #TODO: don't hardcode
     verbosity = args.verbose
     if (args.access == "vpi"):
         vpi = 1
@@ -354,11 +373,9 @@ def main():
 
 
     if args.interface == "direct":
-        subName = f"verilatorsst{args.model}Direct.VerilatorSST{args.model}"
-        run_direct(sub, verbosity, vpi)
+        run_direct(sub, verbosity, verbosityMask, vpi)
     elif args.interface == "links":
-        #subName = f"verilatorsst{args.model}.VerilatorSST{args.model}"
-        run_links(sub, verbosity, vpi)
+        run_links(sub, verbosity, verbosityMask, vpi)
 
 if __name__ == "__main__":
     main()

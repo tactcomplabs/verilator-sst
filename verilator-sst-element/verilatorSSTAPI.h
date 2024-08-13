@@ -14,6 +14,23 @@ namespace SST::VerilatorSST {
 // Data Structures
 // ---------------------------------------------------------------
 
+enum class Verbose_Types : uint32_t {
+   WRITE_EVENT  = 0b1,
+   READ_EVENT   = 0b10,
+   ALL_EVENTS   = 0b11,
+   WRITE_PORT   = 0b100,
+   READ_PORT    = 0b1000,
+   INOUT_PORT   = 0b10000,
+   ALL_PORTS    = 0b11100,
+   READ_DATA    = 0b100000,
+   WRITE_DATA   = 0b1000000,
+   ALL_DATA     = 0b1100000,
+   TEST_OP      = 0b10000000,
+   WRITE_QUEUE  = 0b100000000,
+   INIT         = 0b1000000000,
+   FULL         = 0b1111111111
+}
+
 enum class VPortType : uint8_t {
   V_INPUT = 0b00000000,  /// VPortType: input port
   V_OUTPUT = 0b00000001, /// VPortType: output port
