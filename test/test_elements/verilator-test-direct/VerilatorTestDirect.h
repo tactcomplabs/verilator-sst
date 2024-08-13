@@ -36,13 +36,14 @@ struct TestOp {
   std::string PortName;
   uint64_t * Values;
   uint64_t AtTick;
+  bool isWrite; //TODO same code in VerilatorTestLInk.h
 
   // Default constructor
-  TestOp() : PortName(), Values( nullptr ), AtTick( 0 ) { }
+  TestOp() : PortName( 0 ), isWrite(false), Values( nullptr ), AtTick( 0 ) { }
 
   // Full constructor
-  TestOp( const std::string & PortName, uint64_t * const Values, uint64_t AtTick ) :
-          PortName( PortName ), Values( Values ), AtTick( AtTick ) { }
+  TestOp( const std::string PortName, bool isWrite, uint64_t * Values, uint64_t AtTick ) : 
+          PortName( PortName ), isWrite(isWrite), Values( Values ), AtTick( AtTick ) { }
 };
 
 class VerilatorTestDirect : public SST::Component {
@@ -81,6 +82,7 @@ public:
     splitStr( StrOp, ':', op );
     uint32_t width;
     uint32_t depth;
+    const bool isWrite = strcmp(op[1].c_str(), "write") == 0;
     model->getPortWidth(op[0], width); // in bits
     const uint32_t byteWidth = ( width / 8 ) + ( ( width % 8 == 0 ) ? 0 : 1 );
     model->getPortDepth(op[0], depth);
@@ -89,17 +91,17 @@ public:
     const  uint32_t rem = (size % 8 == 0) ? 0 : 1;
     uint64_t * const values = new uint64_t[nvals+rem];
     for (size_t i=0; i<nvals; i++) {
-      const uint64_t val = std::stoull( op[1+i] );
+      const uint64_t val = std::stoull( op[2+i] );
       values[i] = val;
       size -= 8;
     }
     if ( rem ) {
-      const uint64_t val = std::stoull( op[1+nvals] );
+      const uint64_t val = std::stoull( op[2+nvals] );
       values[nvals] = val;
       nvals++;
     }
-    const uint64_t tick = std::stoull( op[1+nvals] );
-    const TestOp toRet( op[0], values, tick );
+    const uint64_t tick = std::stoull( op[2+nvals] );
+    const TestOp toRet( op[0], isWrite, values, tick );
     return toRet;
   }
 

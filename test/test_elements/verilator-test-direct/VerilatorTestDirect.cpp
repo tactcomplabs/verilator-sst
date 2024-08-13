@@ -119,7 +119,7 @@ bool VerilatorTestDirect::ExecTestOp() {
     //const bool writing = InfoVec[portId].Write;
     VPortType portType;
     model->getPortType(portName, portType);
-    const bool writing = (portType == VPortType::V_INPUT);
+    const bool writing = currOp.isWrite;
     const uint32_t nvals = size / 8;
     const uint64_t tick = currOp.AtTick; 
     if ( currOp.AtTick > currTick ) {

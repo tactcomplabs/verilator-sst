@@ -20,7 +20,7 @@ VerilatorSSTBase::VerilatorSSTBase( std::string DerivedName,
                                     ComponentId_t id, const Params& params )
   : SubComponent(id), output(nullptr){
   verbosity = params.find<uint32_t>("verbose");
-  std::string outStr = "[" + DerivedName + " @t]: ";
+  std::string outStr = "[" + DerivedName + " @f:@l:time=@t]: ";
   output = new SST::Output(outStr, verbosity, 0,
                            SST::Output::STDOUT);
 }
@@ -190,7 +190,7 @@ const std::vector<std::string> VerilatorSST@VERILOG_DEVICE@::getPortsNames(){
 }
 
 bool VerilatorSST@VERILOG_DEVICE@::getPortType(std::string PortName,
-                                               SST::VerilatorSST::VPortType& Type){
+                                               SST::VerilatorSST::VPortType& direction){
   unsigned Idx = 0;
   try{
     Idx = PortMap.at(PortName);
@@ -200,7 +200,7 @@ bool VerilatorSST@VERILOG_DEVICE@::getPortType(std::string PortName,
     return false;
   }
 
-  Type = std::get<V_TYPE>(Ports[Idx]);
+  direction = std::get<V_TYPE>(Ports[Idx]);
   return true;
 }
 
@@ -362,6 +362,19 @@ void VerilatorSST@VERILOG_DEVICE@::writePort(std::string PortName,
                   PortName.c_str());
   }
 
+  // inout ports must be disabled before writing
+  VPortType portType;
+  getPortType(PortName, portType);
+  if(portType == VPortType::V_INOUT) {
+    if(!ENABLE_INOUT_HANDLING) {
+      output->fatal(CALL_INFO,-1,"inout port (%s) cannot be written, inout handling is disabled\n", PortName.c_str());
+    }
+
+    if(!verifyInoutEnabledIs(false, PortName)) {
+      output->fatal(CALL_INFO,-1,"inout port (%s) cannot be written, it is being driven by the top module\n", PortName.c_str());
+    }
+  }
+
   // determine which write to use
   if( UseVPI ){
     writePortVPI(PortName, Packet);
@@ -394,7 +407,24 @@ std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPort(std::string PortName
                   PortName.c_str());
   }
 
-  // determine which write to use
+  // inout ports must be enabled before reading
+  VPortType portType;
+  getPortType(PortName, portType);
+  if(portType == VPortType::V_INOUT) {
+    if(!ENABLE_INOUT_HANDLING) {
+      output->fatal(CALL_INFO, -1, "inout port (%s) cannot be read, inout handling is disabled\n", PortName.c_str());
+    }
+
+    if(!verifyInoutEnabledIs(true, PortName)) {
+      output->fatal(CALL_INFO, -1, "inout port (%s) cannot be read, it is not being driven by the top module\n", PortName.c_str());
+    }
+
+    // redirect to __out port
+    const std::string outPortName = PortName + "__out";
+    return readPort(outPortName);
+  }
+
+  // determine which read to use
   if( UseVPI ){
     const std::vector<uint8_t>& data = readPortVPI(PortName);
     return data;
@@ -404,6 +434,25 @@ std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPort(std::string PortName
     const std::vector<uint8_t>& data = (*Func)(Top);
     return data;
   }
+}
+
+bool VerilatorSST@VERILOG_DEVICE@::verifyInoutEnabledIs(const bool isEnabled, const std::string portName){
+  const std::string enPortName = portName + "__en";
+  const std::vector<uint8_t> enPortData = readPort(enPortName);
+  uint32_t bitCnt;
+  getPortWidth(enPortName,bitCnt);
+  const uint32_t byteWidth = (bitCnt+7)/8;
+
+  for(size_t i=0; i<byteWidth; i++){
+    // all bits of inout port must be driven before valid read
+    const uint8_t mask = bitCnt > 7 ? 255 : (1 << bitCnt) - 1;
+    const bool allBitsAtLevel = isEnabled ? (enPortData[i] & mask) == mask : (enPortData[i] & mask) == 0;
+    bitCnt -= 8;
+
+    if (!allBitsAtLevel) return false;
+  }
+
+  return true;
 }
 
 @VERILATOR_SST_PORT_IO_IMPLS@

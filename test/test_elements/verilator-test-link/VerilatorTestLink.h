@@ -35,27 +35,29 @@ namespace SST::VerilatorSST {
 struct PortDef {
   uint32_t PortId;
   uint32_t Size;
-  bool Write; // true for writing (input) ports, false for reading (output) ports
+  bool Write;
+  bool Read;
 
   // Default constructor
-  PortDef() : PortId( 0 ), Size( 0 ), Write( false ) { }
+  PortDef() : PortId( 0 ), Size( 0 ), Write( false ), Read ( false ) { }
 
   // Full constructor
-  PortDef( uint32_t PortId, uint32_t Size, bool Write ) :
-              PortId( PortId ), Size( Size ), Write( Write ) { }
+  PortDef( uint32_t PortId, uint32_t Size, bool Write, bool Read ) :
+              PortId( PortId ), Size( Size ), Write( Write ), Read( Read ) { }
 };
 
 struct TestOp {
   uint32_t PortId;
   uint64_t * Values;
   uint64_t AtTick;
+  bool isWrite;
 
   // Default constructor
-  TestOp() : PortId( 0 ), Values( nullptr ), AtTick( 0 ) { }
+  TestOp() : PortId( 0 ), isWrite(false), Values( nullptr ), AtTick( 0 ) { }
 
   // Full constructor
-  TestOp( uint32_t PortId, uint64_t * Values, uint64_t AtTick ) : 
-          PortId( PortId ), Values( Values ), AtTick( AtTick ) { }
+  TestOp( uint32_t PortId, bool isWrite, uint64_t * Values, uint64_t AtTick ) : 
+          PortId( PortId ), isWrite(isWrite), Values( Values ), AtTick( AtTick ) { }
 };
 
 class VerilatorTestLink : public SST::Component {
@@ -92,6 +94,8 @@ public:
   const TestOp ConvertToTestOp( const std::string& StrOp ) {
     std::vector<std::string> op;
     splitStr( StrOp, ':', op );
+    const std::string portName = op[0];
+    const bool isWrite = strcmp(op[1].c_str(), "write") == 0;
     const PortDef portInfo = PortMap[op[0]];
     const uint32_t id = portInfo.PortId;
     uint32_t size = portInfo.Size;
@@ -99,17 +103,17 @@ public:
     const  uint32_t rem = (size % 8 == 0) ? 0 : 1;
     uint64_t * const values = new uint64_t[nvals+rem];
     for (size_t i=0; i<nvals; i++) {
-      const uint64_t val = std::stoull( op[1+i] );
+      const uint64_t val = std::stoull( op[2+i] );
       values[i] = val;
       size -= 8;
     }
     if ( rem ) {
-      const uint64_t val = std::stoull( op[1+nvals] );
+      const uint64_t val = std::stoull( op[2+nvals] );
       values[nvals] = val;
       nvals++;
     }
-    const uint64_t tick = std::stoull( op[1+nvals] );
-    const TestOp toRet( id, values, tick );
+    const uint64_t tick = std::stoull( op[2+nvals] );
+    const TestOp toRet( id, isWrite, values, tick );
     return toRet;
   }
 
