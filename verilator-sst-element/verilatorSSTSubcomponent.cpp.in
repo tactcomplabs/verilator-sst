@@ -436,29 +436,6 @@ std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPort(std::string PortName
   }
 }
 
-void VerilatorSST@VERILOG_DEVICE@::portEventHandler(const char * portName, SST::Event * ev, SST::Link * link ) {
-  const PortEvent * portEvent = static_cast<const PortEvent *>(ev);
-  if(portEvent->getAction() == PortEventAction::WRITE) {
-    if( portEvent->getAtTick() > 0 ){
-      writePortAtTick(portName,portEvent->getPacket(),portEvent->getAtTick());
-    }else{
-      writePort(portName,portEvent->getPacket());
-    }
-    delete portEvent;
-    return;
-  }
-
-  if(portEvent->getAction() == PortEventAction::READ) {
-    const std::vector<uint8_t> packet = readPort(portName);
-    PortEvent * respPortEvent = new PortEvent(packet);
-    link->send(respPortEvent);
-    delete ev;
-    return;
-  }
-
-  output->fatal(CALL_INFO, -1, "received port event with unrecognized action. portName=%s action=%u\n",portName,static_cast<uint8_t>(portEvent->getAction()));
-}
-
 bool VerilatorSST@VERILOG_DEVICE@::verifyInoutEnabledIs(const bool isEnabled, const std::string portName){
   const std::string enPortName = portName + "__en";
   const std::vector<uint8_t> enPortData = readPort(enPortName);

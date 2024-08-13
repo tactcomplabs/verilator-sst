@@ -154,9 +154,6 @@ private:
   /// VPI Write of Port
   void writePortVPI(std::string PortName,
                     const std::vector<uint8_t>& Packet);
-
-  /// handles write and read port events received from links
-  void portEventHandler(const char * portName, SST::Event * ev, SST::Link * link );
   
   /// check all inout __en bits match isEnabled argument 
   bool verifyInoutEnabledIs(const bool isEnabled, const std::string portName);
