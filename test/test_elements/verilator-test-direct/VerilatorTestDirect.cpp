@@ -8,6 +8,7 @@
 // See LICENSE in the top level directory for licensing details
 //
 
+#include "verilatorSSTAPI.h"
 #include "VerilatorTestDirect.h"
 #include <fstream>
 
@@ -17,8 +18,9 @@ VerilatorTestDirect::VerilatorTestDirect(SST::ComponentId_t id,
   : SST::Component( id ), NumCycles(1000), model(nullptr){
 
   const int Verbosity = params.find<int>( "verbose", 0 );
+  const VerboseMasking VerbosityMask = static_cast<VerboseMasking>( params.find<uint32_t>( "verboseMask", 0 ) );
   output.init( "VerilatorTestDirect[" + getName() + ":@p:@t]: ",
-               Verbosity, 0, SST::Output::STDOUT );
+               Verbosity, VerbosityMask, SST::Output::STDOUT );
 
   model = loadUserSubComponent<VerilatorSSTBase>("model");
   if( !model ){
@@ -35,7 +37,7 @@ VerilatorTestDirect::VerilatorTestDirect(SST::ComponentId_t id,
   registerAsPrimaryComponent();
   primaryComponentDoNotEndSim();
 
-  output.verbose( CALL_INFO, 1, 0, "Model construction complete\n" );
+  output.verbose( CALL_INFO, 1, INIT, "Model construction complete\n" );
 }
 
 VerilatorTestDirect::~VerilatorTestDirect(){
@@ -49,7 +51,7 @@ void VerilatorTestDirect::finish(){
 
 void VerilatorTestDirect::init( unsigned int phase ){
   if ( model ) {
-    output.verbose( CALL_INFO, 1, 0, "Initializing the Verilator model\n");
+    output.verbose( CALL_INFO, 1, VerboseMasking::INIT, "Initializing the Verilator model\n");
     model->init(phase);
   }
 }
@@ -103,7 +105,6 @@ void VerilatorTestDirect::InitTestOps( const SST::Params& params ) {
   }
 }
 
-// TODO: convert this function to use the test direct way of handling test ops
 bool VerilatorTestDirect::ExecTestOp() {
   if ( !OpQueue.empty() ) {
     const TestOp currOp = OpQueue.front();
@@ -150,20 +151,20 @@ bool VerilatorTestDirect::ExecTestOp() {
       Data.push_back( *currPtr );
     }
     if ( writing ) {
-      output.verbose( CALL_INFO, 4, 0, "Sending write on port %s: size=%zu\n", portName.c_str(), Data.size() );
+      output.verbose( CALL_INFO, 4, VerboseMasking::WRITE_EVENT, "Sending write on port %s: size=%zu\n", portName.c_str(), Data.size() );
       for (size_t i=0; i<Data.size(); i++) {
-        output.verbose( CALL_INFO, 4, 0, "byte %zu: %" PRIx8 "\n", i, Data[i] );
+        output.verbose( CALL_INFO, 4, VerboseMasking::WRITE_DATA, "byte %zu: %" PRIx8 "\n", i, Data[i] );
       }
       model->writePort(portName, Data);
     } else {
-      output.verbose( CALL_INFO, 4, 0, "Data to be checked: size=%zu\n", Data.size() );
+      output.verbose( CALL_INFO, 4, VerboseMasking::READ_EVENT, "Data to be checked: size=%zu\n", Data.size() );
       for (size_t i=0; i<Data.size(); i++) {
-        output.verbose( CALL_INFO, 4, 0, "byte %zu: %" PRIx8 "\n", i, Data[i] );
+        output.verbose( CALL_INFO, 4, VerboseMasking::READ_DATA, "byte %zu: %" PRIx8 "\n", i, Data[i] );
       }
       const std::vector<uint8_t> & ReadData = model->readPort(portName);
-      output.verbose( CALL_INFO, 4, 0, "Read data: size=%zu\n", ReadData.size() );
+      output.verbose( CALL_INFO, 4, VerboseMasking::READ_DATA, "Read data: size=%zu\n", ReadData.size() );
       for (size_t i=0; i<ReadData.size(); i++) {
-        output.verbose( CALL_INFO, 4, 0, "byte %zu: %" PRIx8 "\n", i, ReadData[i] );
+        output.verbose( CALL_INFO, 4, VerboseMasking::READ_DATA, "byte %zu: %" PRIx8 "\n", i, ReadData[i] );
       }
       if ( Data.size() != ReadData.size() ) {
         output.fatal(CALL_INFO, -1,
@@ -206,7 +207,7 @@ void VerilatorTestDirect::splitStr(const std::string& s,
 }
 
 bool VerilatorTestDirect::clock(SST::Cycle_t currentCycle){
-  output.verbose( CALL_INFO, 4, 0, "Clocking cycle %" PRIu64 "\n", currentCycle );
+  output.verbose( CALL_INFO, 4, VerboseMasking::CLOCK_INFO, "Clocking cycle %" PRIu64 "\n", currentCycle );
   if( currentCycle > NumCycles ){
     primaryComponentOKToEndSim();
     return true;

@@ -20,7 +20,7 @@ UINT64_MAX = 0xffff_ffff_ffff_ffff
 SCRATCH_ADDR_BASE = 0x0300_0000_0000_0000
 SCRATCH_SIZE = 512 * 1024
 
-class VerboseMasking(Enum):
+class VerboseMasking(enum.Enum):
      WRITE_EVENT  = 0b1
      READ_EVENT   = 0b10
      ALL_EVENTS   = 0b11
@@ -364,7 +364,7 @@ def main():
         raise Exception("Unknown model selected")
 
     sub = args.model
-    verbosityMask = VerboseMasking().FULL #TODO: don't hardcode
+    verbosityMask = VerboseMasking.FULL.value #TODO: don't hardcode
     verbosity = args.verbose
     if (args.access == "vpi"):
         vpi = 1
