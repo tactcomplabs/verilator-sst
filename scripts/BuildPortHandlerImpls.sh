@@ -11,18 +11,18 @@ Device=$2
 LINK=$3
 CLKNAME=$4
 
-INPUTS=`cat $Top | grep VL_IN | sed -n '/VL_INOUT/!p' | sed -n '/__/!p'`
-OUTPUTS=`cat $Top | grep VL_OUT | sed -n '/__/!p'`
+INPUTS=$(cat $Top | grep VL_IN | sed -n '/VL_INOUT/!p' | sed -n '/__/!p')
+OUTPUTS=$(cat $Top | grep VL_OUT | sed -n '/__/!p')
 
 #-- Generate all the input signals
-for INPUT in $INPUTS;do
-  NOPAREN=`sed 's/.*(\(.*\))/\1/' <<< $INPUT`
-  NOPAREN2=`echo $NOPAREN | sed 's/)//'`
-  REMDEPTH=`echo $NOPAREN2 | sed 's/\[[0-9]*\]//'`
-  SIGNAME=`echo $REMDEPTH | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g"`
+for INPUT in $INPUTS; do
+  NOPAREN=$(sed 's/.*(\(.*\))/\1/' <<<$INPUT)
+  NOPAREN2=$(echo $NOPAREN | sed 's/)//')
+  REMDEPTH=$(echo $NOPAREN2 | sed 's/\[[0-9]*\]//')
+  SIGNAME=$(echo $REMDEPTH | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g")
   HANDLER_IMPL="output->fatal(CALL_INFO, -1, \"received a input event, but link handling is disabled\");"
 
-  if (( $LINK > 0 )); then
+  if (($LINK > 0)); then
     HANDLER_IMPL="const PortEvent * portEvent = static_cast<const PortEvent *>(ev);
   if(portEvent->getAction() == PortEventAction::WRITE) {
     if( portEvent->getAtTick() > 0 ){
@@ -43,32 +43,32 @@ for INPUT in $INPUTS;do
   }
 
   output->fatal(CALL_INFO, -1, \"received port event with unrecognized action. portName=${SIGNAME} action=%u\n\",static_cast<uint8_t>(portEvent->getAction()));"
-fi
+  fi
 
-if [[ "${SIGNAME}" == "${CLKNAME}" ]]; then
-  HANDLER_IMPL="//clock handler
+  if [[ "${SIGNAME}" == "${CLKNAME}" ]]; then
+    HANDLER_IMPL="//clock handler
   const PortEvent * portEvent = static_cast<const PortEvent *>(ev);
   pollWriteQueue();
   writePort(${SIGNAME},portEvent->getPacket());
-  ContextP->timeInc(1);"
-  delete portEvent;
-fi
+  ContextP->timeInc(1);
+  delete portEvent;"
+  fi
 
-echo "void VerilatorSST${Device}::handle_${SIGNAME}(SST::Event* ev){
+  echo "void VerilatorSST${Device}::handle_${SIGNAME}(SST::Event* ev){
   ${HANDLER_IMPL}
 }
 "
-done;
+done
 
 #-- Generate all the output signals
-for OUTPUT in $OUTPUTS;do
-  NOPAREN=`sed 's/.*(\(.*\))/\1/' <<< $OUTPUT`
-  NOPAREN2=`echo $NOPAREN | sed 's/)//'`
-  REMDEPTH=`echo $NOPAREN2 | sed 's/\[[0-9]*\]//'`
-  SIGNAME=`echo $REMDEPTH | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g"`
+for OUTPUT in $OUTPUTS; do
+  NOPAREN=$(sed 's/.*(\(.*\))/\1/' <<<$OUTPUT)
+  NOPAREN2=$(echo $NOPAREN | sed 's/)//')
+  REMDEPTH=$(echo $NOPAREN2 | sed 's/\[[0-9]*\]//')
+  SIGNAME=$(echo $REMDEPTH | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g")
   HANDLER_IMPL="output->fatal(CALL_INFO, -1, \"received a input event, but link handling is disabled\");"
 
-  if (( $LINK > 0 )); then
+  if (($LINK > 0)); then
     HANDLER_IMPL="const PortEvent * portEvent = static_cast<const PortEvent *>(ev);
 
   if(portEvent->getAction() == PortEventAction::READ) {
@@ -80,12 +80,12 @@ for OUTPUT in $OUTPUTS;do
   }
 
   output->fatal(CALL_INFO, -1, \"received port event with unrecognized action. portName=${SIGNAME} action=%u\n\",static_cast<uint8_t>(portEvent->getAction()));"
-fi
+  fi
 
-echo "void VerilatorSST${Device}::handle_${SIGNAME}(SST::Event* ev){
+  echo "void VerilatorSST${Device}::handle_${SIGNAME}(SST::Event* ev){
   ${HANDLER_IMPL}
 }
 "
-done;
+done
 
 # -- EOF
