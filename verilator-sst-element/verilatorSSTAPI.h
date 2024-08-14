@@ -23,6 +23,10 @@ namespace SST::VerilatorSST {
 #define VL_DEBUG 0
 #endif
 
+#ifndef ENABLE_INOUT_HANDLING
+#define ENABLE_INOUT_HANDLING 0
+#endif
+
 // ---------------------------------------------------------------
 // Data Structures
 // ---------------------------------------------------------------
@@ -46,12 +50,13 @@ enum VerboseMasking {
 };
 
 enum class VPortType : uint8_t {
-  V_INPUT = 0b00000000,  /// VPortType: input port
-  V_OUTPUT = 0b00000001, /// VPortType: output port
+  V_INOUT  = 0b00000011,  /// VPortType: inout port
+  V_INPUT  = 0b00000010,  /// VPortType: input port
+  V_OUTPUT = 0b00000001,  /// VPortType: output port
 };
 
 #define V_NAME            0
-#define V_TYPE            1
+#define V_TYPE             1
 #define V_WIDTH           2
 #define V_DEPTH           3
 #define V_WRITEFUNC       4
@@ -72,25 +77,31 @@ struct QueueEntry {
 // ---------------------------------------------------------------
 // PortEvent
 // ---------------------------------------------------------------
+
+enum class PortEventAction : uint8_t {
+  WRITE = 0b00000000,
+  READ  = 0b00000001
+};
+
 class PortEvent : public SST::Event{
 public:
   /// PortEvent: default constructor
   explicit PortEvent()
-    : Event(), AtTick(0x00ull) {
+    : Event(), AtTick(0x00ull), action(PortEventAction::READ) {
   }
 
-  explicit PortEvent(uint64_t Tick)
-    : Event(), AtTick(Tick) {
+  explicit PortEvent(uint64_t Tick, PortEventAction action)
+    : Event(), AtTick(Tick), action(action) {
   }
 
   explicit PortEvent(std::vector<uint8_t> P)
-    : Event(), AtTick(0x00ull) {
+    : Event(), AtTick(0x00ull), action(PortEventAction::WRITE) {
     std::copy(P.begin(), P.end(),
               std::back_inserter(Packet));
   }
 
   explicit PortEvent(std::vector<uint8_t> P, uint64_t Tick)
-    : Event(), AtTick(Tick) {
+    : Event(), AtTick(Tick), action(PortEventAction::WRITE) {
     std::copy(P.begin(), P.end(),
               std::back_inserter(Packet));
   }
@@ -101,11 +112,14 @@ public:
     return pe;
   }
 
+  /// PortEvent: retrieve the packet action
+  PortEventAction getAction() const { return action; }
+
   /// PortEvent: retrieve the target clock tick
-  uint64_t getAtTick() { return AtTick; }
+  uint64_t getAtTick() const { return AtTick; }
 
   /// PortEvent: retrieve the packet payload
-  const std::vector<uint8_t> getPacket() { return Packet; }
+  const std::vector<uint8_t> getPacket() const { return Packet; }
 
   /// PortEvent: set the target clock tick
   void setAtTick(uint64_t T) { AtTick = T; }
@@ -119,6 +133,7 @@ public:
 private:
   std::vector<uint8_t> Packet;  /// event packet
   uint64_t AtTick;              /// event at clock tick
+  PortEventAction action;            /// event action
 
 public:
   // PortEvent: event serializer
@@ -127,6 +142,7 @@ public:
     Event::serialize_order(ser);
     ser & Packet;
     ser & AtTick;
+    ser & action;
   }
 
   // PortEvent: implements the nic serialization
@@ -212,7 +228,7 @@ public:
   virtual const std::vector<std::string> getPortsNames() = 0;
 
   /// VerilatorSSTBase: retrieve the port type of the target port
-  virtual bool getPortType(std::string PortName, VPortType& Type) = 0;
+  virtual bool getPortType(std::string PortName, VPortType& direction) = 0;
 
   /// VerilatorSSTBase: retrieve the port width of the target port
   virtual bool getPortWidth(std::string PortName, unsigned& Width) = 0;

@@ -9,14 +9,32 @@
 Top=$1
 Device=$2
 
-#-- Generate all the input signals
-INPUTS=$(cat $Top | grep VL_IN)
-OUTPUTS=$(cat $Top | grep VL_OUT)
+INPUTS=`cat $Top | grep VL_IN | sed -n '/VL_INOUT/!p'`
+OUTPUTS=`cat $Top | grep VL_OUT`
+
+#-- check for inout port pattern:
+# input  port
+# output port__out
+# output port__en
+for port in $INPUTS; do
+  port_name=$(echo $port | awk -F[\&,] '{print $2}')
+  port_out=$(echo $OUTPUTS | tr ' ' '\n' | grep "${port_name}__out")
+  port_en=$(echo $OUTPUTS | tr ' ' '\n' | grep "${port_name}__en")
+
+  if [[ ! -z "$port_out" ]] && [[ ! -z "$port_en" ]]
+  then 
+    INPUTS="${INPUTS//"$port"/}"
+    INOUTS="$INOUTS $port"
+  fi
+done
 
 build_write() {
-  SIGNAME=$1
-  WIDTH=$2
-  DEPTH=$3
+	SIGNAME=$1
+	WIDTH=$2
+	DEPTH=$3
+	
+	# validate packet
+	echo "assert(Packet.size() > 0 && \"received empty packet\");"
 
   if [ $WIDTH -lt 9 ]; then
     # less than a 8 bits
@@ -325,6 +343,31 @@ for OUT in $OUTPUTS; do
   build_read $SIGNAME $WIDTH $DEPTH
   echo "return d;"
   echo "}"
+done
+
+#-- Generate all the inout signals
+for INOUT in $INOUTS; do
+	NOPAREN=$(sed 's/.*(\(.*\))/\1/' <<<$INOUT)
+	NOPAREN2=$(echo $NOPAREN | sed 's/)//')
+	DEPTH=$(echo $NOPAREN2 | sed 's/[][]/ /g' | awk '{print $2}')
+	if [ -z "$DEPTH" ]; then
+		DEPTH=1
+	fi
+	REMDEPTH=$(echo $NOPAREN2 | sed 's/\[[0-9]*\]//')
+	SIGNAME=$(echo $REMDEPTH | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g")
+	ENDBIT=$(echo $REMDEPTH | sed "s/,/ /g" | awk '{print $2}')
+	STARTBIT=$(echo $REMDEPTH | sed "s/,/ /g" | awk '{print $3}' | sed "s/;//g")
+	ENDBIT=$(($ENDBIT + 1))
+	WIDTH=$(($ENDBIT - $STARTBIT))
+
+	echo "void VerilatorSST$Device::DirectWrite${SIGNAME}(VTop *T, const std::vector<uint8_t>& Packet){"
+	build_write $SIGNAME $WIDTH $DEPTH
+	echo "}"
+	echo "std::vector<uint8_t> VerilatorSST$Device::DirectRead${SIGNAME}(VTop *T){"
+	echo "std::vector<uint8_t> d;"
+	build_read $SIGNAME $WIDTH $DEPTH
+	echo "return d;"
+	echo "}"
 done
 
 # -- EOF

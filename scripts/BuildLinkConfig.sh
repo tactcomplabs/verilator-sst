@@ -9,9 +9,8 @@
 Top=$1
 Device=$2
 
-#-- Generate all the input signals
-INPUTS=`cat $Top | grep VL_IN`
-OUTPUTS=`cat $Top | grep VL_OUT`
+INPUTS=`cat $Top | grep VL_IN | sed -n '/VL_INOUT/!p' | sed -n '/__/!p'`
+OUTPUTS=`cat $Top | grep VL_OUT | sed -n '/__/!p'`
 
 for IN in $INPUTS;do
   NOPAREN=`sed 's/.*(\(.*\))/\1/' <<< $IN`

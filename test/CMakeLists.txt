@@ -97,6 +97,25 @@ generate_verilator_component(
   "Links"
 )
 
+if( ENABLE_INOUT_HANDLING )
+  generate_verilator_component(
+    ${CMAKE_CURRENT_SOURCE_DIR}/pin
+    "Pin"
+    "${CMAKE_CURRENT_SOURCE_DIR}/pin/Pin.sv"
+    "$PWD/tests/pin/Pin.sv"
+    "Pin"
+    "Links"
+  )
+  generate_verilator_component(
+    ${CMAKE_CURRENT_SOURCE_DIR}/pin
+    "Pin"
+    "${CMAKE_CURRENT_SOURCE_DIR}/pin/*.sv"
+    "$PWD/tests/pin/Pin.sv"
+    "Pin"
+    "Direct"
+  )
+endif()
+
 # ---------------------------------------------------------------------- #
 # Add the subdirectory containing the standalone elements used to test
 # the generated ones
@@ -125,4 +144,7 @@ add_verilatorsst_test(Accum)
 add_verilatorsst_test(Accum1D)
 add_verilatorsst_test(Scratchpad)
 add_verilatorsst_test(UART)
+if(ENABLE_INOUT_HANDLING)
+add_verilatorsst_test(Pin)
+endif()
 # EOF

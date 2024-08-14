@@ -104,7 +104,7 @@ public:
 
   /// retrieve the port type of the target port
   virtual bool getPortType(std::string PortName,
-                           SST::VerilatorSST::VPortType& Type) override;
+                           SST::VerilatorSST::VPortType& direction) override;
 
   /// retrieve the port width of the target port
   virtual bool getPortWidth(std::string PortName, unsigned& Width) override;
@@ -154,6 +154,9 @@ private:
   /// VPI Write of Port
   void writePortVPI(std::string PortName,
                     const std::vector<uint8_t>& Packet);
+  
+  /// check all inout __en bits match isEnabled argument 
+  bool verifyInoutEnabledIs(const bool isEnabled, const std::string portName);
 
   @VERILATOR_SST_PORT_IO_HANDLERS@
 
