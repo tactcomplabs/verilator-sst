@@ -159,7 +159,6 @@ build_write() {
         echo "T->$SIGNAME[$WORDS] = (tmp & S.getMask<uint32_t>());"
       fi
     fi
-    # TODO: may have to change order of word assignment
   fi
 }
 
