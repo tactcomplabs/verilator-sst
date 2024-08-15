@@ -22,6 +22,16 @@ In addition, there are two modes of reading/writing ports in the Verilated
 model: VPI and Direct. Direct reads/writes access the variables directly and
 may be faster than VPI. Both methods have consistent behavior.
 
+`inout` ports are accessible through the normal methods. Verilator
+virtually implements `inout` ports as an `input` port and two `output` ports. The two
+output ports are the `<inout_name>__en` port and the `<inout_name>__out`, used
+for checking whether the port is being driven by the model and reading the value,
+respectively. The input port is used for writing operations and uses the assigned 
+portname according to the verilog module. VerilatorSST abstracts these ports and
+internally checks on a read/write to the inout port whether or not the associated
+`__en` port is in the correct state. If it is not, the program will err out. As a
+result, inout ports should be read/written by their original names.
+
 ## Dependencies
 
 - [Verilator v5.022 or 5.026](https://github.com/verilator/verilator/releases/tag/v5.022) (5.026 is required for inout port support)
@@ -62,6 +72,7 @@ and use the relevant test component to verify their functionality.
 -DENABLE_CLK_HANDLING=ON # Generates automatic clock port handling (for C++ API interface)
 -DENABLE_LINK_HANDLING=ON # Generates links and link handlers (on by default)
 -DCLOCK_PORT_NAME=<name of clock port> # Defaults to "clk", used with ENABLE_LINK_HANDLING
+-DENABLE_INOUT_HANDLING=ON # Allows designs with inout ports (requires Verilator 5.026 or greater)
 ```
 
 ## Debug
@@ -69,20 +80,3 @@ and use the relevant test component to verify their functionality.
 ```bash
 cmake -DCMAKE_BUILD_TYPE=Debug ../ #instead of cmake ../
 ```
-
-## Dev notes
-
-### Verilog memory order
-
-The index order of Verilog vectors is dependent on how the index bounds are defined. They can be either ascending or descending order. Below, mem1 is defined in ascending order, and mem2 in descending. 
-
-```
-top.v
-reg [B-1:0] mem1 [0:D] //ascending
-reg [B-1:0] mem2 [D:0] //descending
-```
-
-When accessing a descending vector via `Signal::getUIntVector<>()`, the return array indices will be reversed. `mem2_cpp[0] == mem2[D]`. 
-
-> Conventionally, vectors index ranges are defined in ascending order.
-
