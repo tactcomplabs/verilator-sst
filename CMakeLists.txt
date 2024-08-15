@@ -112,7 +112,6 @@ execute_process(COMMAND sst-config --ELEMENT_CXXFLAGS
                 OUTPUT_VARIABLE SST_CXXFLAGS
                 OUTPUT_STRIP_TRAILING_WHITESPACE
 )
-set(CXXFLAGS "${SST_CXXFLAGS}  -fno-stack-protector") #TODO: ask john about this, appears to be overwritten by line 111
 execute_process(COMMAND sst-config --ELEMENT_LDFLAGS
                 OUTPUT_VARIABLE SST_LDFLAGS
                 OUTPUT_STRIP_TRAILING_WHITESPACE
