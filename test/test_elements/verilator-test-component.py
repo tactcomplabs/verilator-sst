@@ -27,20 +27,20 @@ class OpAction(Enum):
      Read  = "read"
 
 class VerboseMasking(IntEnum):
-     WRITE_EVENT  = 0b1
-     READ_EVENT   = 0b10
-     ALL_EVENTS   = 0b11
-     WRITE_PORT   = 0b100
-     READ_PORT    = 0b1000
-     INOUT_PORT   = 0b10000
-     ALL_PORTS    = 0b11100
-     READ_DATA    = 0b100000
-     WRITE_DATA   = 0b1000000
-     ALL_DATA     = 0b1100000
-     TEST_OP      = 0b10000000
-     WRITE_QUEUE  = 0b100000000
-     INIT         = 0b1000000000
-     FULL         = 0b1111111111
+     WRITE_EVENT  = 0b0000_0000_0001
+     READ_EVENT   = 0b0000_0000_0010
+     ALL_EVENTS   = 0b0000_0000_0011
+     WRITE_PORT   = 0b0000_0000_0100
+     READ_PORT    = 0b0000_0000_1000
+     INOUT_PORT   = 0b0000_0001_0000
+     ALL_PORTS    = 0b0000_0001_1100
+     READ_DATA    = 0b0000_0010_0000
+     WRITE_DATA   = 0b0000_0100_0000
+     ALL_DATA     = 0b0000_0110_0000
+     TEST_OP      = 0b0000_1000_0000
+     WRITE_QUEUE  = 0b0001_0000_0000
+     INIT         = 0b0010_0000_0000
+     FULL         = 0b0011_1111_1111
 
 class PortDef:
      """ Wrapper class to make port definitions cleaner """
