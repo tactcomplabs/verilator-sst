@@ -35,10 +35,5 @@
 build/
 install/
 
-# Verilator build files
-VTop*
-verilatorSSTSubcomponent.cpp
-verilatorSSTSubcomponent.h
-
 # Misc
 .cache/clangd/index
