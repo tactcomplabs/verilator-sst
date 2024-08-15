@@ -13,8 +13,8 @@ import argparse
 import queue
 import random
 from enum import Enum
-INOUT_PORT = "3"import enum
 
+INOUT_PORT = "3"
 WRITE_PORT = "2"
 READ_PORT = "1"
 UINT64_MAX = 0xffff_ffff_ffff_ffff
@@ -25,7 +25,7 @@ class OpAction(Enum):
      Write = "write"
      Read  = "read"
 
-class VerboseMasking(enum.Enum):
+class VerboseMasking(Enum):
      WRITE_EVENT  = 0b1
      READ_EVENT   = 0b10
      ALL_EVENTS   = 0b11
