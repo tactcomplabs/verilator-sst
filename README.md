@@ -28,9 +28,10 @@ output ports are the `<inout_name>__en` port and the `<inout_name>__out`, used
 for checking whether the port is being driven by the model and reading the value,
 respectively. The input port is used for writing operations and uses the assigned 
 portname according to the verilog module. VerilatorSST abstracts these ports and
-internally checks on a read/write to the inout port whether or not the associated
-`__en` port is in the correct state. If it is not, the program will err out. As a
-result, inout ports should be read/written by their original names.
+internally checks if the signal is being driven by the verilated model on read/write.
+If it is not driven when a read occurs or is driven when a write occurs, 
+the program will err out. As a result, inout ports should be read/written
+by their original names.
 
 ## Dependencies
 
