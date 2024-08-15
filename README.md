@@ -34,10 +34,10 @@ result, inout ports should be read/written by their original names.
 
 ## Dependencies
 
-- [Verilator v5.022 or 5.026](https://github.com/verilator/verilator/releases/tag/v5.022) (5.026 is required for inout port support)
-- [SST 13.1.0](https://github.com/sstsimulator/sst-core/releases/tag/v13.1.0_Final)
-- Python (tested on 3.6.8 and 3.11.9)
-- CMake (tested on 3.24.2 and 3.30.2)
+- [Verilator >v5.022](https://github.com/verilator/verilator/releases/tag/v5.022) (5.026 is required for inout port support)
+- [SST >13.1.0](https://github.com/sstsimulator/sst-core/releases/tag/v13.1.0_Final)
+- Python (>3.6.8)
+- CMake (>3.24.2)
 
 ## Build
 
