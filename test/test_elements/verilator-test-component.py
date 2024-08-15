@@ -13,6 +13,7 @@ import argparse
 import queue
 import random
 from enum import Enum
+from enum import IntEnum
 
 INOUT_PORT = "3"
 WRITE_PORT = "2"
@@ -25,7 +26,7 @@ class OpAction(Enum):
      Write = "write"
      Read  = "read"
 
-class VerboseMasking(Enum):
+class VerboseMasking(IntEnum):
      WRITE_EVENT  = 0b1
      READ_EVENT   = 0b10
      ALL_EVENTS   = 0b11
@@ -409,6 +410,7 @@ def main():
     parser.add_argument("-i", "--interface", choices=["links", "direct"], default="links", help="Select the direct testing method or the SST::Link method")
     parser.add_argument("-v", "--verbose", choices=range(15), default=4, help="Set the level of verbosity used by the test components")
     parser.add_argument("-a", "--access", choices=["vpi", "direct"], default="direct", help="Select the method used by the subcomponent to read/write the verilated model's ports")
+    parser.add_argument("-k", "--mask", choices=[choice.name for choice in VerboseMasking], default="FULL")
 
     args = parser.parse_args()
 
@@ -416,7 +418,9 @@ def main():
         raise Exception("Unknown model selected")
 
     sub = args.model
-    verbosityMask = VerboseMasking.FULL.value #TODO: don't hardcode
+    chosenMask = args.mask
+    verbosityMask = VerboseMasking[chosenMask]
+    print("Using verbosityMask {}".format(verbosityMask))
     verbosity = args.verbose
     if (args.access == "vpi"):
         vpi = 1
