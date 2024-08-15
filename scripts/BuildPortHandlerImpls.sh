@@ -49,7 +49,7 @@ for INPUT in $INPUTS; do
     HANDLER_IMPL="//clock handler
   const PortEvent * portEvent = static_cast<const PortEvent *>(ev);
   pollWriteQueue();
-  writePort(${SIGNAME},portEvent->getPacket());
+  writePort(\"${SIGNAME}\",portEvent->getPacket());
   ContextP->timeInc(1);
   delete portEvent;"
   fi
