@@ -8,100 +8,90 @@
 # Build the test components
 # ------------------------------------------------ #
 generate_verilator_component(
-  ${CMAKE_CURRENT_SOURCE_DIR}/counter
   "Counter"
   "${CMAKE_CURRENT_SOURCE_DIR}/counter/Counter.v"
-  "$PWD/tests/counter/Counter.v"
+  "${CMAKE_CURRENT_SOURCE_DIR}/counter"
   "Counter"
   "Direct"
   "clk"
 )
 
 generate_verilator_component(
-  ${CMAKE_CURRENT_SOURCE_DIR}/counter
   "Counter"
   "${CMAKE_CURRENT_SOURCE_DIR}/counter/Counter.v"
-  "$PWD/tests/counter/Counter.v"
+  "${CMAKE_CURRENT_SOURCE_DIR}/counter"
   "Counter"
   "Links"
   "clk"
 )
 
 generate_verilator_component(
-  ${CMAKE_CURRENT_SOURCE_DIR}/accum
   "Accum"
   "${CMAKE_CURRENT_SOURCE_DIR}/accum/Accum.sv"
-  "$PWD/tests/accum/Accum.sv"
+  "${CMAKE_CURRENT_SOURCE_DIR}/accum"
   "Accum"
   "Direct"
   "clk"
 )
 
 generate_verilator_component(
-  ${CMAKE_CURRENT_SOURCE_DIR}/accum
   "Accum"
   "${CMAKE_CURRENT_SOURCE_DIR}/accum/Accum.sv"
-  "$PWD/tests/accum/Accum.sv"
+  "${CMAKE_CURRENT_SOURCE_DIR}/accum"
   "Accum"
   "Links"
   "clk"
 )
 
 generate_verilator_component(
-  ${CMAKE_CURRENT_SOURCE_DIR}/accum1D
   "Accum1D"
   "${CMAKE_CURRENT_SOURCE_DIR}/accum1D/Accum1D.sv"
-  "$PWD/tests/accum1D/Accum1D.sv"
+  "${CMAKE_CURRENT_SOURCE_DIR}/accum1D"
   "Accum1D"
   "Direct"
   "clk"
 )
 
 generate_verilator_component(
-  ${CMAKE_CURRENT_SOURCE_DIR}/accum1D
   "Accum1D"
   "${CMAKE_CURRENT_SOURCE_DIR}/accum1D/Accum1D.sv"
-  "$PWD/tests/accum1D/Accum1D.sv"
+  "${CMAKE_CURRENT_SOURCE_DIR}/accum1D"
   "Accum1D"
   "Links"
   "clk"
 )
 
 generate_verilator_component(
-  ${CMAKE_CURRENT_SOURCE_DIR}/scratchpad
   "Scratchpad"
   "${CMAKE_CURRENT_SOURCE_DIR}/scratchpad/Scratchpad.sv"
-  "$PWD/tests/scratchpad/*.sv"
+  "${CMAKE_CURRENT_SOURCE_DIR}/scratchpad"
   "Scratchpad"
   "Direct"
   "clk"
 )
 
 generate_verilator_component(
-  ${CMAKE_CURRENT_SOURCE_DIR}/scratchpad
   "Scratchpad"
   "${CMAKE_CURRENT_SOURCE_DIR}/scratchpad/Scratchpad.sv"
-  "$PWD/tests/scratchpad/*.sv"
+  "${CMAKE_CURRENT_SOURCE_DIR}/scratchpad"
   "Scratchpad"
   "Links"
   "clk"
 )
 
 generate_verilator_component(
-  ${CMAKE_CURRENT_SOURCE_DIR}/uart_mem
   "UART"
   "${CMAKE_CURRENT_SOURCE_DIR}/uart_mem/*.sv"
-  "$PWD/tests/uart_mem/UART.sv"
+  "${CMAKE_CURRENT_SOURCE_DIR}/uart_mem"
   "UART"
   "Direct"
   "clk"
 )
 
 generate_verilator_component(
-  ${CMAKE_CURRENT_SOURCE_DIR}/uart_mem
   "UART"
   "${CMAKE_CURRENT_SOURCE_DIR}/uart_mem/*.sv"
-  "$PWD/tests/uart_mem/UART.sv"
+  "${CMAKE_CURRENT_SOURCE_DIR}/uart_mem"
   "UART"
   "Links"
   "clk"
@@ -109,19 +99,17 @@ generate_verilator_component(
 
 if( ENABLE_INOUT_HANDLING )
   generate_verilator_component(
-    ${CMAKE_CURRENT_SOURCE_DIR}/pin
     "Pin"
     "${CMAKE_CURRENT_SOURCE_DIR}/pin/Pin.sv"
-    "$PWD/tests/pin/Pin.sv"
+    "${CMAKE_CURRENT_SOURCE_DIR}/pin"
     "Pin"
     "Links"
     "clk"
   )
   generate_verilator_component(
-    ${CMAKE_CURRENT_SOURCE_DIR}/pin
     "Pin"
     "${CMAKE_CURRENT_SOURCE_DIR}/pin/*.sv"
-    "$PWD/tests/pin/Pin.sv"
+    "${CMAKE_CURRENT_SOURCE_DIR}/pin"
     "Pin"
     "Direct"
     "clk"
