@@ -419,7 +419,7 @@ def main():
 
     sub = args.model
     chosenMask = args.mask
-    verbosityMask = VerboseMasking[chosenMask]
+    verbosityMask = VerboseMasking[chosenMask].value
     print("Using verbosityMask {}".format(verbosityMask))
     verbosity = args.verbose
     if (args.access == "vpi"):
