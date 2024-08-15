@@ -177,7 +177,7 @@ bool VerilatorTestLink::ExecTestOp() {
       PortEvent * const opEvent = new PortEvent( Data );
       Links[portId]->send( opEvent );
     } else {
-      output.verbose( CALL_INFO, 4, VerboseMasking::READ_EVENT, "Sending write on port%" PRIu32 "Data to be checked: size=%zu\n", portId, Data.size() );
+      output.verbose( CALL_INFO, 4, VerboseMasking::READ_EVENT, "Sending read on port%" PRIu32 ": size=%zu, data to be checked:\n", portId, Data.size() );
       for (size_t i=0; i<Data.size(); i++) {
         output.verbose( CALL_INFO, 4, VerboseMasking::READ_DATA, "byte %zu: %" PRIx8 "\n", i, Data[i] );
       }
