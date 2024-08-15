@@ -37,7 +37,7 @@ VerilatorTestDirect::VerilatorTestDirect(SST::ComponentId_t id,
   registerAsPrimaryComponent();
   primaryComponentDoNotEndSim();
 
-  output.verbose( CALL_INFO, 1, INIT, "Model construction complete\n" );
+  output.verbose( CALL_INFO, 1, VerboseMasking::INIT, "Model construction complete\n" );
 }
 
 VerilatorTestDirect::~VerilatorTestDirect(){
