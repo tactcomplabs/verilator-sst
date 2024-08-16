@@ -6,10 +6,11 @@
 #
 # See LICENSE in the top level directory for licensing details
 #
-function(print_verilator_variables VERILOG_TOP VERILOG_BUILD_DIR VERILOG_SOURCE_DIR VERILOG_TOP_SOURCES VERILOG_DEVICE VERILATOR_INCLUDE VERILATORSST_SCRIPTS)
+function(print_verilator_variables VERILOG_TOP VERILOG_BUILD_DIR VERILOG_SOURCE_DIR VERILOG_TOP_SOURCES VERILATOR_OPTIONS VERILOG_DEVICE VERILATOR_INCLUDE VERILATORSST_SCRIPTS)
   message(STATUS "==> VERILOG_TOP: ${VERILOG_TOP}")
   message(STATUS "==> VERILOG_BUILD_DIR: ${VERILOG_BUILD_DIR}")
   message(STATUS "==> VERILOG_SOURCE_DIR: ${VERILOG_SOURCE_DIR}")
+  message(STATUS "==> VERILATOR_OPTIONS: ${VERILATOR_OPTIONS}")
   message(STATUS "==> VERILOG_DEVICE: ${VERILOG_DEVICE}")
   message(STATUS "==> VERILOG_TOP_SOURCES: ${VERILOG_TOP_SOURCES}")
   message(STATUS "==> VERILATOR_INCLUDE: ${VERILATOR_INCLUDE}")
@@ -35,6 +36,7 @@ endfunction()
 # - VERILOG_TOP : name of the top module
 # - VERILOG_TOP_SOURCES : list of the top module files
 # - VERILOG_SOURCE_DIR : path to the verilog source
+# - VERILATOR_OPTIONS : verilator compilation options
 # - VERILOG_DEVICE : device name of the target verilog module
 # -----------------------------------------------------------------
 # NOTE: Link handling MUST NOT be used for verilator direct
@@ -45,6 +47,7 @@ endfunction()
 function(generate_verilator_component VERILOG_TOP
                                       VERILOG_TOP_SOURCES
                                       VERILOG_SOURCE_DIR
+                                      VERILATOR_OPTIONS
                                       VERILOG_DEVICE
                                       SST_INTERFACE
                                       CLOCK_PORT_NAME)
@@ -62,7 +65,7 @@ function(generate_verilator_component VERILOG_TOP
   set(VERILOG_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/${VERILOG_DEVICE})
 
   # Print out the values of the variables
-  print_verilator_variables(${VERILOG_TOP} ${VERILOG_BUILD_DIR} ${VERILOG_SOURCE_DIR} ${VERILOG_TOP_SOURCES} ${VERILOG_DEVICE} ${VERILATOR_INCLUDE} ${VERILATORSST_SCRIPTS})
+  print_verilator_variables(${VERILOG_TOP} ${VERILOG_BUILD_DIR} ${VERILOG_SOURCE_DIR} ${VERILOG_TOP_SOURCES} ${VERILATOR_OPTIONS} ${VERILOG_DEVICE} ${VERILATOR_INCLUDE} ${VERILATORSST_SCRIPTS})
   find_program(CLANG_FORMAT "clang-format")
   set(VTOP "${VERILOG_BUILD_DIR}/VTop.h")
   set(MESSAGE "GENERATING SST COMPONENT FOR VERILOG MODULE: ${VERILOG_TOP}")
