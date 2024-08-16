@@ -63,7 +63,7 @@ and use the relevant test component to verify their functionality.
 ### Build Options
 
 ```bash
--DVERILOG_SOURCE=<path to verilog source tree>
+-DVERILOG_SOURCE_DIR=<path to verilog source tree>
 -DVERILOG_DEVICE=<name of verilog device to simulate>
 -DVERILOG_TOP=<name of the top level verilog module>
 -DVERILOG_TOP_SOURCES=<list of verilog top source files>
