@@ -6,9 +6,10 @@
 #
 # See LICENSE in the top level directory for licensing details
 #
-function(print_verilator_variables VERILOG_SOURCE VERILOG_TOP VERILOG_TOP_SOURCES VERILATOR_OPTIONS VERILOG_DEVICE VERILATOR_INCLUDE VERILATORSST_SCRIPTS)
-  message(STATUS "==> VERILOG_SOURCE: ${VERILOG_SOURCE}")
+function(print_verilator_variables VERILOG_TOP VERILOG_BUILD_DIR VERILOG_SOURCE_DIR VERILOG_TOP_SOURCES VERILATOR_OPTIONS VERILOG_DEVICE VERILATOR_INCLUDE VERILATORSST_SCRIPTS)
   message(STATUS "==> VERILOG_TOP: ${VERILOG_TOP}")
+  message(STATUS "==> VERILOG_BUILD_DIR: ${VERILOG_BUILD_DIR}")
+  message(STATUS "==> VERILOG_SOURCE_DIR: ${VERILOG_SOURCE_DIR}")
   message(STATUS "==> VERILATOR_OPTIONS: ${VERILATOR_OPTIONS}")
   message(STATUS "==> VERILOG_DEVICE: ${VERILOG_DEVICE}")
   message(STATUS "==> VERILOG_TOP_SOURCES: ${VERILOG_TOP_SOURCES}")
@@ -32,9 +33,9 @@ endfunction()
 # -----------------------------------------------------------------
 # Generate the Verilator source
 # Relevant CMake variables:
-# - VERILOG_SOURCE : path to the verilog source
-# - VERILOG_TOP : names of the top modules
+# - VERILOG_TOP : name of the top module
 # - VERILOG_TOP_SOURCES : list of the top module files
+# - VERILOG_SOURCE_DIR : path to the verilog source
 # - VERILATOR_OPTIONS : verilator compilation options
 # - VERILOG_DEVICE : device name of the target verilog module
 # -----------------------------------------------------------------
@@ -43,9 +44,9 @@ endfunction()
 # -----------------------------------------------------------------
 # Generate the signals from the Verilator top module
 # -----------------------------------------------------------------
-function(generate_verilator_component VERILOG_SOURCE
-                                      VERILOG_TOP
+function(generate_verilator_component VERILOG_TOP
                                       VERILOG_TOP_SOURCES
+                                      VERILOG_SOURCE_DIR
                                       VERILATOR_OPTIONS
                                       VERILOG_DEVICE
                                       SST_INTERFACE
@@ -61,18 +62,19 @@ function(generate_verilator_component VERILOG_SOURCE
   else()
     message(FATAL_ERROR "Invalid SST_INTERFACE: ${SST_INTERFACE}")
   endif()
+  set(VERILOG_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/${VERILOG_DEVICE})
+
   # Print out the values of the variables
-  print_verilator_variables(${VERILOG_SOURCE} ${VERILOG_TOP} ${VERILOG_TOP_SOURCES} ${VERILATOR_OPTIONS} ${VERILOG_DEVICE} ${VERILATOR_INCLUDE} ${VERILATORSST_SCRIPTS})
+  print_verilator_variables(${VERILOG_TOP} ${VERILOG_BUILD_DIR} ${VERILOG_SOURCE_DIR} ${VERILOG_TOP_SOURCES} ${VERILATOR_OPTIONS} ${VERILOG_DEVICE} ${VERILATOR_INCLUDE} ${VERILATORSST_SCRIPTS})
   find_program(CLANG_FORMAT "clang-format")
-  set(VTOP "${VERILOG_SOURCE}/${VERILOG_DEVICE}/VTop.h")
+  set(VTOP "${VERILOG_BUILD_DIR}/VTop.h")
   set(MESSAGE "GENERATING SST COMPONENT FOR VERILOG MODULE: ${VERILOG_TOP}")
   print_encapsulated_message(${MESSAGE})
+
   message(STATUS "Building verilator source...")
   execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildVerilatorSrc.sh
-                            ${VERILOG_DEVICE} ${VERILOG_TOP} ${VERILOG_TOP_SOURCES} ${ENABLE_INOUT_HANDLING}
-                    OUTPUT_VARIABLE VERILATOR_OUT
-                    WORKING_DIRECTORY ${VERILOG_SOURCE})
-
+                    ${VERILOG_BUILD_DIR} ${VERILOG_SOURCE_DIR} ${VERILOG_TOP} ${VERILOG_TOP_SOURCES} ${ENABLE_INOUT_HANDLING}
+                    OUTPUT_VARIABLE VERILATOR_OUT)
   execute_process(COMMAND ${VERILATORSST_SCRIPTS}/CheckInoutPorts.sh ${VTOP}
                   TIMEOUT 1
                   RESULT_VARIABLE CHECK_INOUT_FAIL)
@@ -84,54 +86,54 @@ function(generate_verilator_component VERILOG_SOURCE
   execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortDef.sh ${VTOP}
                     OUTPUT_VARIABLE VERILATOR_SST_PORT_DEF
                     OUTPUT_STRIP_TRAILING_WHITESPACE
-                    WORKING_DIRECTORY ${VERILOG_SOURCE}/${VERILOG_DEVICE})
+                    WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
 
   message(STATUS "Building port entries...")
   execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortEntry.sh ${VTOP} ${VERILOG_DEVICE}
                     OUTPUT_VARIABLE VERILATOR_SST_PORT_ENTRY
                     OUTPUT_STRIP_TRAILING_WHITESPACE
-                    WORKING_DIRECTORY ${VERILOG_SOURCE}/${VERILOG_DEVICE})
+                    WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
   message(STATUS "Building port map...")
   execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortMap.sh ${VTOP}
                     OUTPUT_VARIABLE VERILATOR_SST_PORT_MAP
                     OUTPUT_STRIP_TRAILING_WHITESPACE
-                    WORKING_DIRECTORY ${VERILOG_SOURCE}/${VERILOG_DEVICE})
+                    WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
   message(STATUS "Building port handlers...")
   execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortHandlers.sh ${VTOP}
                     OUTPUT_VARIABLE VERILATOR_SST_PORT_HANDLERS
                     OUTPUT_STRIP_TRAILING_WHITESPACE
-                    WORKING_DIRECTORY ${VERILOG_SOURCE}/${VERILOG_DEVICE})
+                    WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
   message(STATUS "Building port IO...")
   execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortIO.sh ${VTOP}
                     OUTPUT_VARIABLE VERILATOR_SST_PORT_IO_HANDLERS
                     OUTPUT_STRIP_TRAILING_WHITESPACE
-                    WORKING_DIRECTORY ${VERILOG_SOURCE}/${VERILOG_DEVICE})
+                    WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
   message(STATUS "Building port IO implementations...")
   execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortIOImpls.sh ${VTOP} ${VERILOG_DEVICE}
                     OUTPUT_VARIABLE VERILATOR_SST_PORT_IO_IMPLS
                     OUTPUT_STRIP_TRAILING_WHITESPACE
-                    WORKING_DIRECTORY ${VERILOG_SOURCE}/${VERILOG_DEVICE})
+                    WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
   message(STATUS "Building port handler implementations...")
   if(ENABLE_LINK_HANDLING)
     execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortHandlerImpls.sh ${VTOP} ${VERILOG_DEVICE} 1 ${CLOCK_PORT_NAME}
                         OUTPUT_VARIABLE VERILATOR_SST_PORT_HANDLER_IMPLS
                         OUTPUT_STRIP_TRAILING_WHITESPACE
-                    WORKING_DIRECTORY ${VERILOG_SOURCE}/${VERILOG_DEVICE})
+                    WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
     message(STATUS "Building link definitions...")
     execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildLinkDef.sh ${VTOP}
                         OUTPUT_VARIABLE VERILATOR_SST_LINK_DEFS
                         OUTPUT_STRIP_TRAILING_WHITESPACE
-                    WORKING_DIRECTORY ${VERILOG_SOURCE}/${VERILOG_DEVICE})
+                    WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
     message(STATUS "Building link configurations...")
     execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildLinkConfig.sh ${VTOP} ${VERILOG_DEVICE}
                         OUTPUT_VARIABLE VERILATOR_SST_LINK_CONFIGS
                         OUTPUT_STRIP_TRAILING_WHITESPACE
-                    WORKING_DIRECTORY ${VERILOG_SOURCE}/${VERILOG_DEVICE})
+                    WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
   else()
     execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortHandlerImpls.sh ${VTOP} ${VERILOG_DEVICE} 0
                         OUTPUT_VARIABLE VERILATOR_SST_PORT_HANDLER_IMPLS
                         OUTPUT_STRIP_TRAILING_WHITESPACE
-                    WORKING_DIRECTORY ${VERILOG_SOURCE}/${VERILOG_DEVICE})
+                    WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
     set(VERILATOR_SST_LINK_DEFS "")
     set(VERILATOR_SST_LINK_CONFIGS "")
   endif()
@@ -155,7 +157,7 @@ function(generate_verilator_component VERILOG_SOURCE
     execute_process(COMMAND echo "// do nothing; link interface in use"
   OUTPUT_VARIABLE VERILATOR_SST_CLOCK_TICK
   OUTPUT_STRIP_TRAILING_WHITESPACE
-                    WORKING_DIRECTORY ${VERILOG_SOURCE}/${VERILOG_DEVICE})
+                    WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
   endif()
 
   # -----------------------------------------------------------------
@@ -163,12 +165,12 @@ function(generate_verilator_component VERILOG_SOURCE
   # -----------------------------------------------------------------
   configure_file(
     "${CMAKE_SOURCE_DIR}/verilator-sst-element/verilatorSSTSubcomponent.h.in"
-    "${VERILOG_SOURCE}/${VERILOG_DEVICE}/verilatorSSTSubcomponent.h"
+    "${VERILOG_BUILD_DIR}/verilatorSSTSubcomponent.h"
   )
 
   configure_file(
     "${CMAKE_SOURCE_DIR}/verilator-sst-element/verilatorSSTSubcomponent.cpp.in"
-    "${VERILOG_SOURCE}/${VERILOG_DEVICE}/verilatorSSTSubcomponent.cpp"
+    "${VERILOG_BUILD_DIR}/verilatorSSTSubcomponent.cpp"
   )
 
   # -----------------------------------------------------------------
@@ -176,8 +178,8 @@ function(generate_verilator_component VERILOG_SOURCE
   # -----------------------------------------------------------------
   if( CLANG_FORMAT )
     message(STATUS "[CLANG-FORMAT] Executing clang-format on generated source files")
-    execute_process(COMMAND ${CLANG_FORMAT} -i --assume-filename=${CMAKE_CURRENT_SOURCE_DIR}/.clang-format ${VERILOG_SOURCE}/${VERILOG_DEVICE}/verilatorSSTSubcomponent.cpp)
-    execute_process(COMMAND ${CLANG_FORMAT} -i --assume-filename=${CMAKE_CURRENT_SOURCE_DIR}/.clang-format ${VERILOG_SOURCE}/${VERILOG_DEVICE}/verilatorSSTSubcomponent.h)
+    execute_process(COMMAND ${CLANG_FORMAT} -i --assume-filename=${CMAKE_CURRENT_SOURCE_DIR}/.clang-format ${VERILOG_BUILD_DIR}/verilatorSSTSubcomponent.cpp)
+    execute_process(COMMAND ${CLANG_FORMAT} -i --assume-filename=${CMAKE_CURRENT_SOURCE_DIR}/.clang-format ${VERILOG_BUILD_DIR}/verilatorSSTSubcomponent.h)
   endif()
 
   # -----------------------------------------------------------------
@@ -221,8 +223,8 @@ function(generate_verilator_component VERILOG_SOURCE
   # -----------------------------------------------------------------
   set(targetName "verilatorsst${VERILOG_DEVICE}")
   set(verilatorSSTSrcs
-    ${VERILOG_SOURCE}/${VERILOG_DEVICE}/verilatorSSTSubcomponent.cpp
-    ${VERILOG_SOURCE}/${VERILOG_DEVICE}/verilatorSSTSubcomponent.h
+    ${VERILOG_BUILD_DIR}/verilatorSSTSubcomponent.cpp
+    ${VERILOG_BUILD_DIR}/verilatorSSTSubcomponent.h
     ${VERILATORSST_EXTERNAL_INCLUDE}/Signal.h
     ${VERILATORSST_EXTERNAL_INCLUDE}/Signal.cpp
     ${VERILATORSST_EXTERNAL_INCLUDE}/SST.h
@@ -232,13 +234,13 @@ function(generate_verilator_component VERILOG_SOURCE
   set_property(TARGET ${targetName} PROPERTY CXX_STANDARD 17)
   target_include_directories(${targetName}
                           PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-                                  ${CMAKE_CURRENT_SOURCE_DIR}/${VERILOG_DEVICE}
+                                  ${CMAKE_CURRENT_SOURCE_DIR}
                           PUBLIC ${SST_INSTALL_DIR}/include
                                  ${VERILATOR_INCLUDE}
                                  ${VERILATOR_INCLUDE}/vltstd)
   target_link_libraries(${targetName}
-  PRIVATE ${VERILOG_SOURCE}/${VERILOG_DEVICE}/libVTop.a
-          ${VERILOG_SOURCE}/${VERILOG_DEVICE}/libverilated.a
+  PRIVATE ${VERILOG_BUILD_DIR}/libVTop.a
+          ${VERILOG_BUILD_DIR}/libverilated.a
 )
 
   if(ENABLE_INOUT_HANDLING)
@@ -246,7 +248,7 @@ function(generate_verilator_component VERILOG_SOURCE
   endif()
 
   include_directories(${VERILATORSST_EXTERNAL_INCLUDE})
-  include_directories(${VERILOG_SOURCE}/${VERILOG_DEVICE})
+  include_directories(${VERILOG_BUILD_DIR})
 
   # -----------------------------------------------------------------
   # Install the source

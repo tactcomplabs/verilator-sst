@@ -19,7 +19,7 @@ project(verilatorSST CXX)
 #------------------------------------------------------------------
 # PROJECT ARGUMENTS
 #------------------------------------------------------------------
-option(VERILOG_SOURCE "../verilog" "Path to the verilog source tree")
+option(VERILOG_SOURCE_DIR "../verilog" "Path to the verilog source tree")
 
 option(VERILOG_DEVICE "Device" "Name of the verilog device being simulated")
 
