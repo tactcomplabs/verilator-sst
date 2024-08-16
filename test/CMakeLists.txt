@@ -14,6 +14,7 @@ generate_verilator_component(
   "$PWD/tests/counter/Counter.v"
   "Counter"
   "Direct"
+  "clk"
 )
 
 generate_verilator_component(
@@ -23,6 +24,7 @@ generate_verilator_component(
   "$PWD/tests/counter/Counter.v"
   "Counter"
   "Links"
+  "clk"
 )
 
 generate_verilator_component(
@@ -32,6 +34,7 @@ generate_verilator_component(
   "$PWD/tests/accum/Accum.sv"
   "Accum"
   "Direct"
+  "clk"
 )
 
 generate_verilator_component(
@@ -41,6 +44,7 @@ generate_verilator_component(
   "$PWD/tests/accum/Accum.sv"
   "Accum"
   "Links"
+  "clk"
 )
 
 generate_verilator_component(
@@ -50,6 +54,7 @@ generate_verilator_component(
   "$PWD/tests/accum1D/Accum1D.sv"
   "Accum1D"
   "Direct"
+  "clk"
 )
 
 generate_verilator_component(
@@ -59,6 +64,7 @@ generate_verilator_component(
   "$PWD/tests/accum1D/Accum1D.sv"
   "Accum1D"
   "Links"
+  "clk"
 )
 
 generate_verilator_component(
@@ -68,6 +74,7 @@ generate_verilator_component(
   "$PWD/tests/scratchpad/*.sv"
   "Scratchpad"
   "Direct"
+  "clk"
 )
 
 generate_verilator_component(
@@ -77,6 +84,7 @@ generate_verilator_component(
   "$PWD/tests/scratchpad/*.sv"
   "Scratchpad"
   "Links"
+  "clk"
 )
 
 generate_verilator_component(
@@ -86,6 +94,7 @@ generate_verilator_component(
   "$PWD/tests/uart_mem/UART.sv"
   "UART"
   "Direct"
+  "clk"
 )
 
 generate_verilator_component(
@@ -95,6 +104,7 @@ generate_verilator_component(
   "$PWD/tests/uart_mem/UART.sv"
   "UART"
   "Links"
+  "clk"
 )
 
 if( ENABLE_INOUT_HANDLING )
@@ -105,6 +115,7 @@ if( ENABLE_INOUT_HANDLING )
     "$PWD/tests/pin/Pin.sv"
     "Pin"
     "Links"
+    "clk"
   )
   generate_verilator_component(
     ${CMAKE_CURRENT_SOURCE_DIR}/pin
@@ -113,6 +124,7 @@ if( ENABLE_INOUT_HANDLING )
     "$PWD/tests/pin/Pin.sv"
     "Pin"
     "Direct"
+    "clk"
   )
 endif()
 

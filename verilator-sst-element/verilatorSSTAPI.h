@@ -1,3 +1,16 @@
+//
+// _verilatorSSTAPI_h_
+//
+// Copyright (C) 2017-2024 Tactical Computing Laboratories, LLC
+// All Rights Reserved
+// contact@tactcomplabs.com
+//
+// See LICENSE in the top level directory for licensing details
+//
+
+#ifndef _VERILATORSST_API_H_
+#define _VERILATORSST_API_H_
+
 #include "SST.h"
 namespace SST::VerilatorSST {
 
@@ -17,6 +30,24 @@ namespace SST::VerilatorSST {
 // ---------------------------------------------------------------
 // Data Structures
 // ---------------------------------------------------------------
+
+enum VerboseMasking {
+   WRITE_EVENT  = 0b00000000001,
+   READ_EVENT   = 0b00000000010,
+   ALL_EVENTS   = 0b00000000011,
+   WRITE_PORT   = 0b00000000100,
+   READ_PORT    = 0b00000001000,
+   INOUT_PORT   = 0b00000010000,
+   ALL_PORTS    = 0b00000011100,
+   READ_DATA    = 0b00000100000,
+   WRITE_DATA   = 0b00001000000,
+   ALL_DATA     = 0b00001100000,
+   TEST_OP      = 0b00010000000,
+   WRITE_QUEUE  = 0b00100000000,
+   INIT         = 0b01000000000,
+   CLOCK_INFO   = 0b10000000000,
+   FULL         = 0b11111111111
+};
 
 enum class VPortType : uint8_t {
   V_INOUT  = 0b00000011,  /// VPortType: inout port
@@ -227,3 +258,5 @@ protected:
 };  // class VerilatorSST
 
 }  // namespace SST::VerilatorSST
+
+#endif // _VERILATORSST_API_H_

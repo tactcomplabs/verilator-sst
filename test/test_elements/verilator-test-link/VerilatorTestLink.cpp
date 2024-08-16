@@ -8,6 +8,7 @@
 // See LICENSE in the top level directory for licensing details
 //
 
+#include "verilatorSSTAPI.h"
 #include "VerilatorTestLink.h"
 #include <fstream>
 
@@ -19,15 +20,16 @@ VerilatorTestLink::VerilatorTestLink(SST::ComponentId_t id,
     model(nullptr){
 
   const int Verbosity = params.find<int>( "verbose", 0 );
+  const VerboseMasking VerbosityMask = static_cast<VerboseMasking>( params.find<uint32_t>( "verboseMask", 0 ) );
   output.init( "VerilatorTestLink[" + getName() + ":@p:@t]: ",
-               Verbosity, 0, SST::Output::STDOUT );
+               Verbosity, VerbosityMask, SST::Output::STDOUT );
 
   model = loadUserSubComponent<VerilatorSSTBase>("model");
   if( !model ){
     primaryComponent = true;
-    output.verbose( CALL_INFO, 1, 0, "Registering as the primary component\n");
+    output.verbose( CALL_INFO, 1, VerboseMasking::INIT, "Registering as the primary component\n");
   }else{
-    output.verbose( CALL_INFO, 1, 0, "Registering as the Verilator host component\n");
+    output.verbose( CALL_INFO, 1, VerboseMasking::INIT, "Registering as the Verilator host component\n");
   }
   const int NumPorts = params.find<int>( "num_ports", 0 );
   InfoVec.resize( NumPorts );
@@ -46,7 +48,7 @@ VerilatorTestLink::VerilatorTestLink(SST::ComponentId_t id,
     primaryComponentDoNotEndSim();
   }
 
-  output.verbose( CALL_INFO, 1, 0, "Model construction complete\n" );
+  output.verbose( CALL_INFO, 1, VerboseMasking::INIT, "Model construction complete\n" );
 }
 
 VerilatorTestLink::~VerilatorTestLink(){
@@ -61,7 +63,7 @@ void VerilatorTestLink::finish(){
 
 void VerilatorTestLink::init( unsigned int phase ){
   if( model ){
-    output.verbose( CALL_INFO, 1, 0, "Initializing the Verilator model\n");
+    output.verbose( CALL_INFO, 1, VerboseMasking::INIT, "Initializing the Verilator model\n");
     model->init(phase);
   }
 }
@@ -70,7 +72,7 @@ void VerilatorTestLink::InitPortMap( const SST::Params& params ) {
   std::vector<std::string> optList;
   params.find_array( "portMap", optList );
   for( size_t i=0; i<optList.size(); i++ ){
-    output.verbose( CALL_INFO, 1, 0, "Port map entry: %s\n", optList[i].c_str() );
+    output.verbose( CALL_INFO, 1, VerboseMasking::INIT, "Port map entry: %s\n", optList[i].c_str() );
     std::vector<std::string> vstr;
     const std::string s = optList[i];
     splitStr(s, ':', vstr);
@@ -168,16 +170,16 @@ bool VerilatorTestLink::ExecTestOp() {
       Data.push_back( *currPtr );
     }
     if ( writing ) {
-      output.verbose( CALL_INFO, 4, 0, "Sending write on port%" PRIu32 ": size=%" PRIu32 "\n", portId, InfoVec[portId].Size );
+      output.verbose( CALL_INFO, 4, VerboseMasking::WRITE_EVENT, "Sending write on port%" PRIu32 ": size=%" PRIu32 "\n", portId, InfoVec[portId].Size );
       for (size_t i=0; i<Data.size(); i++) {
-        output.verbose( CALL_INFO, 4, 0, "byte %zu: %" PRIx8 "\n", i, Data[i] );
+        output.verbose( CALL_INFO, 4, VerboseMasking::WRITE_DATA, "byte %zu: %" PRIx8 "\n", i, Data[i] );
       }
       PortEvent * const opEvent = new PortEvent( Data );
       Links[portId]->send( opEvent );
     } else {
-      output.verbose( CALL_INFO, 4, 0, "Data to be checked: size=%zu\n", Data.size() );
+      output.verbose( CALL_INFO, 4, VerboseMasking::READ_EVENT, "Sending read on port%" PRIu32 ": size=%zu, data to be checked:\n", portId, Data.size() );
       for (size_t i=0; i<Data.size(); i++) {
-        output.verbose( CALL_INFO, 4, 0, "byte %zu: %" PRIx8 "\n", i, Data[i] );
+        output.verbose( CALL_INFO, 4, VerboseMasking::READ_DATA, "byte %zu: %" PRIx8 "\n", i, Data[i] );
       }
       ReadDataCheck.emplace( Data );
       PortEvent * const opEvent = new PortEvent();
@@ -215,9 +217,9 @@ void VerilatorTestLink::RecvPortEvent( SST::Event* ev, unsigned portId ) {
   PortEvent * readEvent = reinterpret_cast<PortEvent *>( ev );
   const std::vector<uint8_t>& ValidData = ReadDataCheck.front();
   const std::vector<uint8_t>& ReadData = readEvent->getPacket();
-  output.verbose( CALL_INFO, 4, 0, "Read data: size=%zu\n", ReadData.size() );
+  output.verbose( CALL_INFO, 4, VerboseMasking::READ_DATA, "Read data: size=%zu\n", ReadData.size() );
   for (size_t i=0; i<ReadData.size(); i++) {
-    output.verbose( CALL_INFO, 4, 0, "byte %zu: %" PRIx8 "\n", i, ReadData[i] );
+    output.verbose( CALL_INFO, 4, VerboseMasking::READ_DATA, "byte %zu: %" PRIx8 "\n", i, ReadData[i] );
   }
   if ( ValidData.size() != ReadData.size() ) {
     output.fatal(CALL_INFO, -1,
@@ -236,9 +238,9 @@ void VerilatorTestLink::RecvPortEvent( SST::Event* ev, unsigned portId ) {
 }
 
 bool VerilatorTestLink::clock(SST::Cycle_t currentCycle){
-  output.verbose( CALL_INFO, 4, 0, "Clocking cycle %" PRIu64 "\n", currentCycle );
+  output.verbose( CALL_INFO, 4, VerboseMasking::CLOCK_INFO, "Clocking cycle %" PRIu64 "\n", currentCycle );
   if( currentCycle > NumCycles ){
-    output.verbose( CALL_INFO, 4, 0, "Cycle limit reached; ending sim\n" );
+    output.verbose( CALL_INFO, 4, VerboseMasking::CLOCK_INFO, "Cycle limit reached; ending sim\n" );
     primaryComponentOKToEndSim();
     return true;
   }

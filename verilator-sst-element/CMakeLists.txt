@@ -38,7 +38,7 @@ endfunction()
 # - VERILATOR_OPTIONS : verilator compilation options
 # - VERILOG_DEVICE : device name of the target verilog module
 # -----------------------------------------------------------------
-# NOTE: Link handling MUST be used for verilator direct
+# NOTE: Link handling MUST NOT be used for verilator direct
 # NOTE: Cannot use clock handling AND link handling at the same time
 # -----------------------------------------------------------------
 # Generate the signals from the Verilator top module
@@ -48,7 +48,8 @@ function(generate_verilator_component VERILOG_SOURCE
                                       VERILOG_TOP_SOURCES
                                       VERILATOR_OPTIONS
                                       VERILOG_DEVICE
-                                      SST_INTERFACE)
+                                      SST_INTERFACE
+                                      CLOCK_PORT_NAME)
   # Check if INTERFACE = "Direct"
   if(SST_INTERFACE STREQUAL "Direct")
     set(ENABLE_LINK_HANDLING 0)
@@ -112,7 +113,7 @@ function(generate_verilator_component VERILOG_SOURCE
                     WORKING_DIRECTORY ${VERILOG_SOURCE}/${VERILOG_DEVICE})
   message(STATUS "Building port handler implementations...")
   if(ENABLE_LINK_HANDLING)
-    execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortHandlerImpls.sh ${VTOP} ${VERILOG_DEVICE} 1
+    execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortHandlerImpls.sh ${VTOP} ${VERILOG_DEVICE} 1 ${CLOCK_PORT_NAME}
                         OUTPUT_VARIABLE VERILATOR_SST_PORT_HANDLER_IMPLS
                         OUTPUT_STRIP_TRAILING_WHITESPACE
                     WORKING_DIRECTORY ${VERILOG_SOURCE}/${VERILOG_DEVICE})

@@ -13,6 +13,8 @@ import argparse
 import queue
 import random
 from enum import Enum
+from enum import IntEnum
+
 INOUT_PORT = "3"
 WRITE_PORT = "2"
 READ_PORT = "1"
@@ -23,6 +25,22 @@ SCRATCH_SIZE = 512 * 1024
 class OpAction(Enum):
      Write = "write"
      Read  = "read"
+
+class VerboseMasking(IntEnum):
+     WRITE_EVENT  = 0b0000_0000_0001
+     READ_EVENT   = 0b0000_0000_0010
+     ALL_EVENTS   = 0b0000_0000_0011
+     WRITE_PORT   = 0b0000_0000_0100
+     READ_PORT    = 0b0000_0000_1000
+     INOUT_PORT   = 0b0000_0001_0000
+     ALL_PORTS    = 0b0000_0001_1100
+     READ_DATA    = 0b0000_0010_0000
+     WRITE_DATA   = 0b0000_0100_0000
+     ALL_DATA     = 0b0000_0110_0000
+     TEST_OP      = 0b0000_1000_0000
+     WRITE_QUEUE  = 0b0001_0000_0000
+     INIT         = 0b0010_0000_0000
+     FULL         = 0b0011_1111_1111
 
 class PortDef:
      """ Wrapper class to make port definitions cleaner """
@@ -253,7 +271,7 @@ class Test:
      def printTest(self):
           print(self.TestOps)
 
-def run_direct(subName, verbosity, vpi):
+def run_direct(subName, verbosity, verbosityMask, vpi):
     numCycles = 50
     testScheme = Test()
     # tell Test to ignore clk writes
@@ -281,6 +299,7 @@ def run_direct(subName, verbosity, vpi):
     top = sst.Component("top0", "verilatortestdirect.VerilatorTestDirect")
     top.addParams({
         "verbose" : verbosity,
+        "verboseMask" : verbosityMask,
         "clockFreq" : "1GHz",
         "testOps" : testScheme.getTest(),
         "numCycles" : numCycles
@@ -295,7 +314,7 @@ def run_direct(subName, verbosity, vpi):
         #"resetVals" : ["reset_l:0", "clk:0", "add:16", "en:0"]
     })
 
-def run_links(subName, verbosity, vpi):
+def run_links(subName, verbosity, verbosityMask, vpi):
     numCycles = 50
     testScheme = Test()
     ports = PortDef()
@@ -358,6 +377,7 @@ def run_links(subName, verbosity, vpi):
     tester = sst.Component("vtestLink0", "verilatortestlink.VerilatorTestLink")
     tester.addParams({
         "verbose" : verbosity,
+        "verboseMask" : verbosityMask,
         "clockFreq" : "1GHz",
         "num_ports" : ports.getNumPorts(),
         "portMap" : ports.getPortMap(),
@@ -390,6 +410,7 @@ def main():
     parser.add_argument("-i", "--interface", choices=["links", "direct"], default="links", help="Select the direct testing method or the SST::Link method")
     parser.add_argument("-v", "--verbose", choices=range(15), default=4, help="Set the level of verbosity used by the test components")
     parser.add_argument("-a", "--access", choices=["vpi", "direct"], default="direct", help="Select the method used by the subcomponent to read/write the verilated model's ports")
+    parser.add_argument("-k", "--mask", choices=[choice.name for choice in VerboseMasking], default="FULL")
 
     args = parser.parse_args()
 
@@ -397,6 +418,9 @@ def main():
         raise Exception("Unknown model selected")
 
     sub = args.model
+    chosenMask = args.mask
+    verbosityMask = VerboseMasking[chosenMask].value
+    print("Using verbosityMask {}".format(verbosityMask))
     verbosity = args.verbose
     if (args.access == "vpi"):
         vpi = 1
@@ -405,11 +429,9 @@ def main():
 
 
     if args.interface == "direct":
-        subName = f"verilatorsst{args.model}Direct.VerilatorSST{args.model}"
-        run_direct(sub, verbosity, vpi)
+        run_direct(sub, verbosity, verbosityMask, vpi)
     elif args.interface == "links":
-        #subName = f"verilatorsst{args.model}.VerilatorSST{args.model}"
-        run_links(sub, verbosity, vpi)
+        run_links(sub, verbosity, verbosityMask, vpi)
 
 if __name__ == "__main__":
     main()

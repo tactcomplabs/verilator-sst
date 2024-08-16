@@ -95,7 +95,7 @@ public:
     std::vector<std::string> op;
     splitStr( StrOp, ':', op );
     const std::string portName = op[0];
-    const bool isWrite = strcmp(op[1].c_str(), "write") == 0;
+    const bool isWrite = (op[1] == "write");
     const PortDef portInfo = PortMap[op[0]];
     const uint32_t id = portInfo.PortId;
     uint32_t size = portInfo.Size;

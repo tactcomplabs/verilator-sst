@@ -5,10 +5,10 @@ Verilator-SST is a framework for generating SST subcomponents based on provided
 which is then managed by the generated SST Subcomponent. The generated subcomponents
 can be created with one of two supported interfaces.
 
-1. Link interface: generate links for each input or output port in the Verilog top
-   module which can written or read respectively using the
+1. Link interface: generate links for each port in the Verilog top
+   module which can be written or read respectively using the
 `SST::VerilatorSST::PortEvent` class
-2. C++ API: write/read input/output ports using the exposed
+2. Direct interface (C++ API): write/read ports using the exposed
 `writePort`, `writePortAtTick`, and
    `readPort` functions from a parent component
 
@@ -18,11 +18,27 @@ interface, the VerilatorComponent class should be used as the parent component.
 When using the
 C++ API, certain options must be set to avoid errors (see Build Options).
 
+In addition, there are two modes of reading/writing ports in the Verilated
+model: VPI and Direct. Direct reads/writes access the variables directly and
+may be faster than VPI. Both methods have consistent behavior.
+
+`inout` ports are accessible through the normal methods. Verilator
+virtually implements `inout` ports as an `input` port and two `output` ports. The two
+output ports are the `<inout_name>__en` port and the `<inout_name>__out`, used
+for checking whether the port is being driven by the model and reading the value,
+respectively. The input port is used for writing operations and uses the assigned 
+portname according to the verilog module. VerilatorSST abstracts these ports and
+internally checks if the signal is being driven by the verilated model on read/write.
+If it is not driven when a read occurs or is driven when a write occurs, 
+the program will err out. As a result, inout ports should be read/written
+by their original names.
+
 ## Dependencies
 
-- [Verilator v5.022](https://github.com/verilator/verilator/releases/tag/v5.022)
-- [SST 13.1.0](https://github.com/sstsimulator/sst-core/releases/tag/v13.1.0_Final)
-- CMake
+- [Verilator >v5.022](https://github.com/verilator/verilator/releases/tag/v5.022) (5.026 is required for inout port support)
+- [SST >13.1.0](https://github.com/sstsimulator/sst-core/releases/tag/v13.1.0_Final)
+- Python (>3.6.8)
+- CMake (>3.24.2)
 
 ## Build
 
@@ -32,6 +48,7 @@ cd verilator-sst/
 mkdir build && cd build
 cmake ../
 make
+make install
 ```
 
 To verify the installation works properly, run
@@ -39,8 +56,9 @@ To verify the installation works properly, run
 ```bash
 make test
 ```
-This will generate subcomponents for each included example Verilog code
-and use the included test component to verify their functionality.
+This will generate two subcomponents for each included example Verilog code
+(one using links interface, one using direct interface)
+and use the relevant test component to verify their functionality.
 
 ### Build Options
 
@@ -51,58 +69,15 @@ and use the included test component to verify their functionality.
 -DVERILOG_TOP_SOURCES=<list of verilog top source files>
 -DVERILATOR_OPTIONS=<additional verilator compilation options>
 -DVERILATOR_INCLUDE=<verilator include path>
--DVERILATORSST_ENABLE_TESTING=ON # Enables testing (on by default; use OFF to disable)
+-DDISABLE_TESTING # Disables testing (which is enabled by default)
 -DENABLE_CLK_HANDLING=ON # Generates automatic clock port handling (for C++ API interface)
 -DENABLE_LINK_HANDLING=ON # Generates links and link handlers (on by default)
 -DCLOCK_PORT_NAME=<name of clock port> # Defaults to "clk", used with ENABLE_LINK_HANDLING
+-DENABLE_INOUT_HANDLING=ON # Allows designs with inout ports (requires Verilator 5.026 or greater)
 ```
 
 ## Debug
 
 ```bash
-cd verilator-sst/scripts
-DEBUG=1 sst basicVerilogCounter.py
-```
-
-## Dev notes
-
-### Verilog memory order
-
-The index order of Verilog vectors is dependent on how the index bounds are defined. They can be either ascending or descending order. Below, mem1 is defined in ascending order, and mem2 in descending. 
-
-```
-top.v
-reg [B-1:0] mem1 [0:D] //ascending
-reg [B-1:0] mem2 [D:0] //descending
-```
-
-When accessing a descending vector via `Signal::getUIntVector<>()`, the return array indicies will be reversed. `mem2_cpp[0] == mem2[D]`. 
-
-> Conventionally, vectors index ranges are defined in ascending order.
-
-### Known Verilator VPI bug
-
-https://github.com/verilator/verilator/issues/5036
-
-The bug reported in the issue above causes erroneous behavior with the current implementation. Aligned bytes of Verilog logic values equal to 0 are overwritten by VPI to 32 (space) when read. And bytes preceded by a leading zero byte are ignored when written. This only effects one VPI format, `vpiStringVal`. Which is the format used by the VerilatorSST. 
-
-As a temporary solution, `Signal` class constructors overwrite bytes with value 32 to 0 before storage. This moves the problem to a less used number, but will need to be resolved in the future. 
-
-```
-top.v
-...
-wire [16:0] moub, arak;
-assign moub = 16'h0001;
-assign arak = 16'h0100;
-```
-```
-wrapper.cc
-...
-readPort("moub") //ok (temp fix)
-readPort("arak") //ok (temp fix)
-
-writePort("moub",\x0000) //ok
-writePort("moub",\x0001) //bad (byte0 = \x00)
-writePort("moub",\x1000) //ok
-writePort("moub",\x1001) //ok (byte0 = \x10, byte1 = \x01)
+cmake -DCMAKE_BUILD_TYPE=Debug ../ #instead of cmake ../
 ```
