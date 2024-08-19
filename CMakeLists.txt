@@ -19,27 +19,30 @@ project(verilatorSST CXX)
 #------------------------------------------------------------------
 # PROJECT ARGUMENTS
 #------------------------------------------------------------------
-option(VERILOG_SOURCE_DIR "../verilog" "Path to the verilog source tree")
-
-option(VERILOG_DEVICE "Device" "Name of the verilog device being simulated")
-
-option(VERILOG_TOP "Top" "Name of the verilog Top module")
-
-option(VERILOG_TOP_SOURCES "top.v" "List of verilog top source files")
-
-option(VERILATOR_OPTIONS "" "Additional verilator compilation options")
-
-option(VERILATOR_INCLUDE "" "Sets the verilator include path")
-
 option(VERILATORSST_ENABLE_TESTING "Enable Testing" ON)
-
-option(ENABLE_CLK_HANDLING "Allows subcomponent to handle the clock port automatically" OFF)
-
-option(ENABLE_LINK_HANDLING "Automatically adds SST link definitions and configurations" ON)
 
 option(ENABLE_INOUT_HANDLING "Enables write/read access to verilog top module inout ports, requires Verilator 5.026+" OFF)
 
 option(ENABLE_CUSTOM_MODULE "Enables building an external module" OFF)
+
+#------------------------------------------------------------------
+# MODEL ARGUMENTS
+#------------------------------------------------------------------
+option(ENABLE_CLK_HANDLING "Allows subcomponent to handle the clock port automatically" OFF)
+
+option(ENABLE_LINK_HANDLING "Automatically adds SST link definitions and configurations" ON)
+
+set(VERILOG_SOURCE_DIR "../verilog" CACHE STRING "Path to the verilog source tree")
+
+set(VERILOG_DEVICE "Device" CACHE STRING "Name of the verilog device being simulated")
+
+set(VERILOG_TOP "Top" CACHE STRING "Name of the verilog Top module")
+
+set(VERILOG_TOP_SOURCES "top.v" CACHE STRING "List of verilog top source files")
+
+set(VERILATOR_OPTIONS "" CACHE STRING "Additional verilator compilation options")
+
+set(VERILATOR_INCLUDE "" CACHE STRING "Sets the verilator include path")
 
 set(CLOCK_PORT_NAME "clk" CACHE STRING "Name of the top-level module's clock port") #Defaults to "clk"
 
@@ -148,21 +151,21 @@ endif()
 
 if(ENABLE_CUSTOM_MODULE)
   if(ENABLE_LINK_HANDLING)
-    generate_verilator_component(VERILOG_SOURCE_DIR
-                                 VERILOG_TOP
-                                 VERILOG_TOP_SOURCES
-                                 VERILATOR_OPTIONS
-                                 VERILOG_DEVICE
+    generate_verilator_component("${VERILOG_TOP}"
+                                 "${VERILOG_TOP_SOURCES}"
+                                 "${VERILOG_SOURCE_DIR}"
+                                 "${VERILATOR_OPTIONS}"
+                                 "${VERILOG_DEVICE}"
                                  "Links"
-                                 CLOCK_PORT_NAME)
+                                 "${CLOCK_PORT_NAME}")
   else()
-    generate_verilator_component(VERILOG_SOURCE_DIR
-                                 VERILOG_TOP
-                                 VERILOG_TOP_SOURCES
-                                 VERILATOR_OPTIONS
-                                 VERILOG_DEVICE
+    generate_verilator_component("${VERILOG_TOP}"
+                                 "${VERILOG_TOP_SOURCES}"
+                                 "${VERILOG_SOURCE_DIR}"
+                                 "${VERILATOR_OPTIONS}"
+                                 "${VERILOG_DEVICE}"
                                  "Direct"
-                                 CLOCK_PORT_NAME)
+                                 "${CLOCK_PORT_NAME}")
   endif()
 endif()
 
