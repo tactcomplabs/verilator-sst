@@ -39,6 +39,8 @@ option(ENABLE_LINK_HANDLING "Automatically adds SST link definitions and configu
 
 option(ENABLE_INOUT_HANDLING "Enables write/read access to verilog top module inout ports, requires Verilator 5.026+" OFF)
 
+option(ENABLE_CUSTOM_MODULE "Enables building an external module" OFF)
+
 set(CLOCK_PORT_NAME "clk" CACHE STRING "Name of the top-level module's clock port") #Defaults to "clk"
 
 #------------------------------------------------------------------
@@ -142,6 +144,26 @@ option(ENABLE_TESTING "Enable testing" ON)
 # Also allows users to pass -DDISABLE_TESTING
 if(DISABLE_TESTING)
   set(ENABLE_TESTING OFF)
+endif()
+
+if(ENABLE_CUSTOM_MODULE)
+  if(ENABLE_LINK_HANDLING)
+    generate_verilator_component(VERILOG_SOURCE_DIR
+                                 VERILOG_TOP
+                                 VERILOG_TOP_SOURCES
+                                 VERILATOR_OPTIONS
+                                 VERILOG_DEVICE
+                                 "Links"
+                                 CLOCK_PORT_NAME)
+  else()
+    generate_verilator_component(VERILOG_SOURCE_DIR
+                                 VERILOG_TOP
+                                 VERILOG_TOP_SOURCES
+                                 VERILATOR_OPTIONS
+                                 VERILOG_DEVICE
+                                 "Direct"
+                                 CLOCK_PORT_NAME)
+  endif()
 endif()
 
 # Check if testing is enabled and add the tests subdirectory if it is

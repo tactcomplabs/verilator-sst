@@ -38,6 +38,7 @@ endfunction()
 # - VERILOG_SOURCE_DIR : path to the verilog source
 # - VERILATOR_OPTIONS : verilator compilation options
 # - VERILOG_DEVICE : device name of the target verilog module
+# - CLOCK_PORT_NAME : name of verilog module's clock port
 # -----------------------------------------------------------------
 # NOTE: Link handling MUST NOT be used for verilator direct
 # NOTE: Cannot use clock handling AND link handling at the same time
@@ -73,12 +74,13 @@ function(generate_verilator_component VERILOG_TOP
 
   message(STATUS "Building verilator source...")
   execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildVerilatorSrc.sh
-                    ${VERILOG_BUILD_DIR} ${VERILOG_SOURCE_DIR} ${VERILOG_TOP} ${VERILOG_TOP_SOURCES} ${ENABLE_INOUT_HANDLING}
+                    ${VERILOG_BUILD_DIR} ${VERILOG_SOURCE_DIR} ${VERILOG_TOP} ${VERILOG_TOP_SOURCES} ${VERILATOR_OPTIONS} ${ENABLE_INOUT_HANDLING}
                     OUTPUT_VARIABLE VERILATOR_OUT)
   execute_process(COMMAND ${VERILATORSST_SCRIPTS}/CheckInoutPorts.sh ${VTOP}
                   TIMEOUT 1
                   RESULT_VARIABLE CHECK_INOUT_FAIL)
   if(CHECK_INOUT_FAIL)
+    #TODO: add a check for ENABLE_INOUT_HANDLING here. There's no reason to have a warning if it's enabled
     message(WARNING "Inout ports will not be added to the subcomponent port list, set ENABLE_INOUT_HANDLING to add these to the subcomponent")
   endif()
 
