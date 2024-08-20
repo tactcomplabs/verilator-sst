@@ -25,6 +25,8 @@ option(ENABLE_INOUT_HANDLING "Enables write/read access to verilog top module in
 
 option(ENABLE_CUSTOM_MODULE "Enables building an external module" OFF)
 
+set(VERILATOR_INCLUDE "" CACHE STRING "Sets the verilator include path")
+
 #------------------------------------------------------------------
 # MODEL ARGUMENTS
 #------------------------------------------------------------------
@@ -41,8 +43,6 @@ set(VERILOG_TOP "Top" CACHE STRING "Name of the verilog Top module")
 set(VERILOG_TOP_SOURCES "top.v" CACHE STRING "List of verilog top source files")
 
 set(VERILATOR_OPTIONS "" CACHE STRING "Additional verilator compilation options")
-
-set(VERILATOR_INCLUDE "" CACHE STRING "Sets the verilator include path")
 
 set(CLOCK_PORT_NAME "clk" CACHE STRING "Name of the top-level module's clock port") #Defaults to "clk"
 
