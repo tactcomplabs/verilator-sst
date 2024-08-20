@@ -63,17 +63,21 @@ and use the relevant test component to verify their functionality.
 ### Build Options
 
 ```bash
+# Project Arguments
+-DDISABLE_TESTING # Disables testing (which is enabled by default)
+-DENABLE_INOUT_HANDLING=ON # Allows designs with inout ports (requires Verilator 5.026 or greater)
+-DENABLE_CUSTOM_MODULE=ON # Required to build an external module with CLI model arguments
+-DVERILATOR_INCLUDE=<verilator include path> #set automatically if not assigned
+# Model Arguments
 -DVERILOG_SOURCE_DIR=<path to verilog source tree>
--DVERILOG_DEVICE=<name of verilog device to simulate>
+-DVERILOG_DEVICE=<name of verilog device to simulate> # Used in the name of the subcomponent
 -DVERILOG_TOP=<name of the top level verilog module>
 -DVERILOG_TOP_SOURCES=<list of verilog top source files>
--DVERILATOR_OPTIONS=<additional verilator compilation options>
--DVERILATOR_INCLUDE=<verilator include path>
--DDISABLE_TESTING # Disables testing (which is enabled by default)
+-DVERILATOR_OPTIONS=<additional verilator compilation options> # Defaults to empty string
 -DENABLE_CLK_HANDLING=ON # Generates automatic clock port handling (for C++ API interface)
--DENABLE_LINK_HANDLING=ON # Generates links and link handlers (on by default)
+-DENABLE_LINK_HANDLING=ON # Generates links and link handlers (for links interface; on by default)
+# Note: ENABLE_CLK_HANDLING and ENABLE_LINK_HANDLING cannot be set to ON simultaneously
 -DCLOCK_PORT_NAME=<name of clock port> # Defaults to "clk", used with ENABLE_LINK_HANDLING
--DENABLE_INOUT_HANDLING=ON # Allows designs with inout ports (requires Verilator 5.026 or greater)
 ```
 
 ## Debug
