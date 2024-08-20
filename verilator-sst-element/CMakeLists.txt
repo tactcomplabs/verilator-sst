@@ -78,7 +78,7 @@ function(generate_verilator_component VERILOG_TOP
                     RESULT_VARIABLE VERILATOR_CHECK
                     OUTPUT_VARIABLE VERILATOR_OUT)
   if(VERILATOR_CHECK)
-    message(FATAL_ERROR "Errors detected in the BuildVerilatorSrc.sh script; interruping build")
+    message(FATAL_ERROR "Errors detected in the BuildVerilatorSrc.sh script; interrupting build")
   endif()
 
   execute_process(COMMAND ${VERILATORSST_SCRIPTS}/CheckInoutPorts.sh ${VTOP}
@@ -95,7 +95,7 @@ function(generate_verilator_component VERILOG_TOP
                     OUTPUT_STRIP_TRAILING_WHITESPACE
                     WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
   if(PORT_DEF_CHECK)
-    message(FATAL_ERROR "Errors detected in the BuildPortDef.sh script; interruping build")
+    message(FATAL_ERROR "Errors detected in the BuildPortDef.sh script; interrupting build")
   endif()
 
   message(STATUS "Building port entries...")
@@ -105,7 +105,7 @@ function(generate_verilator_component VERILOG_TOP
                     OUTPUT_STRIP_TRAILING_WHITESPACE
                     WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
   if(PORT_ENTRY_CHECK)
-    message(FATAL_ERROR "Errors detected in the BuildPortEntry.sh script; interruping build")
+    message(FATAL_ERROR "Errors detected in the BuildPortEntry.sh script; interrupting build")
   endif()
 
   message(STATUS "Building port map...")
@@ -115,7 +115,7 @@ function(generate_verilator_component VERILOG_TOP
                     OUTPUT_STRIP_TRAILING_WHITESPACE
                     WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
   if(PORT_MAP_CHECK)
-    message(FATAL_ERROR "Errors detected in the BuildPortMap.sh script; interruping build")
+    message(FATAL_ERROR "Errors detected in the BuildPortMap.sh script; interrupting build")
   endif()
 
   message(STATUS "Building port handlers...")
@@ -125,7 +125,7 @@ function(generate_verilator_component VERILOG_TOP
                     OUTPUT_STRIP_TRAILING_WHITESPACE
                     WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
   if(PORT_HANDLERS_CHECK)
-    message(FATAL_ERROR "Errors detected in the BuildPortHandlers.sh script; interruping build")
+    message(FATAL_ERROR "Errors detected in the BuildPortHandlers.sh script; interrupting build")
   endif()
 
   message(STATUS "Building port IO...")
@@ -135,7 +135,7 @@ function(generate_verilator_component VERILOG_TOP
                     OUTPUT_STRIP_TRAILING_WHITESPACE
                     WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
   if(PORT_IO_CHECK)
-    message(FATAL_ERROR "Errors detected in the BuildPortIO.sh script; interruping build")
+    message(FATAL_ERROR "Errors detected in the BuildPortIO.sh script; interrupting build")
   endif()
 
   message(STATUS "Building port IO implementations...")
@@ -145,7 +145,7 @@ function(generate_verilator_component VERILOG_TOP
                     OUTPUT_STRIP_TRAILING_WHITESPACE
                     WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
   if(PORT_IO_IMPLS_CHECK)
-    message(FATAL_ERROR "Errors detected in the BuildPortIOImpls.sh script; interruping build")
+    message(FATAL_ERROR "Errors detected in the BuildPortIOImpls.sh script; interrupting build")
   endif()
 
   message(STATUS "Building port handler implementations...")
@@ -156,7 +156,7 @@ function(generate_verilator_component VERILOG_TOP
                         OUTPUT_STRIP_TRAILING_WHITESPACE
                     WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
     if(PORT_HANDLER_IMPLS_CHECK)
-      message(FATAL_ERROR "Errors detected in the BuildPortHandlerImpls.sh script; interruping build")
+      message(FATAL_ERROR "Errors detected in the BuildPortHandlerImpls.sh script; interrupting build")
     endif()
 
     message(STATUS "Building link definitions...")
@@ -166,7 +166,7 @@ function(generate_verilator_component VERILOG_TOP
                         OUTPUT_STRIP_TRAILING_WHITESPACE
                     WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
     if(LINK_DEF_CHECK)
-      message(FATAL_ERROR "Errors detected in the BuildLinkDef.sh script; interruping build")
+      message(FATAL_ERROR "Errors detected in the BuildLinkDef.sh script; interrupting build")
     endif()
 
     message(STATUS "Building link configurations...")
@@ -176,7 +176,7 @@ function(generate_verilator_component VERILOG_TOP
                         OUTPUT_STRIP_TRAILING_WHITESPACE
                     WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
     if(LINK_CONFIG_CHECK)
-      message(FATAL_ERROR "Errors detected in the BuildLinkConfig.sh script; interruping build")
+      message(FATAL_ERROR "Errors detected in the BuildLinkConfig.sh script; interrupting build")
     endif()
 
   else()
@@ -186,7 +186,7 @@ function(generate_verilator_component VERILOG_TOP
                         OUTPUT_STRIP_TRAILING_WHITESPACE
                     WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
     if(PORT_HANDLER_IMPLS_CHECK)
-      message(FATAL_ERROR "Errors detected in the BuildPortHandlerImpls.sh script; interruping build")
+      message(FATAL_ERROR "Errors detected in the BuildPortHandlerImpls.sh script; interrupting build")
     endif()
 
     set(VERILATOR_SST_LINK_DEFS "")
