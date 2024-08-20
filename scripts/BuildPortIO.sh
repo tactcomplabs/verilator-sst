@@ -6,6 +6,8 @@
 # contact@tactcomplabs.com
 # See LICENSE in the top level directory for licensing details
 
+set -e
+
 Top=$1
 
 #-- Generate all the input signals

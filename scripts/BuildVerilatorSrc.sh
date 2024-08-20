@@ -5,7 +5,7 @@
 # contact@tactcomplabs.com
 # See LICENSE in the top level directory for licensing details
 
-#set -ex #TODO: figure out how to get cmake to stop with build errors
+set -e #TODO: figure out how to get cmake to stop with build errors
 BUILDDIR=$1
 SOURCEDIR=$2
 TOP=$3

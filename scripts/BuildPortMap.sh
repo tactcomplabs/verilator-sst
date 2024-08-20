@@ -8,8 +8,8 @@
 
 Top=$1
 
-INPUTS=`cat $Top | grep VL_IN | sed -n '/VL_INOUT/!p'`
-OUTPUTS=`cat $Top | grep VL_OUT`
+INPUTS=$(cat $Top | grep VL_IN | sed -n '/VL_INOUT/!p')
+OUTPUTS=$(cat $Top | grep VL_OUT)
 
 #-- check for inout port pattern:
 # input  port
@@ -20,8 +20,7 @@ for port in $INPUTS; do
   port_out=$(echo $OUTPUTS | tr ' ' '\n' | grep "${port_name}__out")
   port_en=$(echo $OUTPUTS | tr ' ' '\n' | grep "${port_name}__en")
 
-  if [[ ! -z "$port_out" ]] && [[ ! -z "$port_en" ]]
-  then 
+  if [[ ! -z "$port_out" ]] && [[ ! -z "$port_en" ]]; then
     INPUTS="${INPUTS//"$port"/}"
     INOUTS="$INOUTS $port"
   fi
@@ -32,14 +31,13 @@ ALL="$INPUTS $OUTPUTS $INOUTS"
 
 #-- generate all signals
 IDX=0
-for port in $ALL;do
-  NOPAREN=`sed 's/.*(\(.*\))/\1/' <<< $port`
-  NOPAREN2=`echo $NOPAREN | sed 's/)//'`
-  REMDEPTH=`echo $NOPAREN2 | sed 's/\[[0-9]*\]//'`
-  SIGNAME=`echo $REMDEPTH | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g"`
+for port in $ALL; do
+  NOPAREN=$(sed 's/.*(\(.*\))/\1/' <<<$port)
+  NOPAREN2=$(echo $NOPAREN | sed 's/)//')
+  REMDEPTH=$(echo $NOPAREN2 | sed 's/\[[0-9]*\]//')
+  SIGNAME=$(echo $REMDEPTH | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g")
   echo "{\"$SIGNAME\", $IDX },"
   IDX=$(($IDX + 1))
-done;
-
+done
 
 # -- EOF
