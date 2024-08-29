@@ -7,10 +7,10 @@
 # See LICENSE in the top level directory for licensing details
 
 Top=$1
-INOUTS=$(cat $Top | grep "VL_INOUT")
+INOUTS=$(grep "VL_INOUT" $Top)
 
 if [[ -z $INOUTS ]]; then
-    exit 0
+  exit 0
 fi
 
 exit 1

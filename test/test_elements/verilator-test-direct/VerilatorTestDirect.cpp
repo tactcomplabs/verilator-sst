@@ -157,7 +157,7 @@ bool VerilatorTestDirect::ExecTestOp() {
       }
       model->writePort(portName, Data);
     } else {
-      output.verbose( CALL_INFO, 4, VerboseMasking::READ_EVENT, "Data to be checked: size=%zu\n", Data.size() );
+      output.verbose( CALL_INFO, 4, VerboseMasking::READ_EVENT, "Sending read on port %s: data to be checked has size=%zu\n", portName.c_str(), Data.size() );
       for (size_t i=0; i<Data.size(); i++) {
         output.verbose( CALL_INFO, 4, VerboseMasking::READ_DATA, "byte %zu: %" PRIx8 "\n", i, Data[i] );
       }

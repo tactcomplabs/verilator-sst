@@ -38,6 +38,7 @@ endfunction()
 # - VERILOG_SOURCE_DIR : path to the verilog source
 # - VERILATOR_OPTIONS : verilator compilation options
 # - VERILOG_DEVICE : device name of the target verilog module
+# - CLOCK_PORT_NAME : name of verilog module's clock port
 # -----------------------------------------------------------------
 # NOTE: Link handling MUST NOT be used for verilator direct
 # NOTE: Cannot use clock handling AND link handling at the same time
@@ -65,7 +66,7 @@ function(generate_verilator_component VERILOG_TOP
   set(VERILOG_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/${VERILOG_DEVICE})
 
   # Print out the values of the variables
-  print_verilator_variables(${VERILOG_TOP} ${VERILOG_BUILD_DIR} ${VERILOG_SOURCE_DIR} ${VERILOG_TOP_SOURCES} ${VERILATOR_OPTIONS} ${VERILOG_DEVICE} ${VERILATOR_INCLUDE} ${VERILATORSST_SCRIPTS})
+  print_verilator_variables(${VERILOG_TOP} ${VERILOG_BUILD_DIR} ${VERILOG_SOURCE_DIR} ${VERILOG_TOP_SOURCES} "${VERILATOR_OPTIONS}" ${VERILOG_DEVICE} ${VERILATOR_INCLUDE} ${VERILATORSST_SCRIPTS})
   find_program(CLANG_FORMAT "clang-format")
   set(VTOP "${VERILOG_BUILD_DIR}/VTop.h")
   set(MESSAGE "GENERATING SST COMPONENT FOR VERILOG MODULE: ${VERILOG_TOP}")
@@ -73,8 +74,13 @@ function(generate_verilator_component VERILOG_TOP
 
   message(STATUS "Building verilator source...")
   execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildVerilatorSrc.sh
-                    ${VERILOG_BUILD_DIR} ${VERILOG_SOURCE_DIR} ${VERILOG_TOP} ${VERILOG_TOP_SOURCES} ${ENABLE_INOUT_HANDLING}
+                    ${VERILOG_BUILD_DIR} ${VERILOG_SOURCE_DIR} ${VERILOG_TOP} ${VERILOG_TOP_SOURCES} "${VERILATOR_OPTIONS}" ${ENABLE_INOUT_HANDLING}
+                    RESULT_VARIABLE VERILATOR_CHECK
                     OUTPUT_VARIABLE VERILATOR_OUT)
+  if(VERILATOR_CHECK)
+    message(FATAL_ERROR "Errors detected in the BuildVerilatorSrc.sh script; interrupting build")
+  endif()
+
   execute_process(COMMAND ${VERILATORSST_SCRIPTS}/CheckInoutPorts.sh ${VTOP}
                   TIMEOUT 1
                   RESULT_VARIABLE CHECK_INOUT_FAIL)
@@ -84,58 +90,108 @@ function(generate_verilator_component VERILOG_TOP
 
   message(STATUS "Building port definitions...")
   execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortDef.sh ${VTOP}
+                    RESULT_VARIABLE PORT_DEF_CHECK
                     OUTPUT_VARIABLE VERILATOR_SST_PORT_DEF
                     OUTPUT_STRIP_TRAILING_WHITESPACE
                     WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
+  if(PORT_DEF_CHECK)
+    message(FATAL_ERROR "Errors detected in the BuildPortDef.sh script; interrupting build")
+  endif()
 
   message(STATUS "Building port entries...")
   execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortEntry.sh ${VTOP} ${VERILOG_DEVICE}
+                    RESULT_VARIABLE PORT_ENTRY_CHECK
                     OUTPUT_VARIABLE VERILATOR_SST_PORT_ENTRY
                     OUTPUT_STRIP_TRAILING_WHITESPACE
                     WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
+  if(PORT_ENTRY_CHECK)
+    message(FATAL_ERROR "Errors detected in the BuildPortEntry.sh script; interrupting build")
+  endif()
+
   message(STATUS "Building port map...")
   execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortMap.sh ${VTOP}
+                    RESULT_VARIABLE PORT_MAP_CHECK
                     OUTPUT_VARIABLE VERILATOR_SST_PORT_MAP
                     OUTPUT_STRIP_TRAILING_WHITESPACE
                     WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
+  if(PORT_MAP_CHECK)
+    message(FATAL_ERROR "Errors detected in the BuildPortMap.sh script; interrupting build")
+  endif()
+
   message(STATUS "Building port handlers...")
   execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortHandlers.sh ${VTOP}
+                    RESULT_VARIABLE PORT_HANDLERS_CHECK
                     OUTPUT_VARIABLE VERILATOR_SST_PORT_HANDLERS
                     OUTPUT_STRIP_TRAILING_WHITESPACE
                     WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
+  if(PORT_HANDLERS_CHECK)
+    message(FATAL_ERROR "Errors detected in the BuildPortHandlers.sh script; interrupting build")
+  endif()
+
   message(STATUS "Building port IO...")
   execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortIO.sh ${VTOP}
+                    RESULT_VARIABLE PORT_IO_CHECK
                     OUTPUT_VARIABLE VERILATOR_SST_PORT_IO_HANDLERS
                     OUTPUT_STRIP_TRAILING_WHITESPACE
                     WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
+  if(PORT_IO_CHECK)
+    message(FATAL_ERROR "Errors detected in the BuildPortIO.sh script; interrupting build")
+  endif()
+
   message(STATUS "Building port IO implementations...")
   execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortIOImpls.sh ${VTOP} ${VERILOG_DEVICE}
+                    RESULT_VARIABLE PORT_IO_IMPLS_CHECK
                     OUTPUT_VARIABLE VERILATOR_SST_PORT_IO_IMPLS
                     OUTPUT_STRIP_TRAILING_WHITESPACE
                     WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
+  if(PORT_IO_IMPLS_CHECK)
+    message(FATAL_ERROR "Errors detected in the BuildPortIOImpls.sh script; interrupting build")
+  endif()
+
   message(STATUS "Building port handler implementations...")
   if(ENABLE_LINK_HANDLING)
     execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortHandlerImpls.sh ${VTOP} ${VERILOG_DEVICE} 1 ${CLOCK_PORT_NAME}
+                        RESULT_VARIABLE PORT_HANDLER_IMPLS_CHECK
                         OUTPUT_VARIABLE VERILATOR_SST_PORT_HANDLER_IMPLS
                         OUTPUT_STRIP_TRAILING_WHITESPACE
                     WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
+    if(PORT_HANDLER_IMPLS_CHECK)
+      message(FATAL_ERROR "Errors detected in the BuildPortHandlerImpls.sh script; interrupting build")
+    endif()
+
     message(STATUS "Building link definitions...")
     execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildLinkDef.sh ${VTOP}
+                        RESULT_VARIABLE LINK_DEF_CHECK
                         OUTPUT_VARIABLE VERILATOR_SST_LINK_DEFS
                         OUTPUT_STRIP_TRAILING_WHITESPACE
                     WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
+    if(LINK_DEF_CHECK)
+      message(FATAL_ERROR "Errors detected in the BuildLinkDef.sh script; interrupting build")
+    endif()
+
     message(STATUS "Building link configurations...")
     execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildLinkConfig.sh ${VTOP} ${VERILOG_DEVICE}
+                        RESULT_VARIABLE LINK_CONFIG_CHECK
                         OUTPUT_VARIABLE VERILATOR_SST_LINK_CONFIGS
                         OUTPUT_STRIP_TRAILING_WHITESPACE
                     WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
+    if(LINK_CONFIG_CHECK)
+      message(FATAL_ERROR "Errors detected in the BuildLinkConfig.sh script; interrupting build")
+    endif()
+
   else()
     execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortHandlerImpls.sh ${VTOP} ${VERILOG_DEVICE} 0
+                        RESULT_VARIABLE PORT_HANDLER_IMPLS_CHECK
                         OUTPUT_VARIABLE VERILATOR_SST_PORT_HANDLER_IMPLS
                         OUTPUT_STRIP_TRAILING_WHITESPACE
                     WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
+    if(PORT_HANDLER_IMPLS_CHECK)
+      message(FATAL_ERROR "Errors detected in the BuildPortHandlerImpls.sh script; interrupting build")
+    endif()
+
     set(VERILATOR_SST_LINK_DEFS "")
     set(VERILATOR_SST_LINK_CONFIGS "")
+
   endif()
 
   if ( ENABLE_CLK_HANDLING )

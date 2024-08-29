@@ -6,11 +6,12 @@
 # contact@tactcomplabs.com
 # See LICENSE in the top level directory for licensing details
 
+# cannot use set -e because some greps are expected to fail
 Top=$1
 
-INPUTS=`cat $Top | grep VL_IN | sed -n '/VL_INOUT/!p' | sed -n '/__/!p'`
-OUTPUTS=`cat $Top | grep VL_OUT`
-SAFE_OUTPUTS=$(echo $OUTPUTS | tr ' ' '\n' | sed -n '/__/!p' )
+INPUTS=$(cat $Top | grep VL_IN | sed -n '/VL_INOUT/!p' | sed -n '/__/!p')
+OUTPUTS=$(cat $Top | grep VL_OUT)
+SAFE_OUTPUTS=$(echo $OUTPUTS | tr ' ' '\n' | sed -n '/__/!p')
 
 #-- check for inout port pattern:
 # input  port
@@ -21,8 +22,7 @@ for port in $INPUTS; do
   port_out=$(echo $OUTPUTS | tr ' ' '\n' | grep "${port_name}__out")
   port_en=$(echo $OUTPUTS | tr ' ' '\n' | grep "${port_name}__en")
 
-  if [[ ! -z "$port_out" ]] && [[ ! -z "$port_en" ]]
-  then 
+  if [[ ! -z "$port_out" ]] && [[ ! -z "$port_en" ]]; then
     INPUTS="${INPUTS//"$port"/}"
     SAFE_OUTPUTS="${SAFE_OUTPUTS//"$port_out"/}"
     SAFE_OUTPUTS="${SAFE_OUTPUTS//"$port_en"/}"
@@ -30,30 +30,30 @@ for port in $INPUTS; do
   fi
 done
 
-for IN in $INPUTS;do
-  NOPAREN=`sed 's/.*(\(.*\))/\1/' <<< $IN`
-  NOPAREN2=`echo $NOPAREN | sed 's/)//'`
-  REMDEPTH=`echo $NOPAREN2 | sed 's/\[[0-9]*\]//'`
-  SIGNAME=`echo $REMDEPTH | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g"`
+for IN in $INPUTS; do
+  NOPAREN=$(sed 's/.*(\(.*\))/\1/' <<<$IN)
+  NOPAREN2=$(echo $NOPAREN | sed 's/)//')
+  REMDEPTH=$(echo $NOPAREN2 | sed 's/\[[0-9]*\]//')
+  SIGNAME=$(echo $REMDEPTH | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g")
   echo "{\"$SIGNAME\", \"Input Port\", {\"SST::VerilatorSST::PortEvent\"} },"
-done;
+done
 
 #-- Generate all the output signals
-for OUT in $SAFE_OUTPUTS;do
-  NOPAREN=`sed 's/.*(\(.*\))/\1/' <<< $OUT`
-  NOPAREN2=`echo $NOPAREN | sed 's/)//'`
-  REMDEPTH=`echo $NOPAREN2 | sed 's/\[[0-9]*\]//'`
-  SIGNAME=`echo $REMDEPTH | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g"`
+for OUT in $SAFE_OUTPUTS; do
+  NOPAREN=$(sed 's/.*(\(.*\))/\1/' <<<$OUT)
+  NOPAREN2=$(echo $NOPAREN | sed 's/)//')
+  REMDEPTH=$(echo $NOPAREN2 | sed 's/\[[0-9]*\]//')
+  SIGNAME=$(echo $REMDEPTH | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g")
   echo "{\"$SIGNAME\", \"Output port\", {\"SST::VerilatorSST::PortEvent\"} },"
-done;
+done
 
 #-- Generate all the inout signals
-for INOUT in $INOUTS;do
-  NOPAREN=`sed 's/.*(\(.*\))/\1/' <<< $INOUT`
-  NOPAREN2=`echo $NOPAREN | sed 's/)//'`
-  REMDEPTH=`echo $NOPAREN2 | sed 's/\[[0-9]*\]//'`
-  SIGNAME=`echo $REMDEPTH | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g"`
+for INOUT in $INOUTS; do
+  NOPAREN=$(sed 's/.*(\(.*\))/\1/' <<<$INOUT)
+  NOPAREN2=$(echo $NOPAREN | sed 's/)//')
+  REMDEPTH=$(echo $NOPAREN2 | sed 's/\[[0-9]*\]//')
+  SIGNAME=$(echo $REMDEPTH | sed "s/,/ /g" | awk '{print $1}' | sed "s/&//g")
   echo "{\"$SIGNAME\", \"Inout port\", {\"SST::VerilatorSST::PortEvent\"} },"
-done;
+done
 
 # -- EOF
