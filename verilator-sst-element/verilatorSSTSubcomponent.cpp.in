@@ -1,0 +1,462 @@
+//
+// _verilatorSSTSubcomponent_cpp_
+//
+// Copyright (C) 2017-2024 Tactical Computing Laboratories, LLC
+// All Rights Reserved
+// contact@tactcomplabs.com
+//
+// See LICENSE in the top level directory for licensing details
+//
+
+#include "verilatorSSTSubcomponent.h"
+#include "Signal.h"
+
+using namespace SST::VerilatorSST;
+
+// ---------------------------------------------------------------
+// VerilatorSSTBase
+// ---------------------------------------------------------------
+VerilatorSSTBase::VerilatorSSTBase( std::string DerivedName,
+                                    ComponentId_t id, const Params& params )
+  : SubComponent(id), output(nullptr){
+  verbosity = params.find<uint32_t>("verbose");
+  std::string outStr = "[" + DerivedName + " @f:@l:time=@t]: ";
+  output = new SST::Output(outStr, verbosity, 0,
+                           SST::Output::STDOUT);
+}
+
+VerilatorSSTBase::~VerilatorSSTBase(){
+  delete output;
+}
+
+// ---------------------------------------------------------------
+// VerilatorSST@VERILOG_DEVICE@
+// ---------------------------------------------------------------
+VerilatorSST@VERILOG_DEVICE@::VerilatorSST@VERILOG_DEVICE@(ComponentId_t id,
+                                                           const Params& params)
+  : VerilatorSSTBase("@VERILOG_DEVICE@", id, params), UseVPI(false){
+
+  UseVPI = params.find<bool>("useVPI", false);
+  const std::string clockFreq = params.find<std::string>("clockFreq", "1GHz");
+
+  clockPort = params.find<std::string>("clockPort", "NullPort");
+  if( !isNamedPort(clockPort) ){
+    output->fatal(CALL_INFO, -1, "Could not find clock port with name=%s\n",
+                  clockPort.c_str());
+  }
+
+  // init verilator interfaces
+  ContextP = new VerilatedContext();
+  ContextP->threads(1);
+  ContextP->debug(VL_DEBUG);
+  ContextP->randReset(2);
+  ContextP->traceEverOn(true);
+  const char *empty {};
+  ContextP->commandArgs(0,&empty);
+  Top = new VTop(ContextP, "");
+#if VL_DEBUG == 1
+  ContextP->internalsDump();
+#endif
+
+  // attempt to build the reset value tables
+  initResetValues(params);
+  @VERILATOR_SST_LINK_CONFIGS@
+
+  // register the clock
+  registerClock(clockFreq,
+                new Clock::Handler<VerilatorSST@VERILOG_DEVICE@>(this,
+                                                                 &VerilatorSST@VERILOG_DEVICE@::clock));
+}
+
+VerilatorSST@VERILOG_DEVICE@::~VerilatorSST@VERILOG_DEVICE@(){
+  delete Top;
+  delete ContextP;
+}
+
+void VerilatorSST@VERILOG_DEVICE@::splitStr(const std::string& s,
+                                            char c,
+                                            std::vector<std::string>& v){
+  std::string::size_type i = 0;
+  std::string::size_type j = s.find(c);
+  v.clear();
+
+  if( (j==std::string::npos) && (s.length() > 0) ){
+    v.push_back(s);
+    return ;
+  }
+
+  while (j != std::string::npos) {
+    v.push_back(s.substr(i, j-i));
+    i = ++j;
+    j = s.find(c, j);
+    if (j == std::string::npos)
+      v.push_back(s.substr(i, s.length()));
+  }
+}
+
+void VerilatorSST@VERILOG_DEVICE@::pollWriteQueue(){
+  uint64_t currTick = getCurrentTick();
+  for (auto it=WriteQueue.begin(); it!=WriteQueue.end();) {
+    auto ele = *it;
+    if (ele.AtTick == currTick) {
+      if (UseVPI) {
+        writePortVPI(ele.PortName, ele.Packet);
+      } else {
+        unsigned Idx = PortMap.at(ele.PortName);
+        DirectWriteFunc Func = std::get<V_WRITEFUNC>(Ports[Idx]);
+        (*Func)(Top,ele.Packet);
+      }
+      it = WriteQueue.erase(it);
+    } else {
+      it++;
+    }
+  }
+}
+
+void VerilatorSST@VERILOG_DEVICE@::initResetValues(const Params& params){
+  std::vector<std::string> optList;
+  params.find_array("resetVals", optList);
+
+  for( unsigned i=0; i<optList.size(); i++ ){
+    std::vector<std::string> vstr;
+    std::string s = optList[i];
+    splitStr(s, ':', vstr);
+
+    if( vstr.size() != 2 ){
+      output->fatal(CALL_INFO, -1,
+                    "Error in reading reset value from parameter list:%s\n",
+                    s.c_str() );
+    }
+
+    if( !isNamedPort(vstr[0]) ){
+      output->fatal(CALL_INFO, -1,
+                    "Error in reading reset value: %s is not a named port\n",
+                    vstr[0].c_str());
+    }
+
+    long unsigned val = std::stoul(vstr[1]);
+    ResetVals.push_back(std::make_pair(vstr[0],val));
+  }
+}
+
+void VerilatorSST@VERILOG_DEVICE@::init(unsigned int phase){
+  for (auto ele : ResetVals) {
+    std::vector<uint8_t> d;
+    // convert uint64 to byte vector
+    output->verbose(CALL_INFO, 1, 0, "initializing port %s to %" PRIu64 "\n", ele.first.data(), ele.second);
+    for (int i=0; i<8; i++) {
+      uint8_t tmp = (ele.second >> (i*8)) & 255;
+      d.push_back(tmp);
+    }
+    writePort(ele.first, d);
+  }
+}
+
+void VerilatorSST@VERILOG_DEVICE@::setup(){
+}
+
+void VerilatorSST@VERILOG_DEVICE@::finish(){
+  Top->final();
+}
+
+bool VerilatorSST@VERILOG_DEVICE@::clock(SST::Cycle_t cycle){
+  @VERILATOR_SST_CLOCK_TICK@
+  return false;
+}
+
+bool VerilatorSST@VERILOG_DEVICE@::isNamedPort(std::string PortName){
+
+  for( unsigned i=0; i<Ports.size(); i++ ){
+    if( std::get<V_NAME>(Ports[i]) == PortName ){
+      return true;
+    }
+  }
+
+  return false;
+}
+
+unsigned VerilatorSST@VERILOG_DEVICE@::getNumPorts(){
+  return Ports.size();
+}
+
+const std::vector<std::string> VerilatorSST@VERILOG_DEVICE@::getPortsNames(){
+  std::vector<std::string> Names;
+
+  for( unsigned i=0; i<Ports.size(); i++ ){
+    Names.push_back(std::get<V_NAME>(Ports[i]));
+  }
+
+  return Names;
+}
+
+bool VerilatorSST@VERILOG_DEVICE@::getPortType(std::string PortName,
+                                               SST::VerilatorSST::VPortType& direction){
+  unsigned Idx = 0;
+  try{
+    Idx = PortMap.at(PortName);
+  }catch(const std::out_of_range& oor){
+    output->fatal(CALL_INFO, -1, "Could not find port with name=%s\n",
+                  PortName.c_str());
+    return false;
+  }
+
+  direction = std::get<V_TYPE>(Ports[Idx]);
+  return true;
+}
+
+bool VerilatorSST@VERILOG_DEVICE@::getPortWidth(std::string PortName,
+                                                unsigned& Width){
+  unsigned Idx = 0;
+  try{
+    Idx = PortMap.at(PortName);
+  }catch(const std::out_of_range& oor){
+    output->fatal(CALL_INFO, -1, "Could not find port with name=%s\n",
+                  PortName.c_str());
+    return false;
+  }
+
+  Width = std::get<V_WIDTH>(Ports[Idx]);
+  return true;
+}
+
+bool VerilatorSST@VERILOG_DEVICE@::getPortDepth(std::string PortName,
+                                                unsigned& Depth){
+  unsigned Idx = 0;
+  try{
+    Idx = PortMap.at(PortName);
+  }catch(const std::out_of_range& oor){
+    output->fatal(CALL_INFO, -1, "Could not find port with name=%s\n",
+                  PortName.c_str());
+    return false;
+  }
+
+  Depth = std::get<V_DEPTH>(Ports[Idx]);
+  return true;
+}
+
+bool VerilatorSST@VERILOG_DEVICE@::getResetVal(std::string PortName,
+                                               uint64_t& Val){
+  unsigned Idx = 0;
+  try{
+    Idx = PortMap.at(PortName);
+  }catch(const std::out_of_range& oor){
+    output->fatal(CALL_INFO, -1, "Could not find port with name=%s\n",
+                  PortName.c_str());
+    return false;
+  }
+
+  for( unsigned i=0; i<ResetVals.size(); i++ ){
+    if( ResetVals[i].first == PortName ){
+      Val = ResetVals[i].second;
+      return true;
+    }
+  }
+
+  return false;
+}
+
+uint64_t VerilatorSST@VERILOG_DEVICE@::getCurrentTick(){
+  return ContextP->time();
+}
+
+std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPortVPI(std::string PortName){
+  vpiHandle vh1 = vpi_handle_by_name((PLI_BYTE8 *)PortName.data(), NULL);
+  assert(vh1 && "vpi should return a handle (port not found)");
+
+  auto vpiTypeVal = vpi_get(vpiType, vh1);
+  auto vpiSizeVal = vpi_get(vpiSize, vh1);
+
+  if(vpiTypeVal == vpiReg){
+    s_vpi_value val{vpiVectorVal};
+    vpi_get_value(vh1, &val);
+    
+    auto signalFactory = SignalFactory(vpiSizeVal,1);
+    auto signalPtr = signalFactory(val);
+    const std::vector<uint8_t>& d = signalPtr->getUIntVector(true);
+    delete signalPtr;
+    return d;
+  }
+
+  if(vpiTypeVal == vpiMemory){
+    vpiHandle iter = vpi_iterate(vpiMemoryWord,vh1);
+    assert(iter);
+
+    SignalFactory * signalFactory;
+    Signal * signalPtr = nullptr;
+    auto i = 0;
+    while(auto rowHandle = vpi_scan(iter)){
+      if(i == 0){
+        const auto rowSizeBits = vpi_get(vpiSize, rowHandle);
+        signalFactory = new SignalFactory(rowSizeBits, vpiSizeVal);
+      }
+
+      s_vpi_value row{SIGNAL_VPI_FORMAT};
+      vpi_get_value(rowHandle, &row);
+      signalPtr = (*signalFactory)(row);
+
+      vpi_free_object(rowHandle);
+      i++;
+    }
+
+    const std::vector<uint8_t>& d = signalPtr->getUIntVector(true);
+    delete signalPtr;
+    delete signalFactory;
+    return d;
+  }
+
+  assert(false && "unsupported vpiType");
+  std::vector<uint8_t> d;
+  return d;
+}
+
+void VerilatorSST@VERILOG_DEVICE@::writePortVPI(std::string PortName,
+                                                const std::vector<uint8_t>& Packet){
+  vpiHandle vh1 = vpi_handle_by_name(PortName.data(), NULL);
+  assert(vh1 && "vpi should return a handle (port not found)");
+
+  auto vpiTypeVal = vpi_get(vpiType, vh1);
+  auto vpiSizeVal = vpi_get(vpiSize, vh1);
+  
+
+  auto vpiDirVal = vpi_get(vpiDirection,vh1);
+  assert(vpiDirVal == vpiInput && "port must be an input, inout not supported");
+  unsigned Width;
+  unsigned Depth;
+  getPortWidth(PortName, Width);
+  getPortDepth(PortName, Depth);
+  Signal toWrite(Width, Depth, Packet, true);
+  if(vpiTypeVal == vpiReg){
+    t_vpi_value val = toWrite.getVpiValue(0);
+    vpi_put_value(vh1,&val,NULL,vpiNoDelay);
+    return;
+  }
+
+  if(vpiTypeVal == vpiMemory){
+    assert(vpiSizeVal == Depth && "port depth must match signal depth");
+    vpiHandle iter = vpi_iterate(vpiMemoryWord,vh1);
+    assert(iter);
+
+    int i = 0;
+    while(auto rowHandle = vpi_scan(iter)){
+      auto rowSizeBits = vpi_get(vpiSize, rowHandle);
+      assert(rowSizeBits == Width && "row width must match signal width");
+
+      t_vpi_value val = toWrite.getVpiValue(i);
+      vpi_put_value(rowHandle,&val,NULL,0);
+
+      vpi_free_object(rowHandle);
+      i++;
+    }
+
+    return;
+  }
+
+  assert(false && "unsupported vpiType");
+}
+
+void VerilatorSST@VERILOG_DEVICE@::writePort(std::string PortName,
+                                             const std::vector<uint8_t>& Packet){
+  // sanity check
+  if( !isNamedPort(PortName) ){
+    output->fatal(CALL_INFO, -1, "Could not find port with name=%s\n",
+                  PortName.c_str());
+  }
+
+  // inout ports must be disabled before writing
+  VPortType portType;
+  getPortType(PortName, portType);
+  if(portType == VPortType::V_INOUT) {
+    if(!ENABLE_INOUT_HANDLING) {
+      output->fatal(CALL_INFO,-1,"inout port (%s) cannot be written, inout handling is disabled\n", PortName.c_str());
+    }
+
+    if(!verifyInoutEnabledIs(false, PortName)) {
+      output->fatal(CALL_INFO,-1,"inout port (%s) cannot be written, it is being driven by the top module\n", PortName.c_str());
+    }
+  }
+
+  // determine which write to use
+  if( UseVPI ){
+    writePortVPI(PortName, Packet);
+  }else{
+    unsigned Idx = PortMap.at(PortName);
+    DirectWriteFunc Func = std::get<V_WRITEFUNC>(Ports[Idx]);
+    (*Func)(Top,Packet);
+  }
+}
+
+void VerilatorSST@VERILOG_DEVICE@::writePortAtTick(std::string PortName,
+                                                   const std::vector<uint8_t>& Packet,
+                                                   uint64_t Tick){
+  // sanity check
+  if( !isNamedPort(PortName) ){
+    output->fatal(CALL_INFO, -1, "Could not find port with name=%s\n",
+                  PortName.c_str());
+  }
+
+  // Tick is used as a delay/offset, not a definite tick value
+  // VPI/Direct is decided when polling the WriteQueue
+  WriteQueue.emplace_back(PortName, Tick+getCurrentTick(), Packet);
+}
+
+std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPort(std::string PortName){
+
+  // sanity check
+  if( !isNamedPort(PortName) ){
+    output->fatal(CALL_INFO, -1, "Could not find port with name=%s\n",
+                  PortName.c_str());
+  }
+
+  // inout ports must be enabled before reading
+  VPortType portType;
+  getPortType(PortName, portType);
+  if(portType == VPortType::V_INOUT) {
+    if(!ENABLE_INOUT_HANDLING) {
+      output->fatal(CALL_INFO, -1, "inout port (%s) cannot be read, inout handling is disabled\n", PortName.c_str());
+    }
+
+    if(!verifyInoutEnabledIs(true, PortName)) {
+      output->fatal(CALL_INFO, -1, "inout port (%s) cannot be read, it is not being driven by the top module\n", PortName.c_str());
+    }
+
+    // redirect to __out port
+    const std::string outPortName = PortName + "__out";
+    return readPort(outPortName);
+  }
+
+  // determine which read to use
+  if( UseVPI ){
+    const std::vector<uint8_t>& data = readPortVPI(PortName);
+    return data;
+  }else{
+    unsigned Idx = PortMap.at(PortName);
+    DirectReadFunc Func = std::get<V_READFUNC>(Ports[Idx]);
+    const std::vector<uint8_t>& data = (*Func)(Top);
+    return data;
+  }
+}
+
+bool VerilatorSST@VERILOG_DEVICE@::verifyInoutEnabledIs(const bool isEnabled, const std::string portName){
+  const std::string enPortName = portName + "__en";
+  const std::vector<uint8_t> enPortData = readPort(enPortName);
+  uint32_t bitCnt;
+  getPortWidth(enPortName,bitCnt);
+  const uint32_t byteWidth = (bitCnt+7)/8;
+
+  for(size_t i=0; i<byteWidth; i++){
+    // all bits of inout port must be driven before valid read
+    const uint8_t mask = bitCnt > 7 ? 255 : (1 << bitCnt) - 1;
+    const bool allBitsAtLevel = isEnabled ? (enPortData[i] & mask) == mask : (enPortData[i] & mask) == 0;
+    bitCnt -= 8;
+
+    if (!allBitsAtLevel) return false;
+  }
+
+  return true;
+}
+
+@VERILATOR_SST_PORT_IO_IMPLS@
+
+@VERILATOR_SST_PORT_HANDLER_IMPLS@
+
+// EOF
