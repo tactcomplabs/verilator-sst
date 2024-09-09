@@ -24,7 +24,9 @@ SCRATCH_SIZE = 512 * 1024
 UART_ADDR_WIDTH = 2
 UART_DATA_WIDTH = 2
 UART_BAUD_PERIOD = 4 # Should be one more than the verilog param 
-# NOTE: Because the verilog seems to have a spare cycle (?)
+# NOTE: Because the verilog seems to have a spare cycle; also if 
+# baud period is lower than 4, may have to give special care to 
+# the start bit
 
 class OpAction(Enum):
     Write = "write"
@@ -303,18 +305,18 @@ class Test:
                 opStart = start + opCycles * j
                 frames = [ wFlagFrame, wAddrFrame, wDataFrame ]
                 for frame in frames:
+                    bit = 0
                     for i in range(opStart, opStart + frameCycles):
                         self.addTestOp("clk", OpAction.Write, 0, i)
                         if (i % UART_BAUD_PERIOD == 0):
                             # send frame bit
-                            #frameSelect = (i - opStart) // frameCycles
-                            bit = (i - opStart) // UART_BAUD_PERIOD
-                            #frameToSend = frames[frameSelect]
                             self.addTestOp("RX", OpAction.Write, (frame >> bit)&1, i)
+                            bit += 1
                         self.addTestOp("clk", OpAction.Write, 1, i)
                     opStart += frameCycles
                 addr += 1
                 addr = addr % (1 << UART_ADDR_WIDTH)
+            return opStart # returns num of next cycle
 
         #read rx={0} -> rx{addr} -> tx{data}
         def uartReadOps(start, count):
@@ -358,7 +360,9 @@ class Test:
                 addr = addr % (1 << UART_ADDR_WIDTH)
 
         initUart()
-        uartWriteOps(4, 1)
+        # count of read ops must not be higher than write ops 
+        nextCycle = uartWriteOps(4, 1)
+        uartReadOps(nextCycle, 1)
           
 
     def getTest(self):
