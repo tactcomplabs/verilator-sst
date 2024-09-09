@@ -19,7 +19,7 @@ if [[ "$ENABLE_INOUT_HANDLING" == "ON" ]]; then
   echo "OPTIONS = $OPTIONS"
 fi
 
-verilator --cc --vpi --public-flat-rw $OPTIONS -CFLAGS "-fPIC -std=c++17" --Mdir $BUILDDIR -y $SOURCEDIR --prefix VTop --top-module $TOP $SRC
+verilator --cc --vpi --public-flat-rw -CFLAGS "-fPIC -std=c++17" --Mdir $BUILDDIR -y $SOURCEDIR --prefix VTop --top-module $TOP $SRC $OPTIONS
 cd $BUILDDIR
 make -f VTop.mk
 
