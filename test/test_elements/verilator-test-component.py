@@ -291,7 +291,8 @@ class Test:
             # HDL seems to expect stop bit for two cycles
             opCycles = frameCycles * 3
             addr = 0
-            wFlagFrame = 0b11_01_0             # data is LSB of 1 for writes 
+            #wFlagFrame = 0b11_01_0             # data is LSB of 1 for writes 
+            wFlagFrame = ((0b11 << UART_DATA_WIDTH) + 1) << 1
             data = 1
             for i in range(UART_DATA_WIDTH-1):
                 data = (data << 1) + 1
@@ -324,7 +325,8 @@ class Test:
             # HDL seems to expect stop bit for two cycles
             opCycles = frameCycles * 3
             addr = 0
-            rFlagFrame = 0b11_00_0             # data is LSB of 0 for reads 
+            #rFlagFrame = 0b11_00_0             # data is LSB of 0 for reads 
+            rFlagFrame = 0b11 << (UART_DATA_WIDTH + 1)
             data = 1
             for i in range(UART_DATA_WIDTH-1):
                 data = (data << 1) + 1
@@ -361,8 +363,8 @@ class Test:
 
         initUart()
         # count of read ops must not be higher than write ops 
-        nextCycle = uartWriteOps(4, 1)
-        uartReadOps(nextCycle, 1)
+        nextCycle = uartWriteOps(4, 2)
+        uartReadOps(nextCycle, 2)
           
 
     def getTest(self):
@@ -371,8 +373,7 @@ class Test:
     def printTest(self):
         print(self.TestOps)
 
-def run_direct(subName, verbosity, verbosityMask, vpi):
-    numCycles = 128
+def run_direct(subName, verbosity, verbosityMask, vpi, numCycles):
     testScheme = Test()
     # tell Test to ignore clk writes
     testScheme.setDirectMode()
@@ -414,8 +415,7 @@ def run_direct(subName, verbosity, verbosityMask, vpi):
         #"resetVals" : ["reset_l:0", "clk:0", "add:16", "en:0"]
     })
 
-def run_links(subName, verbosity, verbosityMask, vpi):
-    numCycles = 128
+def run_links(subName, verbosity, verbosityMask, vpi, numCycles):
     testScheme = Test()
     ports = PortDef()
     if ( subName == "Counter" ):
@@ -514,6 +514,7 @@ def main():
     parser.add_argument("-v", "--verbose", choices=range(15), default=4, help="Set the level of verbosity used by the test components")
     parser.add_argument("-a", "--access", choices=["vpi", "direct"], default="direct", help="Select the method used by the subcomponent to read/write the verilated model's ports")
     parser.add_argument("-k", "--mask", choices=[choice.name for choice in VerboseMasking], default="FULL")
+    parser.add_argument("-c", "--cycles", default=50, help="Set number of cycles the simulation will run for")
 
     args = parser.parse_args()
 
@@ -521,6 +522,7 @@ def main():
         raise Exception("Unknown model selected")
 
     sub = args.model
+    numCycles = int(args.cycles)
     chosenMask = args.mask
     verbosityMask = VerboseMasking[chosenMask].value
     print("Using verbosityMask {}".format(verbosityMask))
@@ -532,9 +534,9 @@ def main():
 
 
     if args.interface == "direct":
-        run_direct(sub, verbosity, verbosityMask, vpi)
+        run_direct(sub, verbosity, verbosityMask, vpi, numCycles)
     elif args.interface == "links":
-        run_links(sub, verbosity, verbosityMask, vpi)
+        run_links(sub, verbosity, verbosityMask, vpi, numCycles)
 
 if __name__ == "__main__":
     main()
