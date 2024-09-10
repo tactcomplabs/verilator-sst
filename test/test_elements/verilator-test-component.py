@@ -26,7 +26,7 @@ UART_DATA_WIDTH = 2
 UART_BAUD_PERIOD = 4 # Should be one more than the verilog param 
 # NOTE: Because the verilog seems to have a spare cycle; also if 
 # baud period is lower than 4, may have to give special care to 
-# the start bit
+# the start bit interactions
 
 class OpAction(Enum):
     Write = "write"
@@ -287,12 +287,12 @@ class Test:
 
         #write rx={1} -> rx{addr} -> rx{data}
         def uartWriteOps(start, count):
-            frameCycles = UART_BAUD_PERIOD * (3 + UART_DATA_WIDTH) # 3 instead of 2
+            frameCycles = UART_BAUD_PERIOD * (3 + UART_DATA_WIDTH)
             # HDL seems to expect stop bit for two cycles
+            # so data width + start bit + 2 stop bits
             opCycles = frameCycles * 3
             addr = 0
-            #wFlagFrame = 0b11_01_0             # data is LSB of 1 for writes 
-            wFlagFrame = ((0b11 << UART_DATA_WIDTH) + 1) << 1
+            wFlagFrame = ((0b11 << UART_DATA_WIDTH) + 1) << 1 # data is LSB of 1 for writes 
             data = 1
             for i in range(UART_DATA_WIDTH-1):
                 data = (data << 1) + 1
@@ -321,12 +321,12 @@ class Test:
 
         #read rx={0} -> rx{addr} -> tx{data}
         def uartReadOps(start, count):
-            frameCycles = UART_BAUD_PERIOD * (3 + UART_DATA_WIDTH) # 3 instead of 2
+            frameCycles = UART_BAUD_PERIOD * (3 + UART_DATA_WIDTH)
             # HDL seems to expect stop bit for two cycles
+            # so data width + start bit + 2 stop bits
             opCycles = frameCycles * 3
             addr = 0
-            #rFlagFrame = 0b11_00_0             # data is LSB of 0 for reads 
-            rFlagFrame = 0b11 << (UART_DATA_WIDTH + 1)
+            rFlagFrame = 0b11 << (UART_DATA_WIDTH + 1) # data is LSB of 0 for reads 
             data = 1
             for i in range(UART_DATA_WIDTH-1):
                 data = (data << 1) + 1
@@ -341,7 +341,7 @@ class Test:
                 # only transmit two frames (flag, address)
                 frames = [ rFlagFrame, rAddrFrame ]
                 for frame in frames:
-                    # do the writing for each frame bit by bit
+                    # do the writing for flag/address frames bit by bit
                     for i in range(opStart, opStart + frameCycles):
                         self.addTestOp("clk", OpAction.Write, 0, i)
                         if (i % UART_BAUD_PERIOD == 0):
@@ -451,6 +451,7 @@ def run_links(subName, verbosity, verbosityMask, vpi, numCycles):
         ports.addPort("rst_l",     1,  WRITE_PORT)
         ports.addPort("RX",        1,  WRITE_PORT)
         ports.addPort("TX",        1,  READ_PORT)
+        # NOTE: mem_debug port is unused for testing
         ports.addPort("mem_debug", 1,  READ_PORT)
         testScheme.buildUartTest(numCycles)
         print(ports.getPortMap())
