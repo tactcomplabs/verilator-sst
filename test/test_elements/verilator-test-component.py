@@ -363,8 +363,8 @@ class Test:
 
         initUart()
         # count of read ops must not be higher than write ops 
-        nextCycle = uartWriteOps(4, 2)
-        uartReadOps(nextCycle, 2)
+        nextCycle = uartWriteOps(4, 4)
+        uartReadOps(nextCycle, 4)
           
 
     def getTest(self):
