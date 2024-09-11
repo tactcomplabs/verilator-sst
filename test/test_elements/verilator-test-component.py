@@ -370,8 +370,9 @@ class Test:
     def getTest(self):
         return(self.TestOps)
 
-    def printTest(self):
-        print(self.TestOps)
+    def __str__(self):
+        return(str(self.TestOps))
+
 
 def run_direct(subName, verbosity, verbosityMask, vpi, numCycles):
     testScheme = Test()
@@ -387,8 +388,8 @@ def run_direct(subName, verbosity, verbosityMask, vpi, numCycles):
         testScheme.buildAccum1DTest(numCycles)
         print("Basic test for Accum1D:")
     elif ( subName == "UART" ):
-        print("Basic test for UART:")
         testScheme.buildUartTest(numCycles)
+        print("Basic test for UART:")
     elif ( subName == "Scratchpad" ):
         testScheme.buildScratchTest(numCycles)
         print("Basic test for Scratchpad:")
@@ -396,7 +397,7 @@ def run_direct(subName, verbosity, verbosityMask, vpi, numCycles):
         testScheme.buildPinTest(numCycles)
         print("Basic test for Pin:")
 
-    testScheme.printTest()
+    print(testScheme)
     top = sst.Component("top0", "verilatortestdirect.VerilatorTestDirect")
     top.addParams({
         "verbose" : verbosity,
@@ -476,7 +477,7 @@ def run_links(subName, verbosity, verbosityMask, vpi, numCycles):
         testScheme.buildPinTest(numCycles)
         print(ports.getPortMap())
         print("Basic test for Pin:")
-    testScheme.printTest()
+    print(testScheme)
 
     tester = sst.Component("vtestLink0", "verilatortestlink.VerilatorTestLink")
     tester.addParams({
