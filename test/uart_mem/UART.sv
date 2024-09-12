@@ -4,15 +4,15 @@
 //write rx={1} -> rx{addr} -> rx{data}
 
 `ifndef ADDR_WIDTH
-`define ADDR_WIDTH 1
+`define ADDR_WIDTH 2
 `endif
 
 `ifndef DATA_WIDTH
-`define DATA_WIDTH 1
+`define DATA_WIDTH 2
 `endif
 
 `ifndef BAUD_PERIOD
-`define BAUD_PERIOD 1
+`define BAUD_PERIOD 3
 `endif
 
 `define assert(cond,msg) initial begin \
