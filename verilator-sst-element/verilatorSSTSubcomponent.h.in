@@ -37,7 +37,9 @@ typedef std::tuple<std::string,
                    unsigned, //width
                    unsigned, //depth
                    DirectWriteFunc,
-                   DirectReadFunc> PortEntry;
+                   DirectReadFunc,
+                   SST::Statistics::Statistic<uint64_t>*,
+                   SST::Statistics::Statistic<uint64_t>*> PortEntry;
 
 
 // ---------------------------------------------------------------
@@ -70,7 +72,10 @@ public:
   )
 
   // Add statistics
-  SST_ELI_DOCUMENT_STATISTICS()
+  SST_ELI_DOCUMENT_STATISTICS(
+    {"PortWrites", "Counts the total number of input port writes", "writes", 1 },
+    {"PortReads",  "Counts the total number of output port reads", "reads",  1 },
+  )
 
   /// default constructor
   VerilatorSST@VERILOG_DEVICE@(ComponentId_t id, const Params& params);
@@ -169,7 +174,7 @@ private:
   std::vector<PortReset> ResetVals;
 
   ///< Vector of port descriptor tuples
-  const std::vector<PortEntry>  Ports = {
+  std::vector<PortEntry>  Ports = {
     @VERILATOR_SST_PORT_ENTRY@
   };
 

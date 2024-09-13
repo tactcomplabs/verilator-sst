@@ -61,6 +61,8 @@ enum class VPortType : uint8_t {
 #define V_DEPTH           3
 #define V_WRITEFUNC       4
 #define V_READFUNC        5
+#define V_WRITE_STAT      6
+#define V_READ_STAT       7
 
 typedef std::pair<std::string,
                   uint64_t> PortReset;

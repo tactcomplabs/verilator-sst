@@ -539,6 +539,10 @@ def main():
         run_direct(sub, verbosity, verbosityMask, vpi, numCycles)
     elif args.interface == "links":
         run_links(sub, verbosity, verbosityMask, vpi, numCycles)
+          
+    sst.setStatisticLoadLevel(7)
+    sst.setStatisticOutput("sst.statOutputCSV")
+    sst.enableAllStatisticsForAllComponents()
 
 if __name__ == "__main__":
     main()
