@@ -541,7 +541,7 @@ def main():
         run_links(sub, verbosity, verbosityMask, vpi, numCycles)
           
     sst.setStatisticLoadLevel(7)
-    sst.setStatisticOutput("sst.statOutputConsole")
+    sst.setStatisticOutput("sst.statOutputCSV")
     sst.enableAllStatisticsForAllComponents()
 
 if __name__ == "__main__":
