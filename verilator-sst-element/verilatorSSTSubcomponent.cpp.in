@@ -66,11 +66,29 @@ VerilatorSST@VERILOG_DEVICE@::VerilatorSST@VERILOG_DEVICE@(ComponentId_t id,
   registerClock(clockFreq,
                 new Clock::Handler<VerilatorSST@VERILOG_DEVICE@>(this,
                                                                  &VerilatorSST@VERILOG_DEVICE@::clock));
+
+  // register statistics
+  for(auto &portEntry : Ports) {
+    if((static_cast<uint8_t>(std::get<V_TYPE>(portEntry)) & static_cast<uint8_t>(VPortType::V_INPUT)) > 0){
+      std::get<V_WRITE_STAT>(portEntry) = registerStatistic<uint64_t>("PortWrites",std::get<V_NAME>(portEntry));
+    }
+
+    if((static_cast<uint8_t>(std::get<V_TYPE>(portEntry)) & static_cast<uint8_t>(VPortType::V_OUTPUT)) > 0){
+      #if ENABLE_INOUT_HANDLING
+        const std::string portName = std::get<V_NAME>(portEntry);
+        unsigned isInoutEn = portName.find("__en") != std::string::npos;
+        unsigned isInoutOut = portName.find("__out") != std::string::npos;
+        if(isInoutEn || isInoutOut) continue;
+        std::get<V_READ_STAT>(portEntry) = registerStatistic<uint64_t>("PortReads",portName);
+      #else
+        std::get<V_READ_STAT>(portEntry) = registerStatistic<uint64_t>("PortReads",std::get<V_NAME>(portEntry));
+      #endif
+    }
+  }
 }
 
 VerilatorSST@VERILOG_DEVICE@::~VerilatorSST@VERILOG_DEVICE@(){
-  delete Top;
-  delete ContextP;
+  delete Top; // ContextP should be inherently deleted by this also
 }
 
 void VerilatorSST@VERILOG_DEVICE@::splitStr(const std::string& s,
@@ -363,17 +381,23 @@ void VerilatorSST@VERILOG_DEVICE@::writePort(std::string PortName,
   }
 
   // inout ports must be disabled before writing
-  VPortType portType;
-  getPortType(PortName, portType);
-  if(portType == VPortType::V_INOUT) {
-    if(!ENABLE_INOUT_HANDLING) {
-      output->fatal(CALL_INFO,-1,"inout port (%s) cannot be written, inout handling is disabled\n", PortName.c_str());
-    }
+  #if ENABLE_INOUT_HANDLING
+    VPortType portType;
+    getPortType(PortName, portType);
+    if(portType == VPortType::V_INOUT) {
+      if(!ENABLE_INOUT_HANDLING) {
+        output->fatal(CALL_INFO,-1,"inout port (%s) cannot be written, inout handling is disabled\n", PortName.c_str());
+      }
 
-    if(!verifyInoutEnabledIs(false, PortName)) {
-      output->fatal(CALL_INFO,-1,"inout port (%s) cannot be written, it is being driven by the top module\n", PortName.c_str());
+      if(!verifyInoutEnabledIs(false, PortName)) {
+        output->fatal(CALL_INFO,-1,"inout port (%s) cannot be written, it is being driven by the top module\n", PortName.c_str());
+      }
     }
-  }
+  #endif
+
+  // update statistics
+  unsigned idx = PortMap.at(PortName);
+  std::get<V_WRITE_STAT>(Ports[idx])->incrementCollectionCount(1);
 
   // determine which write to use
   if( UseVPI ){
@@ -408,21 +432,36 @@ std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPort(std::string PortName
   }
 
   // inout ports must be enabled before reading
-  VPortType portType;
-  getPortType(PortName, portType);
-  if(portType == VPortType::V_INOUT) {
-    if(!ENABLE_INOUT_HANDLING) {
-      output->fatal(CALL_INFO, -1, "inout port (%s) cannot be read, inout handling is disabled\n", PortName.c_str());
-    }
+  #if ENABLE_INOUT_HANDLING
+    VPortType portType;
+    getPortType(PortName, portType);
+    if(portType == VPortType::V_INOUT) {
+      if(!ENABLE_INOUT_HANDLING) {
+        output->fatal(CALL_INFO, -1, "inout port (%s) cannot be read, inout handling is disabled\n", PortName.c_str());
+      }
 
-    if(!verifyInoutEnabledIs(true, PortName)) {
-      output->fatal(CALL_INFO, -1, "inout port (%s) cannot be read, it is not being driven by the top module\n", PortName.c_str());
-    }
+      if(!verifyInoutEnabledIs(true, PortName)) {
+        output->fatal(CALL_INFO, -1, "inout port (%s) cannot be read, it is not being driven by the top module\n", PortName.c_str());
+      }
 
-    // redirect to __out port
-    const std::string outPortName = PortName + "__out";
-    return readPort(outPortName);
-  }
+      // redirect to __out port
+      const std::string outPortName = PortName + "__out";
+      return readPort(outPortName);
+    }
+  #endif
+
+  // update statistics
+  #if ENABLE_INOUT_HANDLING
+    if(PortName.find("__en") == std::string::npos){
+      const size_t outSubstrIdx = PortName.find("__out");
+      const std::string visiblePortName = outSubstrIdx != std::string::npos ? PortName.substr(0,outSubstrIdx) : PortName;
+      const unsigned idx = PortMap.at(visiblePortName);
+      std::get<V_READ_STAT>(Ports[idx])->incrementCollectionCount(1);
+    }
+  #else
+    const unsigned idx = PortMap.at(PortName);
+    std::get<V_READ_STAT>(Ports[idx])->incrementCollectionCount(1);
+  #endif
 
   // determine which read to use
   if( UseVPI ){
