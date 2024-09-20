@@ -32,6 +32,7 @@ namespace SST::VerilatorSST {
 typedef void (*DirectWriteFunc)(VTop*, const std::vector<uint8_t>&);
 typedef std::vector<uint8_t> (*DirectReadFunc)(VTop*);
 
+// Type to hold necessary Verilator port information
 typedef std::tuple<std::string,
                    VPortType,
                    unsigned, //width
@@ -135,11 +136,11 @@ public:
 private:
 
   // Private data
-  bool UseVPI;          ///< Is the verilator VPI interface used?
-  VerilatedContext *ContextP;       ///< verilated context
+  bool UseVPI;                      ///< Is the verilator VPI interface used?
+  VerilatedContext *ContextP;       ///< verilated context for the module
   VTop *Top;                        ///< top module
   std::list<QueueEntry> WriteQueue; ///< port write queue
-  // Links for each port
+  // Generated links for each port
   @VERILATOR_SST_LINK_DEFS@
 
   // Private functions
@@ -168,7 +169,7 @@ private:
   @VERILATOR_SST_PORT_HANDLERS@
 
   // Private data
-  std::string clockPort;                  ///< verilator named clock port
+  std::string clockPort;   ///< verilator named clock port
 
   ///< Map of port indices to reset values
   std::vector<PortReset> ResetVals;
