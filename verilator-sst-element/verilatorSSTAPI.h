@@ -89,21 +89,21 @@ class PortEvent : public SST::Event{
 public:
   /// PortEvent: default constructor
   explicit PortEvent()
-    : Event(), AtTick(0x00ull), action(PortEventAction::READ) {
+    : Event(), AtTick(0x00ull), Action(PortEventAction::READ) {
   }
 
-  explicit PortEvent(uint64_t Tick, PortEventAction action)
-    : Event(), AtTick(Tick), action(action) {
+  explicit PortEvent(uint64_t Tick, PortEventAction Action)
+    : Event(), AtTick(Tick), Action(Action) {
   }
 
   explicit PortEvent(std::vector<uint8_t> P)
-    : Event(), AtTick(0x00ull), action(PortEventAction::WRITE) {
+    : Event(), AtTick(0x00ull), Action(PortEventAction::WRITE) {
     std::copy(P.begin(), P.end(),
               std::back_inserter(Packet));
   }
 
   explicit PortEvent(std::vector<uint8_t> P, uint64_t Tick)
-    : Event(), AtTick(Tick), action(PortEventAction::WRITE) {
+    : Event(), AtTick(Tick), Action(PortEventAction::WRITE) {
     std::copy(P.begin(), P.end(),
               std::back_inserter(Packet));
   }
@@ -115,7 +115,7 @@ public:
   }
 
   /// PortEvent: retrieve the packet action
-  PortEventAction getAction() const { return action; }
+  PortEventAction getAction() const { return Action; }
 
   /// PortEvent: retrieve the target clock tick
   uint64_t getAtTick() const { return AtTick; }
@@ -135,7 +135,7 @@ public:
 private:
   std::vector<uint8_t> Packet;  /// event packet
   uint64_t AtTick;              /// event at clock tick
-  PortEventAction action;            /// event action
+  PortEventAction Action;            /// event action
 
 public:
   // PortEvent: event serializer
@@ -144,7 +144,7 @@ public:
     Event::serialize_order(ser);
     ser & Packet;
     ser & AtTick;
-    ser & action;
+    ser & Action;
   }
 
   // PortEvent: implements the nic serialization
