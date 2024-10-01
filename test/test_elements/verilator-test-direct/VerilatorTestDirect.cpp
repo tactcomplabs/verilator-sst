@@ -84,9 +84,9 @@ std::vector<uint8_t> VerilatorTestDirect::generateData(unsigned Width, unsigned 
 
 void VerilatorTestDirect::InitTestOps( const SST::Params& params ) {
   const std::string fileName = params.find<std::string>( "testFile", "" );
-  // test operations should have the form portname:value:tick
+  // test operations should have the form portname:value:tick:isWrite
   if ( fileName == "" ) {
-    // try load test ops from param here
+    // try to load test ops from param here
     std::vector<std::string> optList;
     params.find_array<std::string>( "testOps", optList );
     for (auto it=optList.begin(); it!=optList.end(); it++) {
@@ -94,6 +94,7 @@ void VerilatorTestDirect::InitTestOps( const SST::Params& params ) {
       OpQueue.push( toQueue );
     } 
   } else {
+    // load test ops from provided file
     std::ifstream testFile( fileName );
     std::string line;
     if ( testFile.is_open() ) {
@@ -108,16 +109,13 @@ void VerilatorTestDirect::InitTestOps( const SST::Params& params ) {
 bool VerilatorTestDirect::ExecTestOp() {
   if ( !OpQueue.empty() ) {
     const TestOp currOp = OpQueue.front();
-    //const uint32_t portId = currOp.PortId;
     const std::string portName = currOp.PortName;
-    //uint32_t size = InfoVec[portId].Size;
     uint32_t width;
     uint32_t depth;
     model->getPortWidth( portName, width );
     model->getPortDepth( portName, depth );
     const uint32_t byteWidth = width / 8 + ( ( width % 8 == 0 ) ? 0 : 1 );
     uint32_t size = byteWidth * depth;
-    //const bool writing = InfoVec[portId].Write;
     VPortType portType;
     model->getPortType(portName, portType);
     const bool writing = currOp.isWrite;
@@ -130,6 +128,7 @@ bool VerilatorTestDirect::ExecTestOp() {
                     "Error: TestOp detected past when it should've been executed. PortName=%s, Tick=%" PRIu64 "\n",
                    portName.c_str(), tick );
     }
+    // convert the given data to a byte vector
     const uint64_t * vals = currOp.Values;
     std::vector<uint8_t> Data;
     for ( size_t i=0; i<nvals; i++ ) {
@@ -155,12 +154,14 @@ bool VerilatorTestDirect::ExecTestOp() {
       for (size_t i=0; i<Data.size(); i++) {
         output.verbose( CALL_INFO, 4, VerboseMasking::WRITE_DATA, "byte %zu: %" PRIx8 "\n", i, Data[i] );
       }
+      // perform the write operation
       model->writePort(portName, Data);
     } else {
       output.verbose( CALL_INFO, 4, VerboseMasking::READ_EVENT, "Sending read on port %s: data to be checked has size=%zu\n", portName.c_str(), Data.size() );
       for (size_t i=0; i<Data.size(); i++) {
         output.verbose( CALL_INFO, 4, VerboseMasking::READ_DATA, "byte %zu: %" PRIx8 "\n", i, Data[i] );
       }
+      // perform the read operation and compare read data to expected read data
       const std::vector<uint8_t> & ReadData = model->readPort(portName);
       output.verbose( CALL_INFO, 4, VerboseMasking::READ_DATA, "Read data: size=%zu\n", ReadData.size() );
       for (size_t i=0; i<ReadData.size(); i++) {
@@ -213,6 +214,7 @@ bool VerilatorTestDirect::clock(SST::Cycle_t currentCycle){
     return true;
   }
 
+  // execute any queued test operations for the current tick
   while ( ExecTestOp() );
   currTick++;
 
