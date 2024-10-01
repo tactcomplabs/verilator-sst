@@ -32,11 +32,12 @@
 
 namespace SST::VerilatorSST {
 
+// struct to hold info defining each operation to be performed for testing
 struct TestOp {
   std::string PortName;
-  uint64_t * Values;
+  uint64_t * Values; // Either write data or expected read data
   uint64_t AtTick;
-  bool isWrite; //TODO same code in VerilatorTestLInk.h
+  bool isWrite;
 
   // Default constructor
   TestOp() : PortName( 0 ), isWrite(false), Values( nullptr ), AtTick( 0 ) { }
@@ -77,6 +78,7 @@ public:
     }
   }
 
+  // convert operation info from param string to TestOp structure
   const TestOp ConvertToTestOp( const std::string& StrOp ) {
     std::vector<std::string> op;
     splitStr( StrOp, ':', op );
@@ -145,11 +147,11 @@ private:
   SST::Output    output;                          ///< VerilatorTestDirect: SST output
   uint64_t NumCycles;                             ///< VerilatorTestDirect: number of cycles to execute
   SST::VerilatorSST::VerilatorSSTBase *model;     ///< VerilatorTestDirect: subcomponent model
-  std::queue<TestOp> OpQueue;
-  uint64_t currTick = 0;
+  std::queue<TestOp> OpQueue;                     ///< VerilatorTestDirect: queue holding test operations in order of tick
+  uint64_t currTick = 0;         ///< VerilatorTestDirect: current tick of the test component
 
-  void InitTestOps( const SST::Params& params );
-  bool ExecTestOp();
+  void InitTestOps( const SST::Params& params ); ///<VerilatorTestDirect: load test operations from component params
+  bool ExecTestOp();                             ///<VerilatorTestDirect: execute a test operation if there are any for the current tick
  
   std::vector<uint8_t> generateData(unsigned Width, unsigned Depth);  ///< VerilatorTestDirect: generate random input data
 
