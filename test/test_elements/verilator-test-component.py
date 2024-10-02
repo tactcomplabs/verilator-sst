@@ -55,8 +55,11 @@ class PortDef:
         self.PortId = 0
         self.PortNames = [ ]
 
-     # portName is a string, portSize is an int (measured in bytes), portDir
-     # should use READ_PORT, WRITE_PORT, or INOUT_PORT globals
+    # portName is a string, portSize is an int (measured in bytes), portDir
+    # should use READ_PORT, WRITE_PORT, or INOUT_PORT globals
+    # NOTE: because this increments PortId, ports should be 
+    # added in order of their verilog declaration (even if 
+    # unused by the test)
     def addPort(self, portName, portSize, portDir):
         tmp = f"{portName}:{self.PortId}:{portSize}:{portDir}"
         self.PortList.append(tmp)
