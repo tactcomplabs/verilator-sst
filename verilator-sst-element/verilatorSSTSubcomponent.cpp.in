@@ -88,8 +88,7 @@ VerilatorSST@VERILOG_DEVICE@::VerilatorSST@VERILOG_DEVICE@(ComponentId_t id,
 }
 
 VerilatorSST@VERILOG_DEVICE@::~VerilatorSST@VERILOG_DEVICE@(){
-  delete Top;
-  delete ContextP;
+  delete Top; // ContextP will be handled by Top's deletion
 }
 
 void VerilatorSST@VERILOG_DEVICE@::splitStr(const std::string& s,

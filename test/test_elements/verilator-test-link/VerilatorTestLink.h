@@ -32,6 +32,7 @@
 
 namespace SST::VerilatorSST {
 
+// struct used to define characteristics of each exposed port
 struct PortDef {
   uint32_t PortId;
   uint32_t Size;
@@ -46,6 +47,7 @@ struct PortDef {
               PortId( PortId ), Size( Size ), Write( Write ), Read( Read ) { }
 };
 
+// struct used to define each port operation used for testing
 struct TestOp {
   uint32_t PortId;
   uint64_t * Values;
@@ -91,6 +93,7 @@ public:
     }
   }
 
+  /// VerilatorTestLink: function converting string from param to TestOp struct for use
   const TestOp ConvertToTestOp( const std::string& StrOp ) {
     std::vector<std::string> op;
     splitStr( StrOp, ':', op );
@@ -165,18 +168,18 @@ private:
   bool primaryComponent;                        ///< VerilatorTestLink: registers as the primary component
   uint64_t NumCycles;                           ///< VerilatorTestLink: number of cycles to execute
   SST::VerilatorSST::VerilatorSSTBase *model;   ///< VerilatorTestLink: subcomponent model
-  std::map<std::string, PortDef> PortMap;
-  std::vector<PortDef> InfoVec;
-  SST::Link ** Links;
-  std::queue<TestOp> OpQueue;
-  std::queue<std::vector<uint8_t>> ReadDataCheck;
-  uint64_t currTick = 0;
+  std::map<std::string, PortDef> PortMap;       ///< VerilatorTestLink: access port characteristics based on name
+  std::vector<PortDef> InfoVec;                 ///< VerilatorTestLink: access port characteristics by ID number
+  SST::Link ** Links;                           ///< VerilatorTestLink: list of links (one for each port in the verilator model)
+  std::queue<TestOp> OpQueue;                   ///< VerilatorTestLink: queue holding test operations to be applied
+  std::queue<std::vector<uint8_t>> ReadDataCheck; ///< VerilatorTestLink: queue to hold expected read data to check for correct read results
+  uint64_t currTick = 0;                          ///< VerilatorTestLink: current tick of this test component
 
-  void InitPortMap( const SST::Params& params );
-  void InitLinkConfig( const SST::Params& params );
-  void InitTestOps( const SST::Params& params );
-  void RecvPortEvent( SST::Event* ev, unsigned portId );
-  bool ExecTestOp();
+  void InitPortMap( const SST::Params& params );    ///< VerilatorTestLink: initialize name:port_info mapping
+  void InitLinkConfig( const SST::Params& params ); ///< VerilatorTestLink: configure the links for each port
+  void InitTestOps( const SST::Params& params );    ///< VerilatorTestLink: load in the test operations from params
+  void RecvPortEvent( SST::Event* ev, unsigned portId );  ///< VerilatorTestLink: general port handler
+  bool ExecTestOp();  ///< VerilatorTestLink: perform the next queued test operation
 
 };  // class VerilatorTestLink
 };  // namespace SST::VerilatorSST

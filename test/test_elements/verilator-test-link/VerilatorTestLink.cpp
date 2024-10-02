@@ -70,6 +70,7 @@ void VerilatorTestLink::init( unsigned int phase ){
 
 void VerilatorTestLink::InitPortMap( const SST::Params& params ) {
   std::vector<std::string> optList;
+  // get port information from params list
   params.find_array( "portMap", optList );
   for( size_t i=0; i<optList.size(); i++ ){
     output.verbose( CALL_INFO, 1, VerboseMasking::INIT, "Port map entry: %s\n", optList[i].c_str() );
@@ -81,11 +82,13 @@ void VerilatorTestLink::InitPortMap( const SST::Params& params ) {
                     "Error in reading value from portMap parameter:%s\n",
                     s.c_str() );
     }
+    // store ID, size, type, and acceptable operations for the port
     const long unsigned portId = std::stoul( vstr[1] );
     const long unsigned portSize = std::stoul( vstr[2] );
     const long unsigned portType = std::stoul( vstr[3] );
     const bool portIsWriteable = (static_cast<uint8_t>(portType) & static_cast<uint8_t>(VPortType::V_INPUT)) > 0;
     const bool portIsReadable = (static_cast<uint8_t>(portType) & static_cast<uint8_t>(VPortType::V_OUTPUT)) > 0;
+    // put the port info in the map and the info vector
     PortMap[vstr[0]] = PortDef( portId, portSize, portIsWriteable, portIsReadable ); 
     InfoVec[portId].PortId = portId;
     InfoVec[portId].Size = portSize; 
@@ -98,6 +101,7 @@ void VerilatorTestLink::InitLinkConfig( const SST::Params& params ) {
   const int NumPorts = params.find<int>( "num_ports", 0 );
   if ( NumPorts > 0 ) {
     Links = new SST::Link *[NumPorts];
+    // configure a link for each port
     for (size_t i=0; i<NumPorts; i++) {
       char PortName[8];
       std::snprintf(PortName, 7, "port%zu", i);
@@ -113,9 +117,9 @@ void VerilatorTestLink::InitLinkConfig( const SST::Params& params ) {
 
 void VerilatorTestLink::InitTestOps( const SST::Params& params ) {
   const std::string fileName = params.find<std::string>( "testFile", "" );
-  // test operations should have the form portname:value:tick
+  // test operations should have the form portname:value:tick:isWrite
   if ( fileName == "" ) {
-    // try load test ops from param here
+    // try to load test ops from param here
     std::vector<std::string> optList;
     params.find_array<std::string>( "testOps", optList );
     for (auto it=optList.begin(); it!=optList.end(); it++) {
@@ -123,6 +127,7 @@ void VerilatorTestLink::InitTestOps( const SST::Params& params ) {
       OpQueue.push( toQueue );
     } 
   } else {
+    // load test operations from given file 
     std::ifstream testFile( fileName );
     std::string line;
     if ( testFile.is_open() ) {
@@ -142,6 +147,7 @@ bool VerilatorTestLink::ExecTestOp() {
     uint32_t size = InfoVec[portId].Size;
     const uint32_t nvals = size / 8;
     const uint64_t tick = currOp.AtTick;
+    // don't execute test op until desired cycle/tick
     if ( currOp.AtTick > currTick ) {
       return false;
     } else if ( currOp.AtTick < currTick ) {
@@ -151,6 +157,7 @@ bool VerilatorTestLink::ExecTestOp() {
     }
     const uint64_t * vals = currOp.Values;
     std::vector<uint8_t> Data;
+    // convert provided data values to vector of individual bytes
     for ( size_t i=0; i<nvals; i++ ) {
       AddToPacket<uint64_t>( vals[i], Data );
       size -= 8;
@@ -174,6 +181,7 @@ bool VerilatorTestLink::ExecTestOp() {
       for (size_t i=0; i<Data.size(); i++) {
         output.verbose( CALL_INFO, 4, VerboseMasking::WRITE_DATA, "byte %zu: %" PRIx8 "\n", i, Data[i] );
       }
+      // create the write event and send it along the link
       PortEvent * const opEvent = new PortEvent( Data );
       Links[portId]->send( opEvent );
     } else {
@@ -181,6 +189,7 @@ bool VerilatorTestLink::ExecTestOp() {
       for (size_t i=0; i<Data.size(); i++) {
         output.verbose( CALL_INFO, 4, VerboseMasking::READ_DATA, "byte %zu: %" PRIx8 "\n", i, Data[i] );
       }
+      // store expected read data, create the read event, send it on the link
       ReadDataCheck.emplace( Data );
       PortEvent * const opEvent = new PortEvent();
       Links[portId]->send( opEvent );
@@ -221,6 +230,7 @@ void VerilatorTestLink::RecvPortEvent( SST::Event* ev, unsigned portId ) {
   for (size_t i=0; i<ReadData.size(); i++) {
     output.verbose( CALL_INFO, 4, VerboseMasking::READ_DATA, "byte %zu: %" PRIx8 "\n", i, ReadData[i] );
   }
+  // compare received read data with expected read data
   if ( ValidData.size() != ReadData.size() ) {
     output.fatal(CALL_INFO, -1,
                   "Error: Read data from port%" PRIu32 " has incorrect size (%zu, should be %zu) at tick %" PRIu64 "\n",
@@ -244,7 +254,7 @@ bool VerilatorTestLink::clock(SST::Cycle_t currentCycle){
     primaryComponentOKToEndSim();
     return true;
   }
-  // drive the test links (including the clock)
+  // drive the test links (including the clock) if there are test ops for this tick
   while ( ExecTestOp() ); 
   currTick++;
 

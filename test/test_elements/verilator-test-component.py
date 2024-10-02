@@ -55,8 +55,11 @@ class PortDef:
         self.PortId = 0
         self.PortNames = [ ]
 
-     # portName is a string, portSize is an int (measured in bytes), portDir
-     # should use READ_PORT, WRITE_PORT, or INOUT_PORT globals
+    # portName is a string, portSize is an int (measured in bytes), portDir
+    # should use READ_PORT, WRITE_PORT, or INOUT_PORT globals
+    # NOTE: because this increments PortId, ports should be 
+    # added in order of their verilog declaration (even if 
+    # unused by the test)
     def addPort(self, portName, portSize, portDir):
         tmp = f"{portName}:{self.PortId}:{portSize}:{portDir}"
         self.PortList.append(tmp)
@@ -83,7 +86,7 @@ class Test:
         self.TestOps = [ ]
         self.randValues = queue.Queue()
         self.directMode = 0
-        # direct mode ignores clk writes
+        # NOTE: direct mode ignores clk writes
 
     # Used for test ops that have a value <=64bit
     def addTestOp(self, portName, action, value, tick):
@@ -413,7 +416,6 @@ def run_direct(subName, verbosity, verbosityMask, vpi, numCycles):
         "useVPI" : vpi,
         "clockFreq" : "1GHz",
         "clockPort" : "clk",
-        #"resetVals" : ["reset_l:0", "clk:0", "add:16", "en:0"]
     })
 
 def run_links(subName, verbosity, verbosityMask, vpi, numCycles):
@@ -473,7 +475,7 @@ def run_links(subName, verbosity, verbosityMask, vpi, numCycles):
         ports.addPort("data_write", 1,  WRITE_PORT)
         ports.addPort("data_read",  1,  READ_PORT)
         ports.addPort("io_port",    1,  INOUT_PORT)
-        ports.addPort("clk",        1,  WRITE_PORT) #TODO order here determines order of link events
+        ports.addPort("clk",        1,  WRITE_PORT)
         testScheme.buildPinTest(numCycles)
         print(ports.getPortMap())
         print("Basic test for Pin:")
@@ -490,12 +492,14 @@ def run_links(subName, verbosity, verbosityMask, vpi, numCycles):
         "numCycles" : numCycles
     })
 
-    verilatorsst = sst.Component("vsst", "verilatorcomponent.VerilatorComponent") # and verilatorsst component
+    # VerilatorComponent just holds the subcomponent
+    verilatorsst = sst.Component("vsst", "verilatorcomponent.VerilatorComponent")
     verilatorsst.addParams({
         "numCycles" : numCycles
     })
     subCompName  = f"verilatorsst{subName}.VerilatorSST{subName}"
-    model = verilatorsst.setSubComponent("model", subCompName) # and verilatorsst subcomponent
+    # subcomponent contains the actual verilated module
+    model = verilatorsst.setSubComponent("model", subCompName)
     model.addParams({
         "useVPI" : vpi,
         "clockFreq" : "2.0GHz",
@@ -503,6 +507,7 @@ def run_links(subName, verbosity, verbosityMask, vpi, numCycles):
     })
 
     Links = [ ]
+    # connect each verilator subcomponent port with a VerilatorTestLink port
     for i in range(ports.getNumPorts()):
         Links.append( sst.Link( f"link{i}" ) )
         Links[i].connect( ( model, ports.getPortName( i ), "0ps" ), ( tester, f"port{i}", "0ps" ) )
