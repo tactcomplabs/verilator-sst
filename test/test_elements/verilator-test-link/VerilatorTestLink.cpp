@@ -163,12 +163,12 @@ bool VerilatorTestLink::ExecTestOp() {
       size -= 8;
     }
     const uint8_t * currPtr = reinterpret_cast<const uint8_t *>( vals ) + ( 8 * nvals );
-    if ( size > 4 ) {
+    if ( size >= 4 ) {
       AddToPacket<uint32_t>( *reinterpret_cast<const uint32_t *>( currPtr ), Data );
       currPtr += 4;
       size -= 4;
     }
-    if ( size > 2) {
+    if ( size >= 2) {
       AddToPacket<uint16_t>( *reinterpret_cast<const uint16_t *>( currPtr ), Data );
       currPtr += 2;
       size -= 2;
@@ -234,7 +234,7 @@ void VerilatorTestLink::RecvPortEvent( SST::Event* ev, unsigned portId ) {
   if ( ValidData.size() != ReadData.size() ) {
     output.fatal(CALL_INFO, -1,
                   "Error: Read data from port%" PRIu32 " has incorrect size (%zu, should be %zu) at tick %" PRIu64 "\n",
-                  portId, ValidData.size(), ReadData.size(), currTick );
+                  portId, ReadData.size(), ValidData.size(), currTick );
   }
   for (size_t i=0; i<ValidData.size(); i++) {
     if ( ValidData[i] != ReadData[i] ) {
