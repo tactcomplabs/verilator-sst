@@ -57,9 +57,6 @@ class PortDef:
 
     # portName is a string, portSize is an int (measured in bytes), portDir
     # should use READ_PORT, WRITE_PORT, or INOUT_PORT globals
-    # NOTE: because this increments PortId, ports should be 
-    # added in order of their verilog declaration (even if 
-    # unused by the test)
     def addPort(self, portName, portSize, portDir):
         tmp = f"{portName}:{self.PortId}:{portSize}:{portDir}"
         self.PortList.append(tmp)
@@ -368,6 +365,41 @@ class Test:
         # count of read ops must not be higher than write ops 
         nextCycle = uartWriteOps(4, 4)
         uartReadOps(nextCycle, 4)
+
+    def buildPicoTest(self, numCycles):
+        self.addTestOp("resetn", OpAction.Write, 1, 0)
+        self.addTestOp("resetn", OpAction.Write, 0, 1)
+        # Keep mem ready low until there's a transaction
+        self.addTestOp("mem_ready", OpAction.Write, 0, 1)
+        self.addTestOp("resetn", OpAction.Write, 1, 6)
+        self.addTestOp("clk", OpAction.Write, 1, 6)
+        self.addTestOp("clk", OpAction.Write, 0, 6)
+        InstrMem = [0x3fc00093, 0x0000a023, 0x0000a103, 0x00110113, 0x0020a023, 0xff5ff06f]
+        repeatStart =  15
+        for i in range(7, repeatStart):
+            self.addTestOp("clk", OpAction.Write, 1, i) # cycle clock every cycle
+            if (i == 9):
+                self.addTestOp("mem_valid", OpAction.Read, 1, i)
+                self.addTestOp("mem_instr", OpAction.Read, 1, i)
+                self.addTestOp("mem_addr", OpAction.Read, 0x0, i)
+                #TODO : ready and rdata may have to be a cycle later
+                self.addTestOp("mem_ready", OpAction.Write, 1, i)
+                self.addTestOp("mem_rdata", OpAction.Write, InstrMem[0], i)
+            if (i == 10):
+                self.addTestOp("mem_ready", OpAction.Write, 0, i)
+            if (i == 13):
+                self.addTestOp("mem_valid", OpAction.Read, 1, i)
+                self.addTestOp("mem_instr", OpAction.Read, 1, i)
+                self.addTestOp("mem_addr", OpAction.Read, 0x4, i)
+                #TODO : ready and rdata may have to be a cycle later
+                self.addTestOp("mem_ready", OpAction.Write, 1, i)
+                self.addTestOp("mem_rdata", OpAction.Write, InstrMem[1], i)
+
+            self.addTestOp("clk", OpAction.Write, 0, i) # cycle clock every cycle
+        for i in range(repeatStart, numCycles):
+            self.addTestOp("clk", OpAction.Write, 1, i) # cycle clock every cycle
+            self.addTestOp("clk", OpAction.Write, 0, i) # cycle clock every cycle
+
           
 
     def getTest(self):
@@ -399,6 +431,9 @@ def run_direct(subName, verbosity, verbosityMask, vpi, numCycles):
     elif ( subName == "Pin" ):
         testScheme.buildPinTest(numCycles)
         print("Basic test for Pin:")
+    elif ( subName == "PicoRV" ):
+        print("UNIMPLEMENTED") # TODO: implement
+        print("Basic test for PicoRV:")
 
     print(testScheme)
     top = sst.Component("top0", "verilatortestdirect.VerilatorTestDirect")
@@ -479,6 +514,37 @@ def run_links(subName, verbosity, verbosityMask, vpi, numCycles):
         testScheme.buildPinTest(numCycles)
         print(ports.getPortMap())
         print("Basic test for Pin:")
+    elif ( subName == "PicoRV" ):
+        ports.addPort("clk", 1, WRITE_PORT)
+        ports.addPort("resetn", 1, WRITE_PORT)
+        ports.addPort("mem_ready", 1, WRITE_PORT)
+        ports.addPort("pcpi_wr", 1, WRITE_PORT)
+        ports.addPort("pcpi_wait", 1, WRITE_PORT)
+        ports.addPort("pcpi_ready", 1, WRITE_PORT)
+        ports.addPort("mem_rdata", 4, WRITE_PORT)
+        ports.addPort("pcpi_rd", 4, WRITE_PORT)
+        ports.addPort("irq", 4, WRITE_PORT)
+        ports.addPort("trap", 1, READ_PORT)
+        ports.addPort("mem_valid", 1, READ_PORT)
+        ports.addPort("mem_instr", 1, READ_PORT)
+        ports.addPort("mem_wstrb", 1, READ_PORT)
+        ports.addPort("mem_la_read", 1, READ_PORT)
+        ports.addPort("mem_la_write", 1, READ_PORT)
+        ports.addPort("mem_la_wstrb", 1, READ_PORT)
+        ports.addPort("pcpi_valid", 1, READ_PORT)
+        ports.addPort("trace_valid", 1, READ_PORT)
+        ports.addPort("mem_addr", 4, READ_PORT)
+        ports.addPort("mem_wdata", 4, READ_PORT)
+        ports.addPort("mem_la_addr", 4, READ_PORT)
+        ports.addPort("mem_la_wdata", 4, READ_PORT)
+        ports.addPort("pcpi_insn", 4, READ_PORT)
+        ports.addPort("pcpi_rs1", 4, READ_PORT)
+        ports.addPort("pcpi_rs2", 4, READ_PORT)
+        ports.addPort("eoi", 4, READ_PORT)
+        ports.addPort("trace_data", 5, READ_PORT)
+        testScheme.buildPicoTest(numCycles)
+        print(ports.getPortMap())
+        print("Basic test for PicoRV:")
     print(testScheme)
 
     tester = sst.Component("vtestLink0", "verilatortestlink.VerilatorTestLink")
@@ -514,9 +580,9 @@ def run_links(subName, verbosity, verbosityMask, vpi, numCycles):
 
 def main():
 
-    examples = ["Counter", "Accum", "Accum1D", "UART", "Scratchpad", "Pin"]
+    examples = ["Counter", "Accum", "Accum1D", "UART", "Scratchpad", "Pin", "PicoRV"]
     parser = argparse.ArgumentParser(description="Sample script to run verilator SST examples")
-    parser.add_argument("-m", "--model", choices=examples, default="Accum", help="Select model from examples: Counter, Accum(1D), UART, Scratchpad, Pin")
+    parser.add_argument("-m", "--model", choices=examples, default="Accum", help=("Select model from examples: "+str(examples)))
     parser.add_argument("-i", "--interface", choices=["links", "direct"], default="links", help="Select the direct testing method or the SST::Link method")
     parser.add_argument("-v", "--verbose", choices=range(15), default=4, help="Set the level of verbosity used by the test components")
     parser.add_argument("-a", "--access", choices=["vpi", "direct"], default="direct", help="Select the method used by the subcomponent to read/write the verilated model's ports")
