@@ -374,15 +374,14 @@ class Test:
         self.addTestOp("resetn", OpAction.Write, 1, 6)
         self.addTestOp("clk", OpAction.Write, 1, 6)
         self.addTestOp("clk", OpAction.Write, 0, 6)
+        dataVal = 0
         InstrMem = [0x3fc00093, 0x0000a023, 0x0000a103, 0x00110113, 0x0020a023, 0xff5ff06f]
-        repeatStart =  15
-        for i in range(7, repeatStart):
+        for i in range(7, 22):
             self.addTestOp("clk", OpAction.Write, 1, i) # cycle clock every cycle
             if (i == 9):
                 self.addTestOp("mem_valid", OpAction.Read, 1, i)
                 self.addTestOp("mem_instr", OpAction.Read, 1, i)
                 self.addTestOp("mem_addr", OpAction.Read, 0x0, i)
-                #TODO : ready and rdata may have to be a cycle later
                 self.addTestOp("mem_ready", OpAction.Write, 1, i)
                 self.addTestOp("mem_rdata", OpAction.Write, InstrMem[0], i)
             if (i == 10):
@@ -391,13 +390,83 @@ class Test:
                 self.addTestOp("mem_valid", OpAction.Read, 1, i)
                 self.addTestOp("mem_instr", OpAction.Read, 1, i)
                 self.addTestOp("mem_addr", OpAction.Read, 0x4, i)
-                #TODO : ready and rdata may have to be a cycle later
                 self.addTestOp("mem_ready", OpAction.Write, 1, i)
                 self.addTestOp("mem_rdata", OpAction.Write, InstrMem[1], i)
-
+            if (i == 14):
+                self.addTestOp("mem_ready", OpAction.Write, 0, i)
+            if (i == 17):
+                self.addTestOp("mem_valid", OpAction.Read, 1, i)
+                self.addTestOp("mem_instr", OpAction.Read, 1, i)
+                self.addTestOp("mem_addr", OpAction.Read, 0x8, i)
+                self.addTestOp("mem_ready", OpAction.Write, 1, i)
+                self.addTestOp("mem_rdata", OpAction.Write, InstrMem[2], i)
+            if (i == 18):
+                self.addTestOp("mem_ready", OpAction.Write, 0, i)
+            if (i == 20):
+                # write operation to addr 3fc
+                self.addTestOp("mem_valid", OpAction.Read, 1, i)
+                self.addTestOp("mem_instr", OpAction.Read, 0, i)
+                self.addTestOp("mem_addr", OpAction.Read, 0x03fc, i)
+                self.addTestOp("mem_wstrb", OpAction.Read, 0x000f, i)
+                self.addTestOp("mem_ready", OpAction.Write, 1, i)
+                self.addTestOp("mem_wdata", OpAction.Read, dataVal, i)
+            if (i % 25 == 21):
+                self.addTestOp("mem_ready", OpAction.Write, 0, i)
             self.addTestOp("clk", OpAction.Write, 0, i) # cycle clock every cycle
-        for i in range(repeatStart, numCycles):
+        for i in range(22, numCycles):
             self.addTestOp("clk", OpAction.Write, 1, i) # cycle clock every cycle
+            if (i % 22 == 2):
+                self.addTestOp("mem_valid", OpAction.Read, 1, i)
+                self.addTestOp("mem_instr", OpAction.Read, 1, i)
+                self.addTestOp("mem_addr", OpAction.Read, 0x000c, i)
+                self.addTestOp("mem_ready", OpAction.Write, 1, i)
+                self.addTestOp("mem_rdata", OpAction.Write, InstrMem[3], i)
+            if (i % 22 == 3):
+                self.addTestOp("mem_ready", OpAction.Write, 0, i)
+            if (i % 22 == 5):
+                # read operation to address 0x03fc
+                self.addTestOp("mem_valid", OpAction.Read, 1, i)
+                self.addTestOp("mem_instr", OpAction.Read, 0, i)
+                self.addTestOp("mem_addr", OpAction.Read, 0x03fc, i)
+                self.addTestOp("mem_ready", OpAction.Write, 1, i)
+                self.addTestOp("mem_rdata", OpAction.Write, dataVal, i)
+                dataVal += 1 # increment data value to match the firmware
+            if (i % 22 == 6):
+                self.addTestOp("mem_ready", OpAction.Write, 0, i)
+            if (i % 22 == 9):
+                self.addTestOp("mem_valid", OpAction.Read, 1, i)
+                self.addTestOp("mem_instr", OpAction.Read, 1, i)
+                self.addTestOp("mem_addr", OpAction.Read, 0x0010, i)
+                self.addTestOp("mem_ready", OpAction.Write, 1, i)
+                self.addTestOp("mem_rdata", OpAction.Write, InstrMem[4], i)
+            if (i % 22 == 10):
+                self.addTestOp("mem_ready", OpAction.Write, 0, i)
+            if (i % 22 == 13):
+                self.addTestOp("mem_valid", OpAction.Read, 1, i)
+                self.addTestOp("mem_instr", OpAction.Read, 1, i)
+                self.addTestOp("mem_addr", OpAction.Read, 0x0014, i)
+                self.addTestOp("mem_ready", OpAction.Write, 1, i)
+                self.addTestOp("mem_rdata", OpAction.Write, InstrMem[5], i)
+            if (i % 22 == 14):
+                self.addTestOp("mem_ready", OpAction.Write, 0, i)
+            if (i % 22 == 16):
+                # write operation to addr 3fc
+                self.addTestOp("mem_valid", OpAction.Read, 1, i)
+                self.addTestOp("mem_instr", OpAction.Read, 0, i)
+                self.addTestOp("mem_addr", OpAction.Read, 0x03fc, i)
+                self.addTestOp("mem_wstrb", OpAction.Read, 0x000f, i)
+                self.addTestOp("mem_ready", OpAction.Write, 1, i)
+                self.addTestOp("mem_wdata", OpAction.Read, dataVal, i)
+            if (i % 22 == 17):
+                self.addTestOp("mem_ready", OpAction.Write, 0, i)
+            if (i % 22 == 20):
+                self.addTestOp("mem_valid", OpAction.Read, 1, i)
+                self.addTestOp("mem_instr", OpAction.Read, 1, i)
+                self.addTestOp("mem_addr", OpAction.Read, 0x8, i)
+                self.addTestOp("mem_ready", OpAction.Write, 1, i)
+                self.addTestOp("mem_rdata", OpAction.Write, InstrMem[2], i)
+            if (i % 22 == 21):
+                self.addTestOp("mem_ready", OpAction.Write, 0, i)
             self.addTestOp("clk", OpAction.Write, 0, i) # cycle clock every cycle
 
           
@@ -432,7 +501,7 @@ def run_direct(subName, verbosity, verbosityMask, vpi, numCycles):
         testScheme.buildPinTest(numCycles)
         print("Basic test for Pin:")
     elif ( subName == "PicoRV" ):
-        print("UNIMPLEMENTED") # TODO: implement
+        testScheme.buildPicoTest(numCycles)
         print("Basic test for PicoRV:")
 
     print(testScheme)
