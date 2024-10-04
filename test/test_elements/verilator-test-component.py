@@ -367,6 +367,31 @@ class Test:
         uartReadOps(nextCycle, 4)
 
     def buildPicoTest(self, numCycles):
+
+        def instrFetchCheck(addr, instr, cycle):
+            self.addTestOp("mem_valid", OpAction.Read, 1, cycle)
+            self.addTestOp("mem_instr", OpAction.Read, 1, cycle)
+            self.addTestOp("mem_addr", OpAction.Read, addr, cycle)
+            self.addTestOp("mem_ready", OpAction.Write, 1, cycle)
+            self.addTestOp("mem_rdata", OpAction.Write, instr, cycle)
+
+        def writeOpCheck(addr, val, cycle):
+            self.addTestOp("mem_valid", OpAction.Read, 1, cycle)
+            self.addTestOp("mem_instr", OpAction.Read, 0, cycle)
+            self.addTestOp("mem_addr", OpAction.Read, addr, cycle)
+            # check wstrb is f because the instructions we're sending
+            # do a 4 byte store
+            self.addTestOp("mem_wstrb", OpAction.Read, 0x000f, cycle)
+            self.addTestOp("mem_ready", OpAction.Write, 1, cycle)
+            self.addTestOp("mem_wdata", OpAction.Read, val, cycle)
+
+        def readOpCheck(addr, val, cycle):
+            self.addTestOp("mem_valid", OpAction.Read, 1, cycle)
+            self.addTestOp("mem_instr", OpAction.Read, 0, cycle)
+            self.addTestOp("mem_addr", OpAction.Read, addr, cycle)
+            self.addTestOp("mem_ready", OpAction.Write, 1, cycle)
+            self.addTestOp("mem_rdata", OpAction.Write, val, cycle)
+
         self.addTestOp("resetn", OpAction.Write, 1, 0)
         self.addTestOp("resetn", OpAction.Write, 0, 1)
         # Keep mem ready low until there's a transaction
@@ -375,96 +400,62 @@ class Test:
         self.addTestOp("clk", OpAction.Write, 1, 6)
         self.addTestOp("clk", OpAction.Write, 0, 6)
         dataVal = 0
+        # InstrMem emulates an instruction memory by holding the 6 instructions the firmware
+        # should hold, so the test writes those instructions when an IF should be occurring
         InstrMem = [0x3fc00093, 0x0000a023, 0x0000a103, 0x00110113, 0x0020a023, 0xff5ff06f]
+        # first check a few instructions worth of outputs
+        # the firmware program is not yet looping
         for i in range(7, 22):
             self.addTestOp("clk", OpAction.Write, 1, i) # cycle clock every cycle
             if (i == 9):
-                self.addTestOp("mem_valid", OpAction.Read, 1, i)
-                self.addTestOp("mem_instr", OpAction.Read, 1, i)
-                self.addTestOp("mem_addr", OpAction.Read, 0x0, i)
-                self.addTestOp("mem_ready", OpAction.Write, 1, i)
-                self.addTestOp("mem_rdata", OpAction.Write, InstrMem[0], i)
+                instrFetchCheck(0x0, InstrMem[0], i)
             if (i == 10):
+                # Need to set mem_ready low now since the memory operation has ended
+                # Same thing one cycle after every memory op
                 self.addTestOp("mem_ready", OpAction.Write, 0, i)
             if (i == 13):
-                self.addTestOp("mem_valid", OpAction.Read, 1, i)
-                self.addTestOp("mem_instr", OpAction.Read, 1, i)
-                self.addTestOp("mem_addr", OpAction.Read, 0x4, i)
-                self.addTestOp("mem_ready", OpAction.Write, 1, i)
-                self.addTestOp("mem_rdata", OpAction.Write, InstrMem[1], i)
+                instrFetchCheck(0x0004, InstrMem[1], i)
             if (i == 14):
                 self.addTestOp("mem_ready", OpAction.Write, 0, i)
             if (i == 17):
-                self.addTestOp("mem_valid", OpAction.Read, 1, i)
-                self.addTestOp("mem_instr", OpAction.Read, 1, i)
-                self.addTestOp("mem_addr", OpAction.Read, 0x8, i)
-                self.addTestOp("mem_ready", OpAction.Write, 1, i)
-                self.addTestOp("mem_rdata", OpAction.Write, InstrMem[2], i)
+                instrFetchCheck(0x0008, InstrMem[2], i)
             if (i == 18):
                 self.addTestOp("mem_ready", OpAction.Write, 0, i)
             if (i == 20):
                 # write operation to addr 3fc
-                self.addTestOp("mem_valid", OpAction.Read, 1, i)
-                self.addTestOp("mem_instr", OpAction.Read, 0, i)
-                self.addTestOp("mem_addr", OpAction.Read, 0x03fc, i)
-                self.addTestOp("mem_wstrb", OpAction.Read, 0x000f, i)
-                self.addTestOp("mem_ready", OpAction.Write, 1, i)
-                self.addTestOp("mem_wdata", OpAction.Read, dataVal, i)
+                writeOpCheck(0x03fc, dataVal, i)
             if (i % 25 == 21):
                 self.addTestOp("mem_ready", OpAction.Write, 0, i)
             self.addTestOp("clk", OpAction.Write, 0, i) # cycle clock every cycle
+        # Now the firmware is in the loop so generate test ops
+        # based on modulo, same ops will be happening in a cycle
         for i in range(22, numCycles):
             self.addTestOp("clk", OpAction.Write, 1, i) # cycle clock every cycle
             if (i % 22 == 2):
-                self.addTestOp("mem_valid", OpAction.Read, 1, i)
-                self.addTestOp("mem_instr", OpAction.Read, 1, i)
-                self.addTestOp("mem_addr", OpAction.Read, 0x000c, i)
-                self.addTestOp("mem_ready", OpAction.Write, 1, i)
-                self.addTestOp("mem_rdata", OpAction.Write, InstrMem[3], i)
+                instrFetchCheck(0x000c, InstrMem[3], i)
             if (i % 22 == 3):
                 self.addTestOp("mem_ready", OpAction.Write, 0, i)
             if (i % 22 == 5):
                 # read operation to address 0x03fc
-                self.addTestOp("mem_valid", OpAction.Read, 1, i)
-                self.addTestOp("mem_instr", OpAction.Read, 0, i)
-                self.addTestOp("mem_addr", OpAction.Read, 0x03fc, i)
-                self.addTestOp("mem_ready", OpAction.Write, 1, i)
-                self.addTestOp("mem_rdata", OpAction.Write, dataVal, i)
+                readOpCheck(0x03fc, dataVal, i)
                 dataVal += 1 # increment data value to match the firmware
             if (i % 22 == 6):
                 self.addTestOp("mem_ready", OpAction.Write, 0, i)
             if (i % 22 == 9):
-                self.addTestOp("mem_valid", OpAction.Read, 1, i)
-                self.addTestOp("mem_instr", OpAction.Read, 1, i)
-                self.addTestOp("mem_addr", OpAction.Read, 0x0010, i)
-                self.addTestOp("mem_ready", OpAction.Write, 1, i)
-                self.addTestOp("mem_rdata", OpAction.Write, InstrMem[4], i)
+                instrFetchCheck(0x0010, InstrMem[4], i)
             if (i % 22 == 10):
                 self.addTestOp("mem_ready", OpAction.Write, 0, i)
             if (i % 22 == 13):
-                self.addTestOp("mem_valid", OpAction.Read, 1, i)
-                self.addTestOp("mem_instr", OpAction.Read, 1, i)
-                self.addTestOp("mem_addr", OpAction.Read, 0x0014, i)
-                self.addTestOp("mem_ready", OpAction.Write, 1, i)
-                self.addTestOp("mem_rdata", OpAction.Write, InstrMem[5], i)
+                instrFetchCheck(0x0014, InstrMem[5], i)
             if (i % 22 == 14):
                 self.addTestOp("mem_ready", OpAction.Write, 0, i)
             if (i % 22 == 16):
                 # write operation to addr 3fc
-                self.addTestOp("mem_valid", OpAction.Read, 1, i)
-                self.addTestOp("mem_instr", OpAction.Read, 0, i)
-                self.addTestOp("mem_addr", OpAction.Read, 0x03fc, i)
-                self.addTestOp("mem_wstrb", OpAction.Read, 0x000f, i)
-                self.addTestOp("mem_ready", OpAction.Write, 1, i)
-                self.addTestOp("mem_wdata", OpAction.Read, dataVal, i)
+                writeOpCheck(0x03fc, dataVal, i)
             if (i % 22 == 17):
                 self.addTestOp("mem_ready", OpAction.Write, 0, i)
             if (i % 22 == 20):
-                self.addTestOp("mem_valid", OpAction.Read, 1, i)
-                self.addTestOp("mem_instr", OpAction.Read, 1, i)
-                self.addTestOp("mem_addr", OpAction.Read, 0x8, i)
-                self.addTestOp("mem_ready", OpAction.Write, 1, i)
-                self.addTestOp("mem_rdata", OpAction.Write, InstrMem[2], i)
+                instrFetchCheck(0x0008, InstrMem[2], i)
             if (i % 22 == 21):
                 self.addTestOp("mem_ready", OpAction.Write, 0, i)
             self.addTestOp("clk", OpAction.Write, 0, i) # cycle clock every cycle
