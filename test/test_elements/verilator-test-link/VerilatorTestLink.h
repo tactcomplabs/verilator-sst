@@ -172,7 +172,8 @@ private:
   std::vector<PortDef> InfoVec;                 ///< VerilatorTestLink: access port characteristics by ID number
   SST::Link ** Links;                           ///< VerilatorTestLink: list of links (one for each port in the verilator model)
   std::queue<TestOp> OpQueue;                   ///< VerilatorTestLink: queue holding test operations to be applied
-  std::queue<std::vector<uint8_t>> ReadDataCheck; ///< VerilatorTestLink: queue to hold expected read data to check for correct read results
+  //std::queue<std::vector<uint8_t>> ReadDataCheck; ///< VerilatorTestLink: queue to hold expected read data to check for correct read results
+  std::vector<std::queue<std::vector<uint8_t>>> ExpectedReadData;
   uint64_t currTick = 0;                          ///< VerilatorTestLink: current tick of this test component
 
   void InitPortMap( const SST::Params& params );    ///< VerilatorTestLink: initialize name:port_info mapping
