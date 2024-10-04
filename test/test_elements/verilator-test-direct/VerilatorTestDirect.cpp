@@ -136,12 +136,12 @@ bool VerilatorTestDirect::ExecTestOp() {
       size -= 8;
     }
     const uint8_t * currPtr = reinterpret_cast<const uint8_t *>( vals ) + ( 8 * nvals );
-    if ( size > 4 ) {
+    if ( size >= 4 ) {
       AddToPacket<uint32_t>( *reinterpret_cast<const uint32_t *>( currPtr ), Data );
       currPtr += 4;
       size -= 4;
     }
-    if ( size > 2) {
+    if ( size >= 2) {
       AddToPacket<uint16_t>( *reinterpret_cast<const uint16_t *>( currPtr ), Data );
       currPtr += 2;
       size -= 2;
@@ -170,7 +170,7 @@ bool VerilatorTestDirect::ExecTestOp() {
       if ( Data.size() != ReadData.size() ) {
         output.fatal(CALL_INFO, -1,
                      "Error: Read data from port %s has incorrect size (%zu, should be %zu) at tick %" PRIu64 "\n",
-                     portName.c_str(), Data.size(), ReadData.size(), currTick );
+                     portName.c_str(), ReadData.size(), Data.size(), currTick );
       }
       for (size_t i=0; i<Data.size(); i++) {
         if ( Data[i] != ReadData[i] ) {
