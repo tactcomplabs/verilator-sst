@@ -95,10 +95,14 @@ public:
 
   /// VerilatorTestLink: function converting string from param to TestOp struct for use
   const TestOp ConvertToTestOp( const std::string& StrOp ) {
+    output.verbose( CALL_INFO, 4, VerboseMasking::INIT, "Converting test op: %s\n", StrOp.c_str());
     std::vector<std::string> op;
     splitStr( StrOp, ':', op );
     const std::string portName = op[0];
     const bool isWrite = (op[1] == "write");
+    if (PortMap.find(op[0]) == PortMap.end()) {
+      output.fatal( CALL_INFO, -1, "Error: Test op (%s) has unmapped port name\n", StrOp.c_str());
+    }
     const PortDef portInfo = PortMap[op[0]];
     const uint32_t id = portInfo.PortId;
     uint32_t size = portInfo.Size;

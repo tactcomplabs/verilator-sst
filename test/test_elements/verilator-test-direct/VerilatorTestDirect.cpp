@@ -86,6 +86,7 @@ void VerilatorTestDirect::InitTestOps( const SST::Params& params ) {
   const std::string fileName = params.find<std::string>( "testFile", "" );
   // test operations should have the form portname:value:tick:isWrite
   if ( fileName == "" ) {
+    output.verbose( CALL_INFO, 4, VerboseMasking::INIT, "Test file param empty; loading test ops directly from config script\n" );
     // try to load test ops from param here
     std::vector<std::string> optList;
     params.find_array<std::string>( "testOps", optList );
@@ -94,6 +95,7 @@ void VerilatorTestDirect::InitTestOps( const SST::Params& params ) {
       OpQueue.push( toQueue );
     } 
   } else {
+    output.verbose( CALL_INFO, 4, VerboseMasking::INIT, "Loading test ops from file: %s\n", fileName.c_str() );
     // load test ops from provided file
     std::ifstream testFile( fileName );
     std::string line;
@@ -102,6 +104,8 @@ void VerilatorTestDirect::InitTestOps( const SST::Params& params ) {
         const TestOp & toQueue = ConvertToTestOp( line );
         OpQueue.push( toQueue );
       }
+    } else {
+      output.fatal( CALL_INFO, -1, "Error: test file %s cannot be read\n", fileName.c_str() );
     }
   }
 }

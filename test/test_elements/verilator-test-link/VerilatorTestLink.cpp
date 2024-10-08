@@ -138,6 +138,8 @@ void VerilatorTestLink::InitTestOps( const SST::Params& params ) {
         const TestOp & toQueue = ConvertToTestOp( line );
         OpQueue.push( toQueue );
       }
+    } else {
+      output.fatal( CALL_INFO, -1, "Error: test file %s cannot be read\n", fileName.c_str() );
     }
   }
 }
