@@ -468,6 +468,10 @@ class Test:
     def __str__(self):
         return(str(self.TestOps))
 
+    def export(self):
+        for op in self.TestOps:
+            print(op)
+
 
 def run_direct(subName, verbosity, verbosityMask, vpi, numCycles):
     testScheme = Test()
@@ -603,6 +607,7 @@ def run_links(subName, verbosity, verbosityMask, vpi, numCycles):
         ports.addPort("eoi", 4, READ_PORT)
         ports.addPort("trace_data", 5, READ_PORT)
         testScheme.buildPicoTest(numCycles)
+        #testScheme.export()
         print(ports.getPortMap())
         print("Basic test for PicoRV:")
     print(testScheme)
@@ -614,6 +619,7 @@ def run_links(subName, verbosity, verbosityMask, vpi, numCycles):
         "clockFreq" : "1GHz",
         "num_ports" : ports.getNumPorts(),
         "portMap" : ports.getPortMap(),
+        #"testFile" : "pico_test_ops.txt",
         "testOps" : testScheme.getTest(),
         "numCycles" : numCycles
     })
@@ -648,6 +654,7 @@ def main():
     parser.add_argument("-a", "--access", choices=["vpi", "direct"], default="direct", help="Select the method used by the subcomponent to read/write the verilated model's ports")
     parser.add_argument("-k", "--mask", choices=[choice.name for choice in VerboseMasking], default="FULL")
     parser.add_argument("-c", "--cycles", default=50, help="Set number of cycles the simulation will run for")
+    parser.add_argument("-t", "--testfile", default="", help="Pass test ops from an external text file instead of from Python script")
 
     args = parser.parse_args()
 
