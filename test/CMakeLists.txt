@@ -128,6 +128,26 @@ if( ENABLE_INOUT_HANDLING )
   )
 endif()
 
+generate_verilator_component(
+  "picorv32"
+  "${CMAKE_CURRENT_SOURCE_DIR}/pico/picorv32.v"
+  "${CMAKE_CURRENT_SOURCE_DIR}/pico"
+  ""
+  "PicoRV"
+  "Links"
+  "clk"
+)
+
+generate_verilator_component(
+  "picorv32"
+  "${CMAKE_CURRENT_SOURCE_DIR}/pico/picorv32.v"
+  "${CMAKE_CURRENT_SOURCE_DIR}/pico"
+  ""
+  "PicoRV"
+  "Direct"
+  "clk"
+)
+
 # ---------------------------------------------------------------------- #
 # Add the subdirectory containing the standalone elements used to test
 # the generated ones
@@ -159,4 +179,5 @@ add_verilatorsst_test(UART 512)
 if(ENABLE_INOUT_HANDLING)
 add_verilatorsst_test(Pin 50)
 endif()
+add_verilatorsst_test(PicoRV 200)
 # EOF

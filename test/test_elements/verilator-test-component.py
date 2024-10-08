@@ -57,9 +57,6 @@ class PortDef:
 
     # portName is a string, portSize is an int (measured in bytes), portDir
     # should use READ_PORT, WRITE_PORT, or INOUT_PORT globals
-    # NOTE: because this increments PortId, ports should be 
-    # added in order of their verilog declaration (even if 
-    # unused by the test)
     def addPort(self, portName, portSize, portDir):
         tmp = f"{portName}:{self.PortId}:{portSize}:{portDir}"
         self.PortList.append(tmp)
@@ -368,6 +365,101 @@ class Test:
         # count of read ops must not be higher than write ops 
         nextCycle = uartWriteOps(4, 4)
         uartReadOps(nextCycle, 4)
+
+    def buildPicoTest(self, numCycles):
+
+        def instrFetchCheck(addr, instr, cycle):
+            self.addTestOp("mem_valid", OpAction.Read, 1, cycle)
+            self.addTestOp("mem_instr", OpAction.Read, 1, cycle)
+            self.addTestOp("mem_addr", OpAction.Read, addr, cycle)
+            self.addTestOp("mem_ready", OpAction.Write, 1, cycle)
+            self.addTestOp("mem_rdata", OpAction.Write, instr, cycle)
+
+        def writeOpCheck(addr, val, cycle):
+            self.addTestOp("mem_valid", OpAction.Read, 1, cycle)
+            self.addTestOp("mem_instr", OpAction.Read, 0, cycle)
+            self.addTestOp("mem_addr", OpAction.Read, addr, cycle)
+            # check wstrb is f because the instructions we're sending
+            # do a 4 byte store
+            self.addTestOp("mem_wstrb", OpAction.Read, 0x000f, cycle)
+            self.addTestOp("mem_ready", OpAction.Write, 1, cycle)
+            self.addTestOp("mem_wdata", OpAction.Read, val, cycle)
+
+        def readOpCheck(addr, val, cycle):
+            self.addTestOp("mem_valid", OpAction.Read, 1, cycle)
+            self.addTestOp("mem_instr", OpAction.Read, 0, cycle)
+            self.addTestOp("mem_addr", OpAction.Read, addr, cycle)
+            self.addTestOp("mem_ready", OpAction.Write, 1, cycle)
+            self.addTestOp("mem_rdata", OpAction.Write, val, cycle)
+
+        self.addTestOp("resetn", OpAction.Write, 1, 0)
+        self.addTestOp("resetn", OpAction.Write, 0, 1)
+        # Keep mem ready low until there's a transaction
+        self.addTestOp("mem_ready", OpAction.Write, 0, 1)
+        self.addTestOp("resetn", OpAction.Write, 1, 6)
+        self.addTestOp("clk", OpAction.Write, 1, 6)
+        self.addTestOp("clk", OpAction.Write, 0, 6)
+        dataVal = 0
+        # InstrMem emulates an instruction memory by holding the 6 instructions the firmware
+        # should hold, so the test writes those instructions when an IF should be occurring
+        InstrMem = [0x3fc00093, 0x0000a023, 0x0000a103, 0x00110113, 0x0020a023, 0xff5ff06f]
+        # first check a few instructions worth of outputs
+        # the firmware program is not yet looping
+        for i in range(7, 22):
+            self.addTestOp("clk", OpAction.Write, 1, i) # cycle clock every cycle
+            if (i == 9):
+                instrFetchCheck(0x0, InstrMem[0], i)
+            if (i == 10):
+                # Need to set mem_ready low now since the memory operation has ended
+                # Same thing one cycle after every memory op
+                self.addTestOp("mem_ready", OpAction.Write, 0, i)
+            if (i == 13):
+                instrFetchCheck(0x0004, InstrMem[1], i)
+            if (i == 14):
+                self.addTestOp("mem_ready", OpAction.Write, 0, i)
+            if (i == 17):
+                instrFetchCheck(0x0008, InstrMem[2], i)
+            if (i == 18):
+                self.addTestOp("mem_ready", OpAction.Write, 0, i)
+            if (i == 20):
+                # write operation to addr 3fc
+                writeOpCheck(0x03fc, dataVal, i)
+            if (i % 25 == 21):
+                self.addTestOp("mem_ready", OpAction.Write, 0, i)
+            self.addTestOp("clk", OpAction.Write, 0, i) # cycle clock every cycle
+        # Now the firmware is in the loop so generate test ops
+        # based on modulo, same ops will be happening in a cycle
+        for i in range(22, numCycles):
+            self.addTestOp("clk", OpAction.Write, 1, i) # cycle clock every cycle
+            if (i % 22 == 2):
+                instrFetchCheck(0x000c, InstrMem[3], i)
+            if (i % 22 == 3):
+                self.addTestOp("mem_ready", OpAction.Write, 0, i)
+            if (i % 22 == 5):
+                # read operation to address 0x03fc
+                readOpCheck(0x03fc, dataVal, i)
+                dataVal += 1 # increment data value to match the firmware
+            if (i % 22 == 6):
+                self.addTestOp("mem_ready", OpAction.Write, 0, i)
+            if (i % 22 == 9):
+                instrFetchCheck(0x0010, InstrMem[4], i)
+            if (i % 22 == 10):
+                self.addTestOp("mem_ready", OpAction.Write, 0, i)
+            if (i % 22 == 13):
+                instrFetchCheck(0x0014, InstrMem[5], i)
+            if (i % 22 == 14):
+                self.addTestOp("mem_ready", OpAction.Write, 0, i)
+            if (i % 22 == 16):
+                # write operation to addr 3fc
+                writeOpCheck(0x03fc, dataVal, i)
+            if (i % 22 == 17):
+                self.addTestOp("mem_ready", OpAction.Write, 0, i)
+            if (i % 22 == 20):
+                instrFetchCheck(0x0008, InstrMem[2], i)
+            if (i % 22 == 21):
+                self.addTestOp("mem_ready", OpAction.Write, 0, i)
+            self.addTestOp("clk", OpAction.Write, 0, i) # cycle clock every cycle
+
           
 
     def getTest(self):
@@ -399,6 +491,9 @@ def run_direct(subName, verbosity, verbosityMask, vpi, numCycles):
     elif ( subName == "Pin" ):
         testScheme.buildPinTest(numCycles)
         print("Basic test for Pin:")
+    elif ( subName == "PicoRV" ):
+        testScheme.buildPicoTest(numCycles)
+        print("Basic test for PicoRV:")
 
     print(testScheme)
     top = sst.Component("top0", "verilatortestdirect.VerilatorTestDirect")
@@ -479,6 +574,37 @@ def run_links(subName, verbosity, verbosityMask, vpi, numCycles):
         testScheme.buildPinTest(numCycles)
         print(ports.getPortMap())
         print("Basic test for Pin:")
+    elif ( subName == "PicoRV" ):
+        ports.addPort("clk", 1, WRITE_PORT)
+        ports.addPort("resetn", 1, WRITE_PORT)
+        ports.addPort("mem_ready", 1, WRITE_PORT)
+        ports.addPort("pcpi_wr", 1, WRITE_PORT)
+        ports.addPort("pcpi_wait", 1, WRITE_PORT)
+        ports.addPort("pcpi_ready", 1, WRITE_PORT)
+        ports.addPort("mem_rdata", 4, WRITE_PORT)
+        ports.addPort("pcpi_rd", 4, WRITE_PORT)
+        ports.addPort("irq", 4, WRITE_PORT)
+        ports.addPort("trap", 1, READ_PORT)
+        ports.addPort("mem_valid", 1, READ_PORT)
+        ports.addPort("mem_instr", 1, READ_PORT)
+        ports.addPort("mem_wstrb", 1, READ_PORT)
+        ports.addPort("mem_la_read", 1, READ_PORT)
+        ports.addPort("mem_la_write", 1, READ_PORT)
+        ports.addPort("mem_la_wstrb", 1, READ_PORT)
+        ports.addPort("pcpi_valid", 1, READ_PORT)
+        ports.addPort("trace_valid", 1, READ_PORT)
+        ports.addPort("mem_addr", 4, READ_PORT)
+        ports.addPort("mem_wdata", 4, READ_PORT)
+        ports.addPort("mem_la_addr", 4, READ_PORT)
+        ports.addPort("mem_la_wdata", 4, READ_PORT)
+        ports.addPort("pcpi_insn", 4, READ_PORT)
+        ports.addPort("pcpi_rs1", 4, READ_PORT)
+        ports.addPort("pcpi_rs2", 4, READ_PORT)
+        ports.addPort("eoi", 4, READ_PORT)
+        ports.addPort("trace_data", 5, READ_PORT)
+        testScheme.buildPicoTest(numCycles)
+        print(ports.getPortMap())
+        print("Basic test for PicoRV:")
     print(testScheme)
 
     tester = sst.Component("vtestLink0", "verilatortestlink.VerilatorTestLink")
@@ -514,9 +640,9 @@ def run_links(subName, verbosity, verbosityMask, vpi, numCycles):
 
 def main():
 
-    examples = ["Counter", "Accum", "Accum1D", "UART", "Scratchpad", "Pin"]
+    examples = ["Counter", "Accum", "Accum1D", "UART", "Scratchpad", "Pin", "PicoRV"]
     parser = argparse.ArgumentParser(description="Sample script to run verilator SST examples")
-    parser.add_argument("-m", "--model", choices=examples, default="Accum", help="Select model from examples: Counter, Accum(1D), UART, Scratchpad, Pin")
+    parser.add_argument("-m", "--model", choices=examples, default="Accum", help=("Select model from examples: "+str(examples)))
     parser.add_argument("-i", "--interface", choices=["links", "direct"], default="links", help="Select the direct testing method or the SST::Link method")
     parser.add_argument("-v", "--verbose", choices=range(15), default=4, help="Set the level of verbosity used by the test components")
     parser.add_argument("-a", "--access", choices=["vpi", "direct"], default="direct", help="Select the method used by the subcomponent to read/write the verilated model's ports")

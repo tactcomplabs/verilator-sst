@@ -33,6 +33,7 @@ VerilatorTestLink::VerilatorTestLink(SST::ComponentId_t id,
   }
   const int NumPorts = params.find<int>( "num_ports", 0 );
   InfoVec.resize( NumPorts );
+  ExpectedReadData.resize( NumPorts );
   InitLinkConfig( params );
   InitPortMap( params );
   InitTestOps( params );
@@ -163,12 +164,12 @@ bool VerilatorTestLink::ExecTestOp() {
       size -= 8;
     }
     const uint8_t * currPtr = reinterpret_cast<const uint8_t *>( vals ) + ( 8 * nvals );
-    if ( size > 4 ) {
+    if ( size >= 4 ) {
       AddToPacket<uint32_t>( *reinterpret_cast<const uint32_t *>( currPtr ), Data );
       currPtr += 4;
       size -= 4;
     }
-    if ( size > 2) {
+    if ( size >= 2) {
       AddToPacket<uint16_t>( *reinterpret_cast<const uint16_t *>( currPtr ), Data );
       currPtr += 2;
       size -= 2;
@@ -190,12 +191,12 @@ bool VerilatorTestLink::ExecTestOp() {
         output.verbose( CALL_INFO, 4, VerboseMasking::READ_DATA, "byte %zu: %" PRIx8 "\n", i, Data[i] );
       }
       // store expected read data, create the read event, send it on the link
-      ReadDataCheck.emplace( Data );
+      ExpectedReadData[portId].emplace( Data );
       PortEvent * const opEvent = new PortEvent();
       Links[portId]->send( opEvent );
     }
     OpQueue.pop();
-  return true;
+    return true;
   }
   return false;
 }
@@ -224,9 +225,9 @@ void VerilatorTestLink::splitStr(const std::string& s,
 void VerilatorTestLink::RecvPortEvent( SST::Event* ev, unsigned portId ) {
   // should only be receiving read data
   PortEvent * readEvent = reinterpret_cast<PortEvent *>( ev );
-  const std::vector<uint8_t>& ValidData = ReadDataCheck.front();
+  const std::vector<uint8_t>& ValidData = ExpectedReadData[portId].front();
   const std::vector<uint8_t>& ReadData = readEvent->getPacket();
-  output.verbose( CALL_INFO, 4, VerboseMasking::READ_DATA, "Read data: size=%zu\n", ReadData.size() );
+  output.verbose( CALL_INFO, 4, VerboseMasking::READ_DATA, "port%" PRIu32 " read data: size=%zu\n", portId, ReadData.size() );
   for (size_t i=0; i<ReadData.size(); i++) {
     output.verbose( CALL_INFO, 4, VerboseMasking::READ_DATA, "byte %zu: %" PRIx8 "\n", i, ReadData[i] );
   }
@@ -234,7 +235,7 @@ void VerilatorTestLink::RecvPortEvent( SST::Event* ev, unsigned portId ) {
   if ( ValidData.size() != ReadData.size() ) {
     output.fatal(CALL_INFO, -1,
                   "Error: Read data from port%" PRIu32 " has incorrect size (%zu, should be %zu) at tick %" PRIu64 "\n",
-                  portId, ValidData.size(), ReadData.size(), currTick );
+                  portId, ReadData.size(), ValidData.size(), currTick );
   }
   for (size_t i=0; i<ValidData.size(); i++) {
     if ( ValidData[i] != ReadData[i] ) {
@@ -244,7 +245,7 @@ void VerilatorTestLink::RecvPortEvent( SST::Event* ev, unsigned portId ) {
     }
   }
   delete ev;
-  ReadDataCheck.pop();
+  ExpectedReadData[portId].pop();
 }
 
 bool VerilatorTestLink::clock(SST::Cycle_t currentCycle){
