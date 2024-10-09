@@ -95,7 +95,7 @@ public:
 
   /// VerilatorTestLink: function converting string from param to TestOp struct for use
   const TestOp ConvertToTestOp( const std::string& StrOp ) {
-    output.verbose( CALL_INFO, 4, VerboseMasking::INIT, "Converting test op: %s\n", StrOp.c_str());
+    output.verbose( CALL_INFO, 8, VerboseMasking::INIT, "Converting test op: %s\n", StrOp.c_str());
     std::vector<std::string> op;
     splitStr( StrOp, ':', op );
     const std::string portName = op[0];

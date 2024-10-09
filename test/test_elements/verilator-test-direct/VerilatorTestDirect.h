@@ -80,6 +80,7 @@ public:
 
   // convert operation info from param string to TestOp structure
   const TestOp ConvertToTestOp( const std::string& StrOp ) {
+    output.verbose( CALL_INFO, 8, VerboseMasking::INIT, "Converting test op: %s\n", StrOp.c_str());
     std::vector<std::string> op;
     splitStr( StrOp, ':', op );
     uint32_t width;

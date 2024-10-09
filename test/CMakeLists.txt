@@ -167,8 +167,12 @@ function(add_verilatorsst_test SUBDIRECTORY CYCLE_LIMIT)
 
   add_test(NAME VerilatorTestLink_${SUBDIRECTORY}
     COMMAND sst ${CMAKE_CURRENT_SOURCE_DIR}/test_elements/verilator-test-component.py -- -m ${VTOP} -i "links" -c ${CYCLE_LIMIT})
+  add_test(NAME VerilatorTestLink_${SUBDIRECTORY}_VPI
+    COMMAND sst ${CMAKE_CURRENT_SOURCE_DIR}/test_elements/verilator-test-component.py -- -m ${VTOP} -i "links" -c ${CYCLE_LIMIT} -a "vpi")
   add_test(NAME VerilatorTestDirect_${SUBDIRECTORY}
-                  COMMAND sst ${CMAKE_CURRENT_SOURCE_DIR}/test_elements/verilator-test-component.py -- -m ${VTOP} -i "direct" -c ${CYCLE_LIMIT})
+    COMMAND sst ${CMAKE_CURRENT_SOURCE_DIR}/test_elements/verilator-test-component.py -- -m ${VTOP} -i "direct" -c ${CYCLE_LIMIT})
+  add_test(NAME VerilatorTestDirect_${SUBDIRECTORY}_VPI
+    COMMAND sst ${CMAKE_CURRENT_SOURCE_DIR}/test_elements/verilator-test-component.py -- -m ${VTOP} -i "direct" -c ${CYCLE_LIMIT} -a "vpi")
 endfunction()
 
 add_verilatorsst_test(Counter 50)
