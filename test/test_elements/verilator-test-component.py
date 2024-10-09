@@ -610,7 +610,6 @@ def run_links(subName, verbosity, verbosityMask, vpi, testFile, numCycles):
         ports.addPort("eoi", 4, READ_PORT)
         ports.addPort("trace_data", 5, READ_PORT)
         testScheme.buildPicoTest(numCycles)
-        #testScheme.export()
         print(ports.getPortMap())
         print("Basic test for PicoRV:")
     print(testScheme)
