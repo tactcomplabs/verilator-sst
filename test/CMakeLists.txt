@@ -167,12 +167,15 @@ function(add_verilatorsst_test SUBDIRECTORY CYCLE_LIMIT)
 
   add_test(NAME VerilatorTestLink_${SUBDIRECTORY}
     COMMAND sst ${CMAKE_CURRENT_SOURCE_DIR}/test_elements/verilator-test-component.py -- -m ${VTOP} -i "links" -c ${CYCLE_LIMIT})
-  add_test(NAME VerilatorTestLink_${SUBDIRECTORY}_VPI
-    COMMAND sst ${CMAKE_CURRENT_SOURCE_DIR}/test_elements/verilator-test-component.py -- -m ${VTOP} -i "links" -c ${CYCLE_LIMIT} -a "vpi")
   add_test(NAME VerilatorTestDirect_${SUBDIRECTORY}
     COMMAND sst ${CMAKE_CURRENT_SOURCE_DIR}/test_elements/verilator-test-component.py -- -m ${VTOP} -i "direct" -c ${CYCLE_LIMIT})
-  add_test(NAME VerilatorTestDirect_${SUBDIRECTORY}_VPI
-    COMMAND sst ${CMAKE_CURRENT_SOURCE_DIR}/test_elements/verilator-test-component.py -- -m ${VTOP} -i "direct" -c ${CYCLE_LIMIT} -a "vpi")
+  # NOTE: the VPI interface currently does not allow inout ports, so the VPI tests aren't added for the Pin example
+  if(NOT "${SUBDIRECTORY}" STREQUAL "Pin")
+    add_test(NAME VerilatorTestLink_${SUBDIRECTORY}_VPI
+      COMMAND sst ${CMAKE_CURRENT_SOURCE_DIR}/test_elements/verilator-test-component.py -- -m ${VTOP} -i "links" -c ${CYCLE_LIMIT} -a "vpi")
+    add_test(NAME VerilatorTestDirect_${SUBDIRECTORY}_VPI
+      COMMAND sst ${CMAKE_CURRENT_SOURCE_DIR}/test_elements/verilator-test-component.py -- -m ${VTOP} -i "direct" -c ${CYCLE_LIMIT} -a "vpi")
+  endif()
 endfunction()
 
 add_verilatorsst_test(Counter 50)

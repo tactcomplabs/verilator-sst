@@ -672,9 +672,6 @@ def main():
     verbosity = args.verbose
     if (args.access == "vpi"):
         vpi = 1
-        if (sub == "Pin"):
-            print("Pin example cannot be used with VPI because the VPI implementation does not support inout ports... exiting.")
-            return
     else:
         vpi = 0
 
