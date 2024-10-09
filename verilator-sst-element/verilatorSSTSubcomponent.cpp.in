@@ -402,6 +402,7 @@ void VerilatorSST@VERILOG_DEVICE@::writePort(std::string PortName,
   // determine which write to use
   if( UseVPI ){
     writePortVPI(PortName, Packet);
+    this->Top->eval();
   }else{
     unsigned Idx = PortMap.at(PortName);
     DirectWriteFunc Func = std::get<V_WRITEFUNC>(Ports[Idx]);
