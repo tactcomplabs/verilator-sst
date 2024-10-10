@@ -1,3 +1,10 @@
+// test/scratchpad RAM_64.sv
+// Copyright (C) 2017-2024 Tactical Computing Laboratories, LLC
+// All Rights Reserved
+// contact@tactcomplabs.com
+// See LICENSE in the top level directory for licensing details
+//
+
 module RAM_64 #(parameter ADDR_WIDTH)(
     input clk,
     input en,

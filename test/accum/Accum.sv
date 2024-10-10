@@ -1,3 +1,10 @@
+// test/accum Accum.sv
+// Copyright (C) 2017-2024 Tactical Computing Laboratories, LLC
+// All Rights Reserved
+// contact@tactcomplabs.com
+// See LICENSE in the top level directory for licensing details
+//
+
 `ifndef ACCUM_WIDTH
 `define ACCUM_WIDTH 32
 `define ADD_WIDTH ACCUM_WIDTH/2

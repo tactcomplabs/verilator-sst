@@ -468,8 +468,14 @@ class Test:
     def __str__(self):
         return(str(self.TestOps))
 
+    # NOTE: this function can be used to print the test ops to a file through stdout
+    # when executing, if you want to store them
+    def export(self):
+        for op in self.TestOps:
+            print(op)
 
-def run_direct(subName, verbosity, verbosityMask, vpi, numCycles):
+
+def run_direct(subName, verbosity, verbosityMask, vpi, testFile, numCycles):
     testScheme = Test()
     # tell Test to ignore clk writes
     testScheme.setDirectMode()
@@ -501,6 +507,7 @@ def run_direct(subName, verbosity, verbosityMask, vpi, numCycles):
         "verbose" : verbosity,
         "verboseMask" : verbosityMask,
         "clockFreq" : "1GHz",
+        "testFile" : testFile,
         "testOps" : testScheme.getTest(),
         "numCycles" : numCycles
     })
@@ -513,7 +520,7 @@ def run_direct(subName, verbosity, verbosityMask, vpi, numCycles):
         "clockPort" : "clk",
     })
 
-def run_links(subName, verbosity, verbosityMask, vpi, numCycles):
+def run_links(subName, verbosity, verbosityMask, vpi, testFile, numCycles):
     testScheme = Test()
     ports = PortDef()
     if ( subName == "Counter" ):
@@ -614,6 +621,7 @@ def run_links(subName, verbosity, verbosityMask, vpi, numCycles):
         "clockFreq" : "1GHz",
         "num_ports" : ports.getNumPorts(),
         "portMap" : ports.getPortMap(),
+        "testFile" : testFile,
         "testOps" : testScheme.getTest(),
         "numCycles" : numCycles
     })
@@ -648,6 +656,7 @@ def main():
     parser.add_argument("-a", "--access", choices=["vpi", "direct"], default="direct", help="Select the method used by the subcomponent to read/write the verilated model's ports")
     parser.add_argument("-k", "--mask", choices=[choice.name for choice in VerboseMasking], default="FULL")
     parser.add_argument("-c", "--cycles", default=50, help="Set number of cycles the simulation will run for")
+    parser.add_argument("-t", "--testfile", default="", help="Absolute path of file to load TestOps from")
 
     args = parser.parse_args()
 
@@ -658,6 +667,7 @@ def main():
     numCycles = int(args.cycles)
     chosenMask = args.mask
     verbosityMask = VerboseMasking[chosenMask].value
+    testFile = args.testfile
     print("Using verbosityMask {}".format(verbosityMask))
     verbosity = args.verbose
     if (args.access == "vpi"):
@@ -667,9 +677,9 @@ def main():
 
 
     if args.interface == "direct":
-        run_direct(sub, verbosity, verbosityMask, vpi, numCycles)
+        run_direct(sub, verbosity, verbosityMask, vpi, testFile, numCycles)
     elif args.interface == "links":
-        run_links(sub, verbosity, verbosityMask, vpi, numCycles)
+        run_links(sub, verbosity, verbosityMask, vpi, testFile, numCycles)
           
     sst.setStatisticLoadLevel(7)
     sst.setStatisticOutput("sst.statOutputCSV")
