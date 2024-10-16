@@ -17,7 +17,7 @@ Write/read ports using the exposed `writePort`, `writePortAtTick`, and `readPort
 
 ### Reading/Writing Ports
 
-There are two modes of reading/writing ports in the Verilated model: **VPI** and **Direct**. Direct reads/writes access the variables directly and may be faster than VPI, with both methods offering consistent behavior.
+There are two modes of reading/writing ports in the Verilated model: **VPI** and **Direct** (not to be confused with the above mentioned Direct C++ API, which is an SST-side interface). Direct reads/writes access the variables directly and may be faster than VPI, with both methods offering consistent behavior.
 
 #### Handling `inout` Ports
 
@@ -30,13 +30,16 @@ The input port is used for writing operations and is assigned the original port 
 
 - If the signal is **not driven** when a read occurs, or is **driven** when a write occurs, the program will err out.
 
-Therefore, `inout` ports should be read/written by their original names.
+Tristate ports are not supported in the available versions of Verilator, so `inout` behavior can only be achieved through
+the above mentioned three-port abstraction. As a result, `inout` ports **cannot** be accessed properly through VPI.
+
+Therefore, `inout` ports should be read/written by their original names using **Direct** reads/writes.
 
 ---
 
 ## Dependencies
 
-- [Verilator >v5.022](https://github.com/verilator/verilator/releases/tag/v5.022) (Version 5.026 is required for `inout` port support)
+- [Verilator >v5.022](https://github.com/verilator/verilator/releases/tag/v5.022) (Version 5.026 or greater is required for `inout` port support)
 - [SST >13.1.0](https://github.com/sstsimulator/sst-core/releases/tag/v13.1.0_Final)
 - Python (>3.6.8)
 - CMake (>3.24.2)
