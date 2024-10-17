@@ -1,18 +1,25 @@
+// test/uart_mem UART.sv
+// Copyright (C) 2017-2024 Tactical Computing Laboratories, LLC
+// All Rights Reserved
+// contact@tactcomplabs.com
+// See LICENSE in the top level directory for licensing details
+//
+
 //addr_width > data_width
 //nRX=nTX
 //read rx={0} -> rx{addr} -> tx{data}
 //write rx={1} -> rx{addr} -> rx{data}
 
 `ifndef ADDR_WIDTH
-`define ADDR_WIDTH 1
+`define ADDR_WIDTH 2
 `endif
 
 `ifndef DATA_WIDTH
-`define DATA_WIDTH 1
+`define DATA_WIDTH 2
 `endif
 
 `ifndef BAUD_PERIOD
-`define BAUD_PERIOD 1
+`define BAUD_PERIOD 3
 `endif
 
 `define assert(cond,msg) initial begin \

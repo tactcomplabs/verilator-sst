@@ -1,4 +1,4 @@
-# tests/ CMakeLists.txt
+# test/ CMakeLists.txt
 # Copyright (C) 2017-2024 Tactical Computing Laboratories, LLC
 # All Rights Reserved
 # contact@tactcomplabs.com
@@ -128,6 +128,26 @@ if( ENABLE_INOUT_HANDLING )
   )
 endif()
 
+generate_verilator_component(
+  "picorv32"
+  "${CMAKE_CURRENT_SOURCE_DIR}/pico/picorv32.v"
+  "${CMAKE_CURRENT_SOURCE_DIR}/pico"
+  ""
+  "PicoRV"
+  "Links"
+  "clk"
+)
+
+generate_verilator_component(
+  "picorv32"
+  "${CMAKE_CURRENT_SOURCE_DIR}/pico/picorv32.v"
+  "${CMAKE_CURRENT_SOURCE_DIR}/pico"
+  ""
+  "PicoRV"
+  "Direct"
+  "clk"
+)
+
 # ---------------------------------------------------------------------- #
 # Add the subdirectory containing the standalone elements used to test
 # the generated ones
@@ -140,23 +160,31 @@ add_subdirectory(test_elements)
 # - One test will run the link based, SST interface
 # - One test will run the direct interface which does not use SST::Link
 #---------------------- ------------------------------------------------ #
-function(add_verilatorsst_test SUBDIRECTORY)
+function(add_verilatorsst_test SUBDIRECTORY CYCLE_LIMIT)
 
   # Set the VTOP variable based on the subdirectory name passed as an argument
   set(VTOP ${SUBDIRECTORY})
 
   add_test(NAME VerilatorTestLink_${SUBDIRECTORY}
-                  COMMAND sst ${CMAKE_CURRENT_SOURCE_DIR}/test_elements/verilator-test-component.py -- -m ${VTOP} -i "links")
+    COMMAND sst ${CMAKE_CURRENT_SOURCE_DIR}/test_elements/verilator-test-component.py -- -m ${VTOP} -i "links" -c ${CYCLE_LIMIT})
   add_test(NAME VerilatorTestDirect_${SUBDIRECTORY}
-                  COMMAND sst ${CMAKE_CURRENT_SOURCE_DIR}/test_elements/verilator-test-component.py -- -m ${VTOP} -i "direct")
+    COMMAND sst ${CMAKE_CURRENT_SOURCE_DIR}/test_elements/verilator-test-component.py -- -m ${VTOP} -i "direct" -c ${CYCLE_LIMIT})
+  # NOTE: the VPI interface currently does not allow inout ports, so the VPI tests aren't added for the Pin example
+  if(NOT "${SUBDIRECTORY}" STREQUAL "Pin")
+    add_test(NAME VerilatorTestLink_${SUBDIRECTORY}_VPI
+      COMMAND sst ${CMAKE_CURRENT_SOURCE_DIR}/test_elements/verilator-test-component.py -- -m ${VTOP} -i "links" -c ${CYCLE_LIMIT} -a "vpi")
+    add_test(NAME VerilatorTestDirect_${SUBDIRECTORY}_VPI
+      COMMAND sst ${CMAKE_CURRENT_SOURCE_DIR}/test_elements/verilator-test-component.py -- -m ${VTOP} -i "direct" -c ${CYCLE_LIMIT} -a "vpi")
+  endif()
 endfunction()
 
-add_verilatorsst_test(Counter)
-add_verilatorsst_test(Accum)
-add_verilatorsst_test(Accum1D)
-add_verilatorsst_test(Scratchpad)
-add_verilatorsst_test(UART)
+add_verilatorsst_test(Counter 50)
+add_verilatorsst_test(Accum 50)
+add_verilatorsst_test(Accum1D 50)
+add_verilatorsst_test(Scratchpad 50)
+add_verilatorsst_test(UART 512)
 if(ENABLE_INOUT_HANDLING)
-add_verilatorsst_test(Pin)
+add_verilatorsst_test(Pin 50)
 endif()
+add_verilatorsst_test(PicoRV 200)
 # EOF

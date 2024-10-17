@@ -32,12 +32,15 @@ namespace SST::VerilatorSST {
 typedef void (*DirectWriteFunc)(VTop*, const std::vector<uint8_t>&);
 typedef std::vector<uint8_t> (*DirectReadFunc)(VTop*);
 
+// Type to hold necessary Verilator port information
 typedef std::tuple<std::string,
                    VPortType,
                    unsigned, //width
                    unsigned, //depth
                    DirectWriteFunc,
-                   DirectReadFunc> PortEntry;
+                   DirectReadFunc,
+                   SST::Statistics::Statistic<uint64_t>*,
+                   SST::Statistics::Statistic<uint64_t>*> PortEntry;
 
 
 // ---------------------------------------------------------------
@@ -70,7 +73,10 @@ public:
   )
 
   // Add statistics
-  SST_ELI_DOCUMENT_STATISTICS()
+  SST_ELI_DOCUMENT_STATISTICS(
+    {"PortWrites", "Counts the total number of input port writes", "writes", 1 },
+    {"PortReads",  "Counts the total number of output port reads", "reads",  1 },
+  )
 
   /// default constructor
   VerilatorSST@VERILOG_DEVICE@(ComponentId_t id, const Params& params);
@@ -130,11 +136,11 @@ public:
 private:
 
   // Private data
-  bool UseVPI;          ///< Is the verilator VPI interface used?
-  VerilatedContext *ContextP;       ///< verilated context
+  bool UseVPI;                      ///< Is the verilator VPI interface used?
+  VerilatedContext *ContextP;       ///< verilated context for the module
   VTop *Top;                        ///< top module
   std::list<QueueEntry> WriteQueue; ///< port write queue
-  // Links for each port
+  // Generated links for each port
   @VERILATOR_SST_LINK_DEFS@
 
   // Private functions
@@ -163,13 +169,13 @@ private:
   @VERILATOR_SST_PORT_HANDLERS@
 
   // Private data
-  std::string clockPort;                  ///< verilator named clock port
+  std::string clockPort;   ///< verilator named clock port
 
   ///< Map of port indices to reset values
   std::vector<PortReset> ResetVals;
 
   ///< Vector of port descriptor tuples
-  const std::vector<PortEntry>  Ports = {
+  std::vector<PortEntry>  Ports = {
     @VERILATOR_SST_PORT_ENTRY@
   };
 

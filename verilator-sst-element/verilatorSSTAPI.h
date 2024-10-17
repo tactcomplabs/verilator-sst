@@ -61,10 +61,13 @@ enum class VPortType : uint8_t {
 #define V_DEPTH           3
 #define V_WRITEFUNC       4
 #define V_READFUNC        5
+#define V_WRITE_STAT      6
+#define V_READ_STAT       7
 
 typedef std::pair<std::string,
                   uint64_t> PortReset;
 
+// Struct to hold info for synchronous delayed writes 
 struct QueueEntry {
   std::string PortName;
   uint64_t AtTick;
@@ -83,25 +86,29 @@ enum class PortEventAction : uint8_t {
   READ  = 0b00000001
 };
 
+// Event used to send writes/reads to exposed ports across links
 class PortEvent : public SST::Event{
 public:
   /// PortEvent: default constructor
   explicit PortEvent()
-    : Event(), AtTick(0x00ull), action(PortEventAction::READ) {
+    : Event(), AtTick(0x00ull), Action(PortEventAction::READ) {
   }
 
-  explicit PortEvent(uint64_t Tick, PortEventAction action)
-    : Event(), AtTick(Tick), action(action) {
+  /// PortEvent: overloaded constructor
+  explicit PortEvent(uint64_t Tick, PortEventAction Action)
+    : Event(), AtTick(Tick), Action(Action) {
   }
 
+  /// PortEvent: write constructor w/ data payload
   explicit PortEvent(std::vector<uint8_t> P)
-    : Event(), AtTick(0x00ull), action(PortEventAction::WRITE) {
+    : Event(), AtTick(0x00ull), Action(PortEventAction::WRITE) {
     std::copy(P.begin(), P.end(),
               std::back_inserter(Packet));
   }
 
+  /// PortEvent: delayed write constructor (to occur at Tick)
   explicit PortEvent(std::vector<uint8_t> P, uint64_t Tick)
-    : Event(), AtTick(Tick), action(PortEventAction::WRITE) {
+    : Event(), AtTick(Tick), Action(PortEventAction::WRITE) {
     std::copy(P.begin(), P.end(),
               std::back_inserter(Packet));
   }
@@ -113,7 +120,7 @@ public:
   }
 
   /// PortEvent: retrieve the packet action
-  PortEventAction getAction() const { return action; }
+  PortEventAction getAction() const { return Action; }
 
   /// PortEvent: retrieve the target clock tick
   uint64_t getAtTick() const { return AtTick; }
@@ -133,16 +140,15 @@ public:
 private:
   std::vector<uint8_t> Packet;  /// event packet
   uint64_t AtTick;              /// event at clock tick
-  PortEventAction action;            /// event action
+  PortEventAction Action;       /// event action
 
 public:
   // PortEvent: event serializer
   void serialize_order(SST::Core::Serialization::serializer &ser) override{
-    // we only serialize the raw packet
     Event::serialize_order(ser);
     ser & Packet;
     ser & AtTick;
-    ser & action;
+    ser & Action;
   }
 
   // PortEvent: implements the nic serialization
