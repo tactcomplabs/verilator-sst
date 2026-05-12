@@ -146,9 +146,14 @@ public:
   // PortEvent: event serializer
   void serialize_order(SST::Core::Serialization::serializer &ser) override{
     Event::serialize_order(ser);
+    /*
     ser & Packet;
     ser & AtTick;
     ser & Action;
+    */
+    SST_SER(Packet);
+    SST_SER(AtTick);
+    SST_SER(Action);
   }
 
   // PortEvent: implements the nic serialization

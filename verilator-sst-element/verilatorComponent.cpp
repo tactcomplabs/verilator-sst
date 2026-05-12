@@ -25,8 +25,7 @@ VerilatorComponent::VerilatorComponent(SST::ComponentId_t id,
   }
 
   const std::string clockFreq = params.find<std::string>( "clockFreq", "1GHz" );
-  registerClock( clockFreq, new Clock::Handler<VerilatorComponent>( this,
-                                                                     &VerilatorComponent::clock ) );
+  registerClock( clockFreq, new Clock::Handler2<VerilatorComponent, &VerilatorComponent::clock>( this ) );
 
   NumCycles = params.find<uint64_t>("numCycles", 1000);
 

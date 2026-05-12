@@ -64,8 +64,7 @@ VerilatorSST@VERILOG_DEVICE@::VerilatorSST@VERILOG_DEVICE@(ComponentId_t id,
 
   // register the clock
   registerClock(clockFreq,
-                new Clock::Handler<VerilatorSST@VERILOG_DEVICE@>(this,
-                                                                 &VerilatorSST@VERILOG_DEVICE@::clock));
+                new Clock::Handler2<VerilatorSST@VERILOG_DEVICE@, &VerilatorSST@VERILOG_DEVICE@::clock>(this));
 
   // register statistics
   for(auto &portEntry : Ports) {
