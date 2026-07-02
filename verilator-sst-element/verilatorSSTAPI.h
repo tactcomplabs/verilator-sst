@@ -1,7 +1,7 @@
 //
 // _verilatorSSTAPI_h_
 //
-// Copyright (C) 2017-2024 Tactical Computing Laboratories, LLC
+// Copyright (C) 2017-2026 Tactical Computing Laboratories, LLC
 // All Rights Reserved
 // contact@tactcomplabs.com
 //
@@ -146,9 +146,9 @@ public:
   // PortEvent: event serializer
   void serialize_order(SST::Core::Serialization::serializer &ser) override{
     Event::serialize_order(ser);
-    ser & Packet;
-    ser & AtTick;
-    ser & Action;
+    SST_SER(Packet);
+    SST_SER(AtTick);
+    SST_SER(Action);
   }
 
   // PortEvent: implements the nic serialization

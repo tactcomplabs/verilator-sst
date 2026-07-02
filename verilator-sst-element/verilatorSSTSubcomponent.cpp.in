@@ -1,7 +1,7 @@
 //
 // _verilatorSSTSubcomponent_cpp_
 //
-// Copyright (C) 2017-2024 Tactical Computing Laboratories, LLC
+// Copyright (C) 2017-2026 Tactical Computing Laboratories, LLC
 // All Rights Reserved
 // contact@tactcomplabs.com
 //
@@ -64,8 +64,7 @@ VerilatorSST@VERILOG_DEVICE@::VerilatorSST@VERILOG_DEVICE@(ComponentId_t id,
 
   // register the clock
   registerClock(clockFreq,
-                new Clock::Handler<VerilatorSST@VERILOG_DEVICE@>(this,
-                                                                 &VerilatorSST@VERILOG_DEVICE@::clock));
+                new Clock::Handler<VerilatorSST@VERILOG_DEVICE@, &VerilatorSST@VERILOG_DEVICE@::clock>(this));
 
   // register statistics
   for(auto &portEntry : Ports) {
