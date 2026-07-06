@@ -1,7 +1,7 @@
 //
 // _VerilatorTestDirect_cpp_
 //
-// Copyright (C) 2017-2024 Tactical Computing Laboratories, LLC
+// Copyright (C) 2017-2026 Tactical Computing Laboratories, LLC
 // All Rights Reserved
 // contact@tactcomplabs.com
 //
@@ -28,8 +28,7 @@ VerilatorTestDirect::VerilatorTestDirect(SST::ComponentId_t id,
   }
 
   const std::string clockFreq = params.find<std::string>( "clockFreq", "1GHz" );
-  registerClock( clockFreq, new Clock::Handler<VerilatorTestDirect>( this,
-                                                                     &VerilatorTestDirect::clock ) );
+  registerClock( clockFreq, new Clock::Handler<VerilatorTestDirect, &VerilatorTestDirect::clock>( this ) );
   InitTestOps( params );
 
   NumCycles = params.find<uint64_t>("numCycles", 1000);

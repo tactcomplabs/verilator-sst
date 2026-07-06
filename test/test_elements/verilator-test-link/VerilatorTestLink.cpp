@@ -1,7 +1,7 @@
 //
 // _VerilatorTestLink_cpp_
 //
-// Copyright (C) 2017-2024 Tactical Computing Laboratories, LLC
+// Copyright (C) 2017-2026 Tactical Computing Laboratories, LLC
 // All Rights Reserved
 // contact@tactcomplabs.com
 //
@@ -39,8 +39,7 @@ VerilatorTestLink::VerilatorTestLink(SST::ComponentId_t id,
   InitTestOps( params );
 
   const std::string clockFreq = params.find<std::string>( "clockFreq", "1GHz" );
-  registerClock( clockFreq, new Clock::Handler<VerilatorTestLink>( this,
-                                                                   &VerilatorTestLink::clock ) );
+  registerClock( clockFreq, new Clock::Handler<VerilatorTestLink, &VerilatorTestLink::clock>( this ) );
 
   NumCycles = params.find<uint64_t>( "numCycles", 1000 );
 
@@ -106,7 +105,7 @@ void VerilatorTestLink::InitLinkConfig( const SST::Params& params ) {
     for (size_t i=0; i<NumPorts; i++) {
       char PortName[8];
       std::snprintf(PortName, 7, "port%zu", i);
-      Links[i] = configureLink( PortName, "0ns", new Event::Handler<VerilatorTestLink, unsigned>( this, &VerilatorTestLink::RecvPortEvent, i ) );
+      Links[i] = configureLink( PortName, "0ns", new Event::Handler<VerilatorTestLink, &VerilatorTestLink::RecvPortEvent, unsigned>( this, i ) );
       if ( Links[i] == nullptr ) {
         output.fatal( CALL_INFO, -1, "Error: Link for port %s failed to be configured\n", PortName );
       }

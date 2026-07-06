@@ -40,7 +40,7 @@ Therefore, `inout` ports should be read/written by their original names using **
 ## Dependencies
 
 - [Verilator >v5.022](https://github.com/verilator/verilator/releases/tag/v5.022) (Version 5.026 or greater is required for `inout` port support)
-- [SST >13.1.0](https://github.com/sstsimulator/sst-core/releases/tag/v13.1.0_Final)
+- [SST >16.0.0](https://github.com/sstsimulator/sst-core/releases/tag/v16.0.0_Final)
 - Python (>3.6.8)
 - CMake (>3.24.2)
 
