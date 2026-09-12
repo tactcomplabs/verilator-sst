@@ -175,6 +175,7 @@ class Test:
      
     def buildAccumTest(self, numCycles):
         global UINT64_MAX
+        self.addTestOp("en", OpAction.Write, 0, 0)
         self.addTestOp("reset_l", OpAction.Write, 1, 0)
         self.addTestOp("reset_l", OpAction.Write, 0, 1)
         self.addTestOp("reset_l", OpAction.Write, 1, 3)
