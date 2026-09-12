@@ -88,8 +88,31 @@ function(generate_verilator_component VERILOG_TOP
     message(WARNING "Inout ports will not be added to the subcomponent port list, set ENABLE_INOUT_HANDLING to add these to the subcomponent")
   endif()
 
+  # -----------------------------------------------------------------
+  # Generate the port manifest
+  # -----------------------------------------------------------------
+  # VTop.h declares scalar/packed-vector ports as VL_IN8/16/32/64/W macros
+  # (parseable directly) but SV unpacked-array ports (e.g. `output [31:0]
+  # accum[4]`) as VlUnpacked<T,N> members, which carry width/depth but no
+  # direction. GeneratePortManifest.sh passes the macro-style lines through
+  # untouched and, for VlUnpacked lines, recovers direction with a
+  # best-effort grep of the original Verilog/SystemVerilog source. This
+  # manifest -- not VTop.h -- drives every port-discovery script below;
+  # VTop.h itself is untouched and still compiled normally.
+  message(STATUS "Building port manifest...")
+  execute_process(COMMAND ${VERILATORSST_SCRIPTS}/GeneratePortManifest.sh ${VTOP} "${VERILOG_TOP_SOURCES}"
+                    RESULT_VARIABLE PORT_MANIFEST_CHECK
+                    OUTPUT_VARIABLE VERILATOR_SST_PORT_MANIFEST
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+  if(PORT_MANIFEST_CHECK)
+    message(FATAL_ERROR "Errors detected in the GeneratePortManifest.sh script; interrupting build")
+  endif()
+
+  set(VTOP_PORTS "${VERILOG_BUILD_DIR}/VTop.ports.h")
+  file(WRITE ${VTOP_PORTS} "${VERILATOR_SST_PORT_MANIFEST}")
+
   message(STATUS "Building port definitions...")
-  execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortDef.sh ${VTOP}
+  execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortDef.sh ${VTOP_PORTS}
                     RESULT_VARIABLE PORT_DEF_CHECK
                     OUTPUT_VARIABLE VERILATOR_SST_PORT_DEF
                     OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -99,7 +122,7 @@ function(generate_verilator_component VERILOG_TOP
   endif()
 
   message(STATUS "Building port entries...")
-  execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortEntry.sh ${VTOP} ${VERILOG_DEVICE}
+  execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortEntry.sh ${VTOP_PORTS} ${VERILOG_DEVICE}
                     RESULT_VARIABLE PORT_ENTRY_CHECK
                     OUTPUT_VARIABLE VERILATOR_SST_PORT_ENTRY
                     OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -109,7 +132,7 @@ function(generate_verilator_component VERILOG_TOP
   endif()
 
   message(STATUS "Building port map...")
-  execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortMap.sh ${VTOP}
+  execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortMap.sh ${VTOP_PORTS}
                     RESULT_VARIABLE PORT_MAP_CHECK
                     OUTPUT_VARIABLE VERILATOR_SST_PORT_MAP
                     OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -119,7 +142,7 @@ function(generate_verilator_component VERILOG_TOP
   endif()
 
   message(STATUS "Building port handlers...")
-  execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortHandlers.sh ${VTOP}
+  execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortHandlers.sh ${VTOP_PORTS}
                     RESULT_VARIABLE PORT_HANDLERS_CHECK
                     OUTPUT_VARIABLE VERILATOR_SST_PORT_HANDLERS
                     OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -129,7 +152,7 @@ function(generate_verilator_component VERILOG_TOP
   endif()
 
   message(STATUS "Building port IO...")
-  execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortIO.sh ${VTOP}
+  execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortIO.sh ${VTOP_PORTS}
                     RESULT_VARIABLE PORT_IO_CHECK
                     OUTPUT_VARIABLE VERILATOR_SST_PORT_IO_HANDLERS
                     OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -139,7 +162,7 @@ function(generate_verilator_component VERILOG_TOP
   endif()
 
   message(STATUS "Building port IO implementations...")
-  execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortIOImpls.sh ${VTOP} ${VERILOG_DEVICE}
+  execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortIOImpls.sh ${VTOP_PORTS} ${VERILOG_DEVICE}
                     RESULT_VARIABLE PORT_IO_IMPLS_CHECK
                     OUTPUT_VARIABLE VERILATOR_SST_PORT_IO_IMPLS
                     OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -150,7 +173,7 @@ function(generate_verilator_component VERILOG_TOP
 
   message(STATUS "Building port handler implementations...")
   if(ENABLE_LINK_HANDLING)
-    execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortHandlerImpls.sh ${VTOP} ${VERILOG_DEVICE} 1 ${CLOCK_PORT_NAME}
+    execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortHandlerImpls.sh ${VTOP_PORTS} ${VERILOG_DEVICE} 1 ${CLOCK_PORT_NAME}
                         RESULT_VARIABLE PORT_HANDLER_IMPLS_CHECK
                         OUTPUT_VARIABLE VERILATOR_SST_PORT_HANDLER_IMPLS
                         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -160,7 +183,7 @@ function(generate_verilator_component VERILOG_TOP
     endif()
 
     message(STATUS "Building link definitions...")
-    execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildLinkDef.sh ${VTOP}
+    execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildLinkDef.sh ${VTOP_PORTS}
                         RESULT_VARIABLE LINK_DEF_CHECK
                         OUTPUT_VARIABLE VERILATOR_SST_LINK_DEFS
                         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -170,7 +193,7 @@ function(generate_verilator_component VERILOG_TOP
     endif()
 
     message(STATUS "Building link configurations...")
-    execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildLinkConfig.sh ${VTOP} ${VERILOG_DEVICE}
+    execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildLinkConfig.sh ${VTOP_PORTS} ${VERILOG_DEVICE}
                         RESULT_VARIABLE LINK_CONFIG_CHECK
                         OUTPUT_VARIABLE VERILATOR_SST_LINK_CONFIGS
                         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -180,7 +203,7 @@ function(generate_verilator_component VERILOG_TOP
     endif()
 
   else()
-    execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortHandlerImpls.sh ${VTOP} ${VERILOG_DEVICE} 0
+    execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortHandlerImpls.sh ${VTOP_PORTS} ${VERILOG_DEVICE} 0
                         RESULT_VARIABLE PORT_HANDLER_IMPLS_CHECK
                         OUTPUT_VARIABLE VERILATOR_SST_PORT_HANDLER_IMPLS
                         OUTPUT_STRIP_TRAILING_WHITESPACE
