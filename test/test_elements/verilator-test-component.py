@@ -105,6 +105,15 @@ class Test:
     def buildScratchTest(self, numCycles):
         global SCRATCH_ADDR_BASE
         global SCRATCH_SIZE
+        # drive safe defaults before the first clock edge so the model's
+        # auto-clocking (direct mode) or first manual pulse doesn't see
+        # uninitialized addr/en/write values (addr must stay in-bounds for
+        # the RTL's address assertions even when en is deasserted)
+        self.addTestOp("en", OpAction.Write, 0, 0)
+        self.addTestOp("write", OpAction.Write, 0, 0)
+        self.addTestOp("addr", OpAction.Write, SCRATCH_ADDR_BASE, 0)
+        self.addTestOp("len", OpAction.Write, 0, 0)
+        self.addTestOp("wdata", OpAction.Write, 0, 0)
         for i in range(numCycles):
             self.addTestOp("clk", OpAction.Write, 1, i) # cycle clock every cycle
             # setup different params based on cycles
@@ -147,6 +156,11 @@ class Test:
 
     def buildAccum1DTest(self, numCycles):
         global UINT64_MAX
+        # explicitly reset en=0 before the first clock edge; otherwise the
+        # model's auto-clocking (direct mode) or first manual pulse can see
+        # an uninitialized en/add and trigger a spurious accumulation
+        self.addTestOp("en", OpAction.Write, 0, 0)
+        self.addTestOp("reset_l", OpAction.Write, 1, 0)
         self.addTestOp("reset_l", OpAction.Write, 0, 1)
         self.addTestOp("reset_l", OpAction.Write, 1, 3)
         self.addTestOp("clk", OpAction.Write, 1, 3)
@@ -520,6 +534,13 @@ def run_direct(subName, verbosity, verbosityMask, vpi, testFile, numCycles):
         "clockFreq" : "1GHz",
         "clockPort" : "clk",
     })
+    if ( subName == "Scratchpad" ):
+        # the model's own free-running clock can tick before any test op is
+        # applied; resetVals are driven during SST init (before the first
+        # clock edge) so addr never violates Scratchpad's address asserts
+        model.addParams({
+            "resetVals" : [f"addr:{SCRATCH_ADDR_BASE}"]
+        })
 
 def run_links(subName, verbosity, verbosityMask, vpi, testFile, numCycles):
     testScheme = Test()
@@ -640,6 +661,13 @@ def run_links(subName, verbosity, verbosityMask, vpi, testFile, numCycles):
         "clockFreq" : "2.0GHz",
         "clockPort" : "clk"
     })
+    if ( subName == "Scratchpad" ):
+        # the model's own free-running clock can tick before any test op is
+        # applied; resetVals are driven during SST init (before the first
+        # clock edge) so addr never violates Scratchpad's address asserts
+        model.addParams({
+            "resetVals" : [f"addr:{SCRATCH_ADDR_BASE}"]
+        })
 
     Links = [ ]
     # connect each verilator subcomponent port with a VerilatorTestLink port
