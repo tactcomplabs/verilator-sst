@@ -686,11 +686,17 @@ def main():
     parser.add_argument("-k", "--mask", choices=[choice.name for choice in VerboseMasking], default="FULL")
     parser.add_argument("-c", "--cycles", default=50, help="Set number of cycles the simulation will run for")
     parser.add_argument("-t", "--testfile", default="", help="Absolute path of file to load TestOps from")
+    parser.add_argument("-b", "--scratchbase", default=None,
+                         help="Override the Scratchpad base address (must match the RTL's SCRATCHPAD_BASE parameter); accepts decimal or 0x-hex")
 
     args = parser.parse_args()
 
     if args.model not in examples:
         raise Exception("Unknown model selected")
+
+    global SCRATCH_ADDR_BASE
+    if args.scratchbase is not None:
+        SCRATCH_ADDR_BASE = int(args.scratchbase, 0)
 
     sub = args.model
     numCycles = int(args.cycles)
