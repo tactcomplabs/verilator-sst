@@ -112,13 +112,22 @@ def main():
     for var in modules[0].get("stmtsp", []):
         if var.get("type") != "VAR":
             continue
-        # isPrimaryIO marks a module port regardless of varType: plain
-        # ports are varType PORT, but e.g. "output wire foo" ports that are
-        # continuously assigned show up as varType WIRE.
-        if not var.get("isPrimaryIO"):
-            continue
 
         direction = var.get("direction")
+        # A module port always carries a real direction (INPUT/OUTPUT/
+        # INOUT); internal vars, parameters, etc. report direction NONE.
+        # isPrimaryIO was tried first as the port marker, but it isn't
+        # reliable across Verilator versions: 5.022 and 5.026 report it
+        # False for every var, including genuine ports (confirmed against
+        # both), while newer Verilator sets it True for ports. direction
+        # itself has been consistent across every version tested (5.022,
+        # 5.026, 5.052), so filter on that instead. INOUT is intentionally
+        # let through here so it still reaches the direction dispatch
+        # below and produces the "unsupported direction" error rather than
+        # being silently dropped.
+        if direction == "NONE":
+            continue
+
         name = var["name"]
         width, depth = resolve_width_depth(var["dtypep"], addr_map)
         msb = width - 1
