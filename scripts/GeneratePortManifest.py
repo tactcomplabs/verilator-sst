@@ -29,6 +29,20 @@
 # grep/sed/awk -- so the exact macro name doesn't matter as long as it
 # contains "VL_IN" or "VL_OUT" (and not "VL_INOUT", which every script
 # explicitly filters out).
+#
+# INOUT ports need special handling. Verilator's --pins-inout-enables splits
+# each inout into <name> (input), <name>__out and <name>__en (both output)
+# -- but only in the --cc code generation backend. The --json-only AST dump
+# used here runs an earlier pipeline stage and reports the original,
+# unsplit INOUT var even when --pins-inout-enables was passed to the same
+# invocation (confirmed empirically: a --cc --pins-inout-enables VTop.h
+# shows the three split ports; --json-only --pins-inout-enables's
+# VTop.tree.json still shows one INOUT var). So when inout handling is
+# enabled, the split is replicated by hand below, using the same
+# <name>__out/<name>__en naming --pins-inout-enables itself produces, which
+# scripts/BuildPort*.sh already know how to detect. When it's disabled, the
+# port is silently omitted, matching the old VTop.h-grepping script's
+# behavior (scripts/CheckInoutPorts.sh separately warns about this case).
 
 import json
 import sys
@@ -93,12 +107,16 @@ def parse_range(rangeStr):
 
 
 def main():
-    if len(sys.argv) != 2:
-        print(f"usage: {sys.argv[0]} <VTop.tree.json>", file=sys.stderr)
+    if len(sys.argv) != 3:
+        print(
+            f"usage: {sys.argv[0]} <VTop.tree.json> <ENABLE_INOUT_HANDLING ON|OFF>",
+            file=sys.stderr,
+        )
         return 1
 
     with open(sys.argv[1]) as f:
         tree = json.load(f)
+    enable_inout_handling = sys.argv[2] == "ON"
 
     addr_map = {}
     build_addr_map(tree, addr_map)
@@ -121,10 +139,7 @@ def main():
         # False for every var, including genuine ports (confirmed against
         # both), while newer Verilator sets it True for ports. direction
         # itself has been consistent across every version tested (5.022,
-        # 5.026, 5.052), so filter on that instead. INOUT is intentionally
-        # let through here so it still reaches the direction dispatch
-        # below and produces the "unsupported direction" error rather than
-        # being silently dropped.
+        # 5.026, 5.052), so filter on that instead.
         if direction == "NONE":
             continue
 
@@ -132,17 +147,23 @@ def main():
         width, depth = resolve_width_depth(var["dtypep"], addr_map)
         msb = width - 1
         lsb = 0
-        sigRef = f"&{name}[{depth}]" if depth > 1 else f"&{name}"
+
+        def sig_ref(sig_name):
+            return f"&{sig_name}[{depth}]" if depth > 1 else f"&{sig_name}"
 
         if direction == "INPUT":
-            lines.append(f"VL_IN({sigRef},{msb},{lsb});")
+            lines.append(f"VL_IN({sig_ref(name)},{msb},{lsb});")
         elif direction == "OUTPUT":
-            lines.append(f"VL_OUT({sigRef},{msb},{lsb});")
+            lines.append(f"VL_OUT({sig_ref(name)},{msb},{lsb});")
+        elif direction == "INOUT":
+            if enable_inout_handling:
+                lines.append(f"VL_IN({sig_ref(name)},{msb},{lsb});")
+                lines.append(f"VL_OUT({sig_ref(name + '__out')},{msb},{lsb});")
+                lines.append(f"VL_OUT({sig_ref(name + '__en')},{msb},{lsb});")
+            # else: silently omitted, see the module docstring above.
         else:
             print(
-                f"error: port '{name}' has unsupported direction '{direction}' "
-                "(true bidirectional inout ports are not supported; build with "
-                "--pins-inout-enables to split them into input/output pairs)",
+                f"error: port '{name}' has unsupported direction '{direction}'",
                 file=sys.stderr,
             )
             return 1

@@ -111,7 +111,7 @@ function(generate_verilator_component VERILOG_TOP
   endif()
 
   message(STATUS "Building port manifest...")
-  execute_process(COMMAND ${Python3_EXECUTABLE} ${VERILATORSST_SCRIPTS}/GeneratePortManifest.py ${VERILOG_BUILD_DIR}/VTop.tree.json
+  execute_process(COMMAND ${Python3_EXECUTABLE} ${VERILATORSST_SCRIPTS}/GeneratePortManifest.py ${VERILOG_BUILD_DIR}/VTop.tree.json ${ENABLE_INOUT_HANDLING}
                     RESULT_VARIABLE PORT_MANIFEST_CHECK
                     OUTPUT_VARIABLE VERILATOR_SST_PORT_MANIFEST
                     OUTPUT_STRIP_TRAILING_WHITESPACE)
