@@ -12,7 +12,7 @@ Top=$1
 
 #-- Generate all the input signals
 INPUTS=$(cat $Top | grep VL_IN | sed -n '/VL_INOUT/!p')
-OUTPUTS=$(cat $Top | grep VL_OUT)
+OUTPUTS=$(cat $Top | { grep VL_OUT || true; })
 
 for IN in $INPUTS; do
   NOPAREN=$(sed 's/.*(\(.*\))/\1/' <<<$IN)
