@@ -52,6 +52,16 @@ function(generate_verilator_component VERILOG_TOP
                                       VERILOG_DEVICE
                                       SST_INTERFACE
                                       CLOCK_PORT_NAME)
+  # Optional 8th positional argument: path to a DPI implementation library
+  # (e.g. bambu's libmdpi.so) to link into this specific generated component,
+  # for verilog top modules that import bambu's DPI-C functions (m_next,
+  # m_read, m_write, m_fini, m_state). Left unset for ordinary components:
+  # linking it unconditionally for every component would also pull in its
+  # IPC-init constructor for targets that never call those DPI functions.
+  set(MDPI_LIB "")
+  if(ARGC GREATER 7)
+    list(GET ARGN 0 MDPI_LIB)
+  endif()
   # Check if INTERFACE = "Direct"
   if(SST_INTERFACE STREQUAL "Direct")
     set(ENABLE_LINK_HANDLING 0)
@@ -332,6 +342,14 @@ function(generate_verilator_component VERILOG_TOP
   PRIVATE ${VERILOG_BUILD_DIR}/libVTop.a
           ${VERILOG_BUILD_DIR}/libverilated.a
 )
+
+  if(MDPI_LIB)
+    if(NOT EXISTS ${MDPI_LIB})
+      message(FATAL_ERROR "DPI library does not exist: ${MDPI_LIB}")
+    endif()
+    message(STATUS "Linking DPI implementation: ${MDPI_LIB}")
+    target_link_libraries(${targetName} PRIVATE ${MDPI_LIB})
+  endif()
 
   if(ENABLE_INOUT_HANDLING)
     add_compile_definitions(ENABLE_INOUT_HANDLING=1)

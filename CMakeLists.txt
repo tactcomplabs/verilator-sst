@@ -44,6 +44,8 @@ set(VERILOG_TOP_SOURCES "top.v" CACHE STRING "List of verilog top source files")
 
 set(VERILATOR_OPTIONS "" CACHE STRING "Additional verilator compilation options")
 
+set(MDPI_LIBRARY "" CACHE STRING "Path to a prebuilt DPI implementation (e.g. bambu's libmdpi.so) to link into the generated component, for verilog top modules that import bambu's DPI-C functions (m_next, m_read, m_write, m_fini, m_state)")
+
 set(CLOCK_PORT_NAME "clk" CACHE STRING "Name of the top-level module's clock port") #Defaults to "clk"
 
 #------------------------------------------------------------------
@@ -157,7 +159,8 @@ if(ENABLE_CUSTOM_MODULE)
                                  "${VERILATOR_OPTIONS}"
                                  "${VERILOG_DEVICE}"
                                  "Links"
-                                 "${CLOCK_PORT_NAME}")
+                                 "${CLOCK_PORT_NAME}"
+                                 "${MDPI_LIBRARY}")
   else()
     generate_verilator_component("${VERILOG_TOP}"
                                  "${VERILOG_TOP_SOURCES}"
@@ -165,7 +168,8 @@ if(ENABLE_CUSTOM_MODULE)
                                  "${VERILATOR_OPTIONS}"
                                  "${VERILOG_DEVICE}"
                                  "Direct"
-                                 "${CLOCK_PORT_NAME}")
+                                 "${CLOCK_PORT_NAME}"
+                                 "${MDPI_LIBRARY}")
   endif()
 endif()
 

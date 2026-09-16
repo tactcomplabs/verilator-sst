@@ -88,6 +88,7 @@ This will generate two subcomponents for each included example Verilog code (one
 -DVERILOG_TOP=<name of the top level verilog module>
 -DVERILOG_TOP_SOURCES=<list of verilog top source files>
 -DVERILATOR_OPTIONS=<additional verilator compilation options>  # Defaults to empty string
+-DMDPI_LIBRARY=<path to a prebuilt DPI implementation, e.g. bambu's libmdpi.so>  # Defaults to empty string; needed for top modules that import bambu's DPI-C functions (m_next, m_read, m_write, m_fini, m_state) -- experimental, see MDPI_TESTBENCH_POC.md
 -DENABLE_CLK_HANDLING=ON                                   # Generates automatic clock port handling (for C++ API interface)
 -DENABLE_LINK_HANDLING=ON                                  # Generates links and link handlers (for links interface; on by default)
 -DCLOCK_PORT_NAME=<name of clock port>                     # Defaults to "clk", used with ENABLE_LINK_HANDLING
