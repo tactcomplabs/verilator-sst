@@ -6,7 +6,7 @@ cmake \
     -DVERILOG_DEVICE=forwardKernelTB \
     -DVERILOG_TOP=forward_kernel_tb \
     -DVERILOG_TOP_SOURCES=testbench_forward_kernel_tb.v \
-    -DVERILATOR_OPTIONS="-Wno-fatal -Wno-lint" \
+    -DVERILATOR_OPTIONS="-Wno-fatal -Wno-lint --timescale-override 1ps/1ps" \
     -DENABLE_LINK_HANDLING=ON \
     -DCLOCK_PORT_NAME=clock \
     ..

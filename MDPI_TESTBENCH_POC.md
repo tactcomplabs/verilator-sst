@@ -104,3 +104,8 @@ verilator-sst-native testbench directly, without the DPI/IPC layer, so
 stimulus and checking happen in-process instead of through a second OS
 process. That avoids this class of timing issue entirely rather than working
 around it.
+
+**Update**: this path has since been implemented and works — see
+`V2023_XML_TESTBENCH.md`, which drives bambu v2023.1's older self-contained
+`--generate-tb=<file.xml>` testbench generator (no DPI, no second process)
+through this same `ENABLE_CUSTOM_MODULE`/`ENABLE_LINK_HANDLING` mechanism.
