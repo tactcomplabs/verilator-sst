@@ -34,6 +34,7 @@
 # Directories
 build/
 install/
+output-v2023-*/
 
 # Misc
 .cache/clangd/index
