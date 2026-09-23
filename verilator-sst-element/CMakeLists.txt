@@ -58,8 +58,14 @@ function(generate_verilator_component VERILOG_TOP
   # m_read, m_write, m_fini, m_state). Left unset for ordinary components:
   # linking it unconditionally for every component would also pull in its
   # IPC-init constructor for targets that never call those DPI functions.
+  # NOTE: guard on ARGN itself, not "ARGC GREATER 7": a CMake list containing
+  # exactly one empty-string element serializes identically to an empty list,
+  # so when the caller passes "" (no MDPI library), ARGC is still 8 but
+  # `list(GET ARGN 0 ...)` fails with "list GET given empty list". if(ARGN)
+  # is false in both the "argument omitted" and "argument is empty string"
+  # cases, which is what we want here.
   set(MDPI_LIB "")
-  if(ARGC GREATER 7)
+  if(ARGN)
     list(GET ARGN 0 MDPI_LIB)
   endif()
   # Check if INTERFACE = "Direct"
