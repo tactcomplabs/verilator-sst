@@ -19,6 +19,7 @@ StubCpu::StubCpu(SST::ComponentId_t id, const SST::Params &params)
   numOps = params.find<uint64_t>("numOps", 12);
   burst = params.find<uint64_t>("burst", 4);
   period = params.find<uint64_t>("period", 40);
+  exact = params.find<bool>("exact", true);
   rng.seed(params.find<uint32_t>("seed", 1));
 
   accel = loadUserSubComponent<AccumAccelAPI>("accel");
@@ -61,10 +62,13 @@ void StubCpu::issue() {
     minLat = std::min(minLat, lat);
     maxLat = std::max(maxLat, lat);
     for (unsigned i = 0; i < got.size(); i++) {
-      if (got[i] != want[i]) {
+      // shared accelerator: other clients only ever add, so our own totals
+      // are a lower bound (no wraparound at these sizes)
+      const bool bad = exact ? got[i] != want[i] : got[i] < want[i];
+      if (bad) {
         errors++;
-        out.output("req %" PRIu64 " lane %u: got 0x%08x want 0x%08x\n", n, i,
-                   got[i], want[i]);
+        out.output("req %" PRIu64 " lane %u: got 0x%08x want %s0x%08x\n", n, i,
+                   got[i], exact ? "" : ">= ", want[i]);
       }
     }
     out.verbose(CALL_INFO, 2, 0, "req %" PRIu64 " done after %" PRIu64

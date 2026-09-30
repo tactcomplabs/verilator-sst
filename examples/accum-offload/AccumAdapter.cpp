@@ -21,6 +21,8 @@ AccumAdapter::AccumAdapter(SST::ComponentId_t id, const SST::Params &params)
   if (!model)
     out.fatal(CALL_INFO, -1, "no subcomponent loaded in slot \"model\"\n");
 
+  engine = std::make_unique<AccumEngine>(out, model);
+
   // A subcomponent can own a clock just like a component. This one only
   // steps the RTL handshake; the model's own clock toggles `clk`.
   registerClock(params.find<std::string>("clockFreq", "1GHz"),
@@ -29,70 +31,19 @@ AccumAdapter::AccumAdapter(SST::ComponentId_t id, const SST::Params &params)
 
 // Nobody calls init() on a subcomponent but its parent, so the chain is
 // StubCpu::init -> AccumAdapter::init -> model->init.
-void AccumAdapter::init(unsigned int phase) { model->init(phase); }
+void AccumAdapter::init(unsigned int phase) { engine->init(phase); }
 
 void AccumAdapter::finish() {
   out.verbose(CALL_INFO, 1, 0, "completed %" PRIu64 " requests, %zu left\n",
-              completed, queue.size());
+              engine->completedCount(), engine->outstanding());
 }
 
 void AccumAdapter::submit(const Operands &ops, Callback done) {
-  queue.push_back({ops, std::move(done)});
+  engine->submit(ops, std::move(done));
 }
 
 bool AccumAdapter::clock(SST::Cycle_t) {
-  switch (state) {
-  case State::Reset:
-    // reset_l 1 -> 0 -> 1 so the RTL sees a falling edge regardless of its
-    // random power-up value. Requests submitted meanwhile just queue.
-    if (cycle == 0) {
-      writeBit("en", false);
-      writeBit("reset_l", true);
-    } else if (cycle == 1) {
-      writeBit("reset_l", false);
-    } else {
-      writeBit("reset_l", true);
-      state = State::Idle;
-    }
-    break;
-
-  case State::Idle:
-    if (!queue.empty()) {
-      std::vector<uint8_t> packet;
-      for (uint16_t v : queue.front().ops) {
-        packet.push_back(v & 0xff);
-        packet.push_back(v >> 8);
-      }
-      model->writePort("add", packet);
-      writeBit("en", true);
-      state = State::WaitDone;
-    }
-    break;
-
-  case State::WaitDone:
-    if (readBit("done")) {
-      const auto bytes = model->readPort("accum");
-      Sums sums{};
-      for (unsigned i = 0; i < Lanes; i++)
-        for (unsigned b = 0; b < 4; b++)
-          sums[i] |= uint32_t(bytes[i * 4 + b]) << (8 * b);
-      writeBit("en", false);
-
-      // pop before the callback: the client may submit() from inside it
-      Callback cb = std::move(queue.front().done);
-      queue.pop_front();
-      completed++;
-      state = State::WaitClear;
-      cb(sums);
-    }
-    break;
-
-  case State::WaitClear:
-    if (!readBit("done"))
-      state = State::Idle;
-    break;
-  }
-  cycle++;
+  engine->step();
   return false;
 }
 

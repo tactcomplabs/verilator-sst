@@ -11,17 +11,18 @@
 #ifndef _ACCUMADAPTER_H_
 #define _ACCUMADAPTER_H_
 
-#include <deque>
+#include <memory>
 #include <string>
 
 #include "AccumAccelAPI.h"
+#include "AccumEngine.h"
 #include "verilatorSSTAPI.h"
 
 namespace SST::VerilatorSST {
 
 /// AccumAdapter: implements AccumAccelAPI on top of the Direct build of the
-/// verilated Accum model, which it owns in its own "model" slot. It hides the
-/// RTL protocol (reset, en/done handshake, byte packing) from the client.
+/// verilated Accum model, which it owns in its own "model" slot. The RTL
+/// protocol (reset, en/done handshake, byte packing) lives in AccumEngine.
 class AccumAdapter : public AccumAccelAPI {
 public:
   AccumAdapter(SST::ComponentId_t id, const SST::Params &params);
@@ -31,7 +32,7 @@ public:
   void finish() override;
 
   void submit(const Operands &ops, Callback done) override;
-  size_t outstanding() const override { return queue.size(); }
+  size_t outstanding() const override { return engine->outstanding(); }
 
   bool clock(SST::Cycle_t cycle);
 
@@ -58,27 +59,10 @@ public:
   // clang-format on
 
 private:
-  enum class State { Reset, Idle, WaitDone, WaitClear };
-
-  struct Request {
-    Operands ops;
-    Callback done;
-  };
-
-  void writeBit(const std::string &port, bool v) {
-    model->writePort(port, {uint8_t(v)});
-  }
-  bool readBit(const std::string &port) {
-    const auto b = model->readPort(port);
-    return !b.empty() && b[0] != 0;
-  }
-
   SST::Output out;
   VerilatorSSTBase *model = nullptr;
-  State state = State::Reset;
-  uint64_t cycle = 0;
-  uint64_t completed = 0;
-  std::deque<Request> queue; ///< front() is the request in flight, if any
+  std::unique_ptr<AccumEngine> engine; ///< RTL handshake, shared with the
+                                       ///< link-connected component
 };
 
 } // namespace SST::VerilatorSST

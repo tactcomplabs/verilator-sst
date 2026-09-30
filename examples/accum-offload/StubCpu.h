@@ -64,6 +64,7 @@ private:
   AccumAccelAPI *accel = nullptr;
 
   uint64_t numOps, burst, period;
+  bool exact;
   uint64_t cycle = 0;
   uint64_t issued = 0;
   uint64_t completed = 0;
