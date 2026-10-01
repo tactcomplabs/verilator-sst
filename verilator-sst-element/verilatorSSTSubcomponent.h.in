@@ -61,6 +61,7 @@ public:
     { "useVPI",     "Is Verilator VPI used",                      "false"},
     { "clockFreq",  "Sets the clock frequency",                   "1GHz"},
     { "clockPort",  "Sets the internal verilog clock port",       "clock"},
+    @VERILATOR_SST_SELF_CLOCK_DOC@
     { "resetVals",  "Initial reset values for each labeled port", "port:Val"},
   )
 
@@ -170,6 +171,7 @@ private:
 
   // Private data
   std::string clockPort;   ///< verilator named clock port
+  bool SelfClock;          ///< model toggles its own clock (vs. clk link events)
 
   ///< Map of port indices to reset values
   std::vector<PortReset> ResetVals;

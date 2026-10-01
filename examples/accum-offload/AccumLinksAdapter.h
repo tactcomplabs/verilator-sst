@@ -27,9 +27,11 @@ namespace SST::VerilatorSST {
 ///
 /// The link endpoints are ports of this adapter: the config connects
 /// (adapter, "clk") <-> (model, "clk"), and so on. The CPU itself never sees
-/// them and needs no changes. Since the Links build does not clock
-/// itself, this adapter also generates the RTL clock: one full clock cycle
-/// (rising, then falling edge) per adapter clock tick.
+/// them and needs no changes. By default the Links build does not clock
+/// itself, so this adapter also generates the RTL clock: one full clock cycle
+/// (rising, then falling edge) per adapter clock tick. With selfClock=1 the
+/// model clocks itself instead (set selfClock=1 on the model too): the adapter
+/// leaves the "clk" port unconnected and only runs the en/done handshake.
 class AccumLinksAdapter : public AccumAccelAPI {
 public:
   AccumLinksAdapter(SST::ComponentId_t id, const SST::Params &params);
@@ -53,6 +55,7 @@ public:
   SST_ELI_DOCUMENT_PARAMS(
     {"verbose",   "Sets the verbosity",                  "0"},
     {"clockFreq", "Rate of one RTL clock cycle per tick", "1GHz"},
+    {"selfClock", "The model clocks itself; do not drive or connect clk", "false"},
   )
 
   // Same names as the verilog ports
@@ -87,6 +90,7 @@ private:
   void handleAccum(SST::Event *ev);
 
   SST::Output out;
+  bool selfClock = false;
   SST::Link *linkClk, *linkResetL, *linkEn, *linkAdd, *linkAccum, *linkDone;
   State state = State::Reset;
   bool readPending = false; ///< a read request is outstanding on `done`

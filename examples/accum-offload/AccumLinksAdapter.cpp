@@ -19,7 +19,9 @@ AccumLinksAdapter::AccumLinksAdapter(SST::ComponentId_t id,
            params.find<int>("verbose", 0), 0, SST::Output::STDOUT);
 
   // Write-only ports need no handler; read ports get the model's reply.
-  linkClk = configureLink("clk");
+  selfClock = params.find<bool>("selfClock", false);
+  // not needed (and left unconnected in the config) when the model clocks itself
+  linkClk = selfClock ? nullptr : configureLink("clk");
   linkResetL = configureLink("reset_l");
   linkEn = configureLink("en");
   linkAdd = configureLink("add");
@@ -29,11 +31,14 @@ AccumLinksAdapter::AccumLinksAdapter(SST::ComponentId_t id,
   linkDone = configureLink(
       "done", new Event::Handler<AccumLinksAdapter,
                                  &AccumLinksAdapter::handleDone>(this));
-  for (auto *l : {linkClk, linkResetL, linkEn, linkAdd, linkAccum, linkDone}) {
+  for (auto *l : {linkResetL, linkEn, linkAdd, linkAccum, linkDone}) {
     if (!l)
       out.fatal(CALL_INFO, -1,
-                "all six Accum ports must be connected in the config\n");
+                "reset_l, en, add, accum and done must be connected in the "
+                "config\n");
   }
+  if (!selfClock && !linkClk)
+    out.fatal(CALL_INFO, -1, "clk must be connected unless selfClock is set\n");
 
   registerClock(params.find<std::string>("clockFreq", "1GHz"),
                 new Clock::Handler<AccumLinksAdapter,
@@ -47,7 +52,8 @@ void AccumLinksAdapter::submit(const Operands &ops, Callback done) {
 bool AccumLinksAdapter::clock(SST::Cycle_t) {
   // One adapter tick == one RTL clock cycle. Everything sent between the
   // rising and falling edge is seen by the RTL after the rising edge.
-  writeBit(linkClk, true);
+  if (!selfClock)
+    writeBit(linkClk, true);
 
   switch (state) {
   case State::Reset:
@@ -88,7 +94,8 @@ bool AccumLinksAdapter::clock(SST::Cycle_t) {
     break; // waiting for the accum read issued by handleDone
   }
 
-  writeBit(linkClk, false);
+  if (!selfClock)
+    writeBit(linkClk, false);
   cycle++;
   return false;
 }

@@ -30,9 +30,7 @@ set(VERILATOR_INCLUDE "" CACHE STRING "Sets the verilator include path")
 #------------------------------------------------------------------
 # MODEL ARGUMENTS
 #------------------------------------------------------------------
-option(ENABLE_CLK_HANDLING "Allows subcomponent to handle the clock port automatically" OFF)
-
-option(ENABLE_LINK_HANDLING "Automatically adds SST link definitions and configurations" ON)
+option(ENABLE_LINK_HANDLING "Generate the Links build (SST links per port); OFF generates the Direct build (C++ API, always self clocked)" ON)
 
 set(VERILOG_SOURCE_DIR "../verilog" CACHE STRING "Path to the verilog source tree")
 

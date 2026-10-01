@@ -49,4 +49,21 @@ set_tests_properties(AccumOffloadComponentExample
   PASS_REGULAR_EXPRESSION "StubCpu: PASSED"
   FAIL_REGULAR_EXPRESSION "StubCpu: FAILED")
 
+# Self-clocked Links model: clk left unconnected, everything else still links
+add_test(NAME AccumOffloadLinksSelfClockExample
+  COMMAND sst ${CMAKE_CURRENT_SOURCE_DIR}/accum-offload-links.py -- -s)
+set_tests_properties(AccumOffloadLinksSelfClockExample PROPERTIES
+  PASS_REGULAR_EXPRESSION "StubCpu: PASSED"
+  FAIL_REGULAR_EXPRESSION "StubCpu: FAILED")
+
+# Mismatches between selfClock and the clk wiring must be fatal, both ways
+add_test(NAME AccumOffloadLinksSelfClockButClkConnected
+  COMMAND sst ${CMAKE_CURRENT_SOURCE_DIR}/accum-offload-links.py -- --model-self-clock 1 --adapter-self-clock 0)
+set_tests_properties(AccumOffloadLinksSelfClockButClkConnected PROPERTIES
+  PASS_REGULAR_EXPRESSION "selfClock is set, but the clock port clk is connected")
+add_test(NAME AccumOffloadLinksClkUnconnectedWithoutSelfClock
+  COMMAND sst ${CMAKE_CURRENT_SOURCE_DIR}/accum-offload-links.py -- --model-self-clock 0 --adapter-self-clock 1)
+set_tests_properties(AccumOffloadLinksClkUnconnectedWithoutSelfClock PROPERTIES
+  PASS_REGULAR_EXPRESSION "was unable to configureLink link_clk")
+
 # EOF

@@ -88,12 +88,15 @@ This will generate two subcomponents for each included example Verilog code (one
 -DVERILOG_TOP=<name of the top level verilog module>
 -DVERILOG_TOP_SOURCES=<list of verilog top source files>
 -DVERILATOR_OPTIONS=<additional verilator compilation options>  # Defaults to empty string
--DENABLE_CLK_HANDLING=ON                                   # Generates automatic clock port handling (for C++ API interface)
--DENABLE_LINK_HANDLING=ON                                  # Generates links and link handlers (for links interface; on by default)
--DCLOCK_PORT_NAME=<name of clock port>                     # Defaults to "clk", used with ENABLE_LINK_HANDLING
+-DENABLE_LINK_HANDLING=ON                                  # ON (default): Links build, a link per port. OFF: Direct build (C++ API, no links)
+-DCLOCK_PORT_NAME=<name of clock port>                     # Defaults to "clk", used by the Links build
 ```
 
-> **Note**: `ENABLE_CLK_HANDLING` and `ENABLE_LINK_HANDLING` cannot be set to `ON` simultaneously.
+### Clocking
+
+- **Direct build:** always clocks itself at its `clockFreq` parameter.
+- **Links build:** by default every event on the `clk` link is one clock edge, so the component connected to `clk` is responsible for clocking. Set the runtime parameter `selfClock=1` to have the model toggle its own clock at `clockFreq` instead; the `clk` link must then be left unconnected (and `clockPort` must name the port the model was generated with, `CLOCK_PORT_NAME`). Mismatches are fatal in both directions: `selfClock=1` with `clk` connected, or `selfClock` unset with `clk` unconnected. All other ports remain links either way.
+- In both clocking modes one RTL cycle is two Verilator ticks, so `writePortAtTick` offsets mean the same thing. When the model clocks itself, link events may land before or after an edge at the same timestamp, so clients should use the RTL's own handshake or `writePortAtTick`.
 
 ---
 
