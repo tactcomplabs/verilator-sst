@@ -98,6 +98,15 @@ This will generate two subcomponents for each included example Verilog code (one
 - **Links build:** by default every event on the `clk` link is one clock edge, so the component connected to `clk` is responsible for clocking. Set the runtime parameter `selfClock=1` to have the model toggle its own clock at `clockFreq` instead; the `clk` link must then be left unconnected (and `clockPort` must name the port the model was generated with, `CLOCK_PORT_NAME`). Mismatches are fatal in both directions: `selfClock=1` with `clk` connected, or `selfClock` unset with `clk` unconnected. All other ports remain links either way.
 - In both clocking modes one RTL cycle is two Verilator ticks, so `writePortAtTick` offsets mean the same thing. When the model clocks itself, link events may land before or after an edge at the same timestamp, so clients should use the RTL's own handshake or `writePortAtTick`.
 
+#### Differences from earlier Links builds
+
+With `selfClock` unset (the default), a Links model behaves as it did before `selfClock` existed, with one change: it no longer registers an SST clock. Previously every Links model registered a clock at `clockFreq` whose handler did nothing.
+
+- Simulation results are unaffected, since that clock did no work and did not affect when the simulation ends. Event counts and runtime drop slightly because the empty events are gone, so profiling or event-count numbers will look different from older runs.
+- `clockFreq` is still accepted on a Links model but is ignored unless `selfClock=1`.
+- `ENABLE_CLK_HANDLING` was removed; it no longer controlled anything. Use `ENABLE_LINK_HANDLING` to choose between the Links build (ON, the default) and the Direct build (OFF).
+- If you regenerate a model, rebuild and re-install its library: the clock registration is generated code.
+
 ---
 
 ## Debug
