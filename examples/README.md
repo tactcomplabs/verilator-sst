@@ -37,7 +37,7 @@ Payloads are little-endian bytes sized by port width and depth. For `Accum`,
 |---|---|
 | [`accum-driver/`](accum-driver) | **Links, testbench style.** A component drives the six ports directly: clock, reset, operands, reads. The closest to what the test harness does. |
 | [`accum-driver-direct/`](accum-driver-direct) | **Direct, component owns the model.** Same job, using method calls and the `done` handshake. |
-| [`accum-offload/`](accum-offload) | **Client + adapter.** A CPU-like component offloads work through a small API; an adapter hides the RTL behind it. Three ways to attach the RTL, same client, in one library. |
+| [`accum-offload/`](accum-offload) | **Client + adapter** (see its [README](accum-offload/README.md)). A CPU-like component offloads work through a small API; an adapter hides the RTL behind it. Three ways to attach the RTL, same client, in one library. |
 
 ### accum-offload
 
@@ -74,7 +74,7 @@ all clients in arrival order.
 
 - **Modelled latency:** the link latency is the trip to the accelerator and back.
   `-l 10ns` adds 40 cycles at the stub's 2 GHz (2 x 10 ns x 2 GHz) to every
-  request; `-l 0ns` reproduces the subcomponent adapter's numbers.
+  request; `-l 0ns` matches the Links adapter's numbers (the Direct adapter is one cycle faster).
 - **Shared state:** the RTL has one set of running totals, so with several
   clients each result includes the others' earlier requests (`-c 3`). The stubs
   then check a lower bound (`exact=0`) instead of equality.
