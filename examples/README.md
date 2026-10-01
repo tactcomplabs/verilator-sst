@@ -82,6 +82,10 @@ all clients in arrival order.
   `AccumEngine` (queue plus reset and `en`/`done` handshake), except the
   Links adapter, which drives the RTL from PortEvents.
 
+## Simulated time in the Links examples
+
+The Links examples report about 1.001 us of simulated time however little work they do. That comes from the `VerilatorComponent` host, a primary component that keeps the simulation open for `numCycles` of its clock (default 1000 at 1 GHz), not from the work. The simulation still waits for your own components to finish, so longer workloads are not cut short; set `numCycles` on the host if you want shorter runs.
+
 ## Choosing
 
 - Want a self-contained check of a model from your own code? `accum-driver*`.
