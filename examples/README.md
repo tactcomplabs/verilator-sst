@@ -39,6 +39,21 @@ Payloads are little-endian bytes sized by port width and depth. For `Accum`,
 | [`accum-driver-direct/`](accum-driver-direct) | **Direct, component owns the model.** Same job, using method calls and the `done` handshake. |
 | [`accum-offload/`](accum-offload) | **Client + adapter** (see its [README](accum-offload/README.md)). A CPU-like component offloads work through a small API; an adapter hides the RTL behind it. Three ways to attach the RTL, same client, in one library. |
 
+### accum-driver and accum-driver-direct vs. the test harness
+
+These two are deliberately close to what `test/test_elements` already does for `Accum`: the same port I/O (`PortEvent`s over links, or `writePort`/`readPort`), and `accum-driver` follows the same 3-cycle schedule as the harness's Accum script. As tests they add almost nothing beyond the harness's Accum cases. Their value is as readable examples of a hand-written component, a second way of looking at the same models. The differences:
+
+| | Test harness | `accum-driver*` |
+|---|---|---|
+| Model knowledge | Generic C++ (`VerilatorTestLink` / `VerilatorTestDirect`) that knows nothing about Accum; all of it is in the Python config | The component is Accum-specific: typed lanes, hand-packed bytes, a built-in reference model |
+| Stimulus | A list of `port:action:value:tick` strings generated in Python, with the expected results precomputed there | Generated inside the component |
+| Checking | `fatal` on the first mismatched read | Counts errors and prints a PASSED/FAILED summary at `finish`, which `ctest` matches |
+| Timing (Links) | Open-loop: reads happen at fixed ticks | Same, deliberately |
+| Timing (Direct) | Open-loop: ops fire at fixed ticks and the `clk` ops are dropped because the model clocks itself, so it depends on the test component's clock and the model's clock staying in step | Closed-loop: follows the RTL's own `done` handshake, so it does not depend on edge ordering |
+| Coverage | Every model (Counter, Accum, Accum1D, Scratchpad, UART, PicoRV, Pin), both interfaces, both access methods, wide values | Accum only |
+
+The Direct timing row is the one that matters if you are writing a real component: wait on the RTL's handshake instead of counting ticks, as `AccumDriverDirect` (and `AccumEngine` in `accum-offload`) do.
+
 ### accum-offload
 
 This is the pattern to copy for a CPU or accelerator model that uses RTL
