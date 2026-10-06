@@ -40,8 +40,10 @@ endfunction()
 # - VERILOG_DEVICE : device name of the target verilog module
 # - CLOCK_PORT_NAME : name of verilog module's clock port
 # -----------------------------------------------------------------
-# NOTE: Link handling MUST NOT be used for verilator direct
-# NOTE: Cannot use clock handling AND link handling at the same time
+# NOTE: The Direct build has no links and always clocks itself.
+# NOTE: The Links build is driven by "clk" link events by default. Setting the
+#       runtime parameter selfClock=1 makes it clock itself instead (the "clk"
+#       link must then be left unconnected); see VERILATOR_SST_SELF_CLOCK_* below.
 # -----------------------------------------------------------------
 # Generate the signals from the Verilator top module
 # -----------------------------------------------------------------
@@ -71,11 +73,23 @@ function(generate_verilator_component VERILOG_TOP
   # Check if INTERFACE = "Direct"
   if(SST_INTERFACE STREQUAL "Direct")
     set(ENABLE_LINK_HANDLING 0)
-    set(ENABLE_CLK_HANDLING 1)
     set(VERILOG_DEVICE "${VERILOG_DEVICE}Direct")
+    # No links, so the model is always self clocked
+    set(VERILATOR_SST_SELF_CLOCK_INIT "SelfClock = true;")
+    set(VERILATOR_SST_SELF_CLOCK_DOC "")
   elseif(SST_INTERFACE STREQUAL "Links")
     set(ENABLE_LINK_HANDLING 1)
-    set(ENABLE_CLK_HANDLING 0)
+    # Clocked by "clk" link events unless selfClock=1 is passed at runtime. In
+    # self clocked mode the clock is toggled through the runtime clockPort
+    # parameter, while the link configuration keys off CLOCK_PORT_NAME, so
+    # they must name the same port.
+    set(VERILATOR_SST_SELF_CLOCK_INIT "SelfClock = params.find<bool>(\"selfClock\", false);
+  if( SelfClock && clockPort != \"${CLOCK_PORT_NAME}\" ){
+    output->fatal(CALL_INFO, -1,
+                  \"selfClock requires clockPort=${CLOCK_PORT_NAME} (the clock port this model was generated with), got clockPort=%s\\n\",
+                  clockPort.c_str());
+  }")
+    set(VERILATOR_SST_SELF_CLOCK_DOC "{ \"selfClock\", \"Clock the model internally at clockFreq instead of from clk link events; leave the clk link unconnected\", \"false\"},")
   else()
     message(FATAL_ERROR "Invalid SST_INTERFACE: ${SST_INTERFACE}")
   endif()
@@ -220,7 +234,7 @@ function(generate_verilator_component VERILOG_TOP
     endif()
 
     message(STATUS "Building link configurations...")
-    execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildLinkConfig.sh ${VTOP_PORTS} ${VERILOG_DEVICE}
+    execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildLinkConfig.sh ${VTOP_PORTS} ${VERILOG_DEVICE} ${CLOCK_PORT_NAME}
                         RESULT_VARIABLE LINK_CONFIG_CHECK
                         OUTPUT_VARIABLE VERILATOR_SST_LINK_CONFIGS
                         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -244,8 +258,9 @@ function(generate_verilator_component VERILOG_TOP
 
   endif()
 
-  if ( ENABLE_CLK_HANDLING )
-    execute_process(COMMAND echo "// cycle verilator clock and apply queued writes
+  # Body of clock(). It is only registered with SST when the model clocks
+  # itself (always for Direct, selfClock=1 for Links), so it is always generated.
+  execute_process(COMMAND echo "// cycle verilator clock and apply queued writes
   std::vector<uint8_t> setHigh;
   std::vector<uint8_t> setLow;
   setLow.push_back((uint8_t)0U);
@@ -259,12 +274,6 @@ function(generate_verilator_component VERILOG_TOP
   Top->eval();"
   OUTPUT_VARIABLE VERILATOR_SST_CLOCK_TICK
   OUTPUT_STRIP_TRAILING_WHITESPACE )
-  else()
-    execute_process(COMMAND echo "// do nothing; link interface in use"
-  OUTPUT_VARIABLE VERILATOR_SST_CLOCK_TICK
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-                    WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
-  endif()
 
   # -----------------------------------------------------------------
   # Configure the verilatorSST files

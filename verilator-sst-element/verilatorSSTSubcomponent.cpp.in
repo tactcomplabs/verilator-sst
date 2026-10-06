@@ -45,6 +45,10 @@ VerilatorSST@VERILOG_DEVICE@::VerilatorSST@VERILOG_DEVICE@(ComponentId_t id,
                   clockPort.c_str());
   }
 
+  // decide who clocks the model: itself (Direct, or Links with selfClock=1)
+  // or "clk" link events (Links default)
+  @VERILATOR_SST_SELF_CLOCK_INIT@
+
   // init verilator interfaces
   ContextP = new VerilatedContext();
   ContextP->threads(1);
@@ -62,9 +66,11 @@ VerilatorSST@VERILOG_DEVICE@::VerilatorSST@VERILOG_DEVICE@(ComponentId_t id,
   initResetValues(params);
   @VERILATOR_SST_LINK_CONFIGS@
 
-  // register the clock
-  registerClock(clockFreq,
-                new Clock::Handler<VerilatorSST@VERILOG_DEVICE@, &VerilatorSST@VERILOG_DEVICE@::clock>(this));
+  // register the clock, only needed when the model clocks itself
+  if( SelfClock ){
+    registerClock(clockFreq,
+                  new Clock::Handler<VerilatorSST@VERILOG_DEVICE@, &VerilatorSST@VERILOG_DEVICE@::clock>(this));
+  }
 
   // register statistics
   for(auto &portEntry : Ports) {
