@@ -40,8 +40,10 @@ endfunction()
 # - VERILOG_DEVICE : device name of the target verilog module
 # - CLOCK_PORT_NAME : name of verilog module's clock port
 # -----------------------------------------------------------------
-# NOTE: Link handling MUST NOT be used for verilator direct
-# NOTE: Cannot use clock handling AND link handling at the same time
+# NOTE: The Direct build has no links and always clocks itself.
+# NOTE: The Links build is driven by "clk" link events by default. Setting the
+#       runtime parameter selfClock=1 makes it clock itself instead (the "clk"
+#       link must then be left unconnected); see VERILATOR_SST_SELF_CLOCK_* below.
 # -----------------------------------------------------------------
 # Generate the signals from the Verilator top module
 # -----------------------------------------------------------------
@@ -55,11 +57,23 @@ function(generate_verilator_component VERILOG_TOP
   # Check if INTERFACE = "Direct"
   if(SST_INTERFACE STREQUAL "Direct")
     set(ENABLE_LINK_HANDLING 0)
-    set(ENABLE_CLK_HANDLING 1)
     set(VERILOG_DEVICE "${VERILOG_DEVICE}Direct")
+    # No links, so the model is always self clocked
+    set(VERILATOR_SST_SELF_CLOCK_INIT "SelfClock = true;")
+    set(VERILATOR_SST_SELF_CLOCK_DOC "")
   elseif(SST_INTERFACE STREQUAL "Links")
     set(ENABLE_LINK_HANDLING 1)
-    set(ENABLE_CLK_HANDLING 0)
+    # Clocked by "clk" link events unless selfClock=1 is passed at runtime. In
+    # self clocked mode the clock is toggled through the runtime clockPort
+    # parameter, while the link configuration keys off CLOCK_PORT_NAME, so
+    # they must name the same port.
+    set(VERILATOR_SST_SELF_CLOCK_INIT "SelfClock = params.find<bool>(\"selfClock\", false);
+  if( SelfClock && clockPort != \"${CLOCK_PORT_NAME}\" ){
+    output->fatal(CALL_INFO, -1,
+                  \"selfClock requires clockPort=${CLOCK_PORT_NAME} (the clock port this model was generated with), got clockPort=%s\\n\",
+                  clockPort.c_str());
+  }")
+    set(VERILATOR_SST_SELF_CLOCK_DOC "{ \"selfClock\", \"Clock the model internally at clockFreq instead of from clk link events; leave the clk link unconnected\", \"false\"},")
   else()
     message(FATAL_ERROR "Invalid SST_INTERFACE: ${SST_INTERFACE}")
   endif()
@@ -68,6 +82,7 @@ function(generate_verilator_component VERILOG_TOP
   # Print out the values of the variables
   print_verilator_variables(${VERILOG_TOP} ${VERILOG_BUILD_DIR} ${VERILOG_SOURCE_DIR} ${VERILOG_TOP_SOURCES} "${VERILATOR_OPTIONS}" ${VERILOG_DEVICE} ${VERILATOR_INCLUDE} ${VERILATORSST_SCRIPTS})
   find_program(CLANG_FORMAT "clang-format")
+  find_package(Python3 COMPONENTS Interpreter REQUIRED)
   set(VTOP "${VERILOG_BUILD_DIR}/VTop.h")
   set(MESSAGE "GENERATING SST COMPONENT FOR VERILOG MODULE: ${VERILOG_TOP}")
   print_encapsulated_message(${MESSAGE})
@@ -88,8 +103,41 @@ function(generate_verilator_component VERILOG_TOP
     message(WARNING "Inout ports will not be added to the subcomponent port list, set ENABLE_INOUT_HANDLING to add these to the subcomponent")
   endif()
 
+  # -----------------------------------------------------------------
+  # Generate the port manifest from Verilator's AST JSON dump
+  # -----------------------------------------------------------------
+  # VTop.h's own port declarations can't be parsed directly: Verilator
+  # represents different port shapes differently there (VL_IN8/16/32/64/W
+  # macros for scalar/packed-vector ports, VlUnpacked<T,N> for SV unpacked
+  # arrays, and potentially other forms in future releases), and some of
+  # those forms don't even encode a port's direction. Verilator's AST JSON
+  # dump is the authoritative, uniform source for every port's
+  # name/direction/width/depth regardless of how VTop.h ends up declaring
+  # it, so it drives every port-discovery script below instead. VTop.h
+  # itself is untouched and still compiled normally.
+  message(STATUS "Building verilator AST JSON dump...")
+  execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildVerilatorJSON.sh
+                    ${VERILOG_BUILD_DIR} ${VERILOG_SOURCE_DIR} ${VERILOG_TOP} ${VERILOG_TOP_SOURCES} "${VERILATOR_OPTIONS}" ${ENABLE_INOUT_HANDLING}
+                    RESULT_VARIABLE VERILATOR_JSON_CHECK
+                    OUTPUT_VARIABLE VERILATOR_JSON_OUT)
+  if(VERILATOR_JSON_CHECK)
+    message(FATAL_ERROR "Errors detected in the BuildVerilatorJSON.sh script; interrupting build")
+  endif()
+
+  message(STATUS "Building port manifest...")
+  execute_process(COMMAND ${Python3_EXECUTABLE} ${VERILATORSST_SCRIPTS}/GeneratePortManifest.py ${VERILOG_BUILD_DIR}/VTop.tree.json ${ENABLE_INOUT_HANDLING}
+                    RESULT_VARIABLE PORT_MANIFEST_CHECK
+                    OUTPUT_VARIABLE VERILATOR_SST_PORT_MANIFEST
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+  if(PORT_MANIFEST_CHECK)
+    message(FATAL_ERROR "Errors detected in the GeneratePortManifest.py script; interrupting build")
+  endif()
+
+  set(VTOP_PORTS "${VERILOG_BUILD_DIR}/VTop.ports.h")
+  file(WRITE ${VTOP_PORTS} "${VERILATOR_SST_PORT_MANIFEST}")
+
   message(STATUS "Building port definitions...")
-  execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortDef.sh ${VTOP}
+  execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortDef.sh ${VTOP_PORTS}
                     RESULT_VARIABLE PORT_DEF_CHECK
                     OUTPUT_VARIABLE VERILATOR_SST_PORT_DEF
                     OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -99,7 +147,7 @@ function(generate_verilator_component VERILOG_TOP
   endif()
 
   message(STATUS "Building port entries...")
-  execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortEntry.sh ${VTOP} ${VERILOG_DEVICE}
+  execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortEntry.sh ${VTOP_PORTS} ${VERILOG_DEVICE}
                     RESULT_VARIABLE PORT_ENTRY_CHECK
                     OUTPUT_VARIABLE VERILATOR_SST_PORT_ENTRY
                     OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -109,7 +157,7 @@ function(generate_verilator_component VERILOG_TOP
   endif()
 
   message(STATUS "Building port map...")
-  execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortMap.sh ${VTOP}
+  execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortMap.sh ${VTOP_PORTS}
                     RESULT_VARIABLE PORT_MAP_CHECK
                     OUTPUT_VARIABLE VERILATOR_SST_PORT_MAP
                     OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -119,7 +167,7 @@ function(generate_verilator_component VERILOG_TOP
   endif()
 
   message(STATUS "Building port handlers...")
-  execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortHandlers.sh ${VTOP}
+  execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortHandlers.sh ${VTOP_PORTS}
                     RESULT_VARIABLE PORT_HANDLERS_CHECK
                     OUTPUT_VARIABLE VERILATOR_SST_PORT_HANDLERS
                     OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -129,7 +177,7 @@ function(generate_verilator_component VERILOG_TOP
   endif()
 
   message(STATUS "Building port IO...")
-  execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortIO.sh ${VTOP}
+  execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortIO.sh ${VTOP_PORTS}
                     RESULT_VARIABLE PORT_IO_CHECK
                     OUTPUT_VARIABLE VERILATOR_SST_PORT_IO_HANDLERS
                     OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -139,7 +187,7 @@ function(generate_verilator_component VERILOG_TOP
   endif()
 
   message(STATUS "Building port IO implementations...")
-  execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortIOImpls.sh ${VTOP} ${VERILOG_DEVICE}
+  execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortIOImpls.sh ${VTOP_PORTS} ${VERILOG_DEVICE}
                     RESULT_VARIABLE PORT_IO_IMPLS_CHECK
                     OUTPUT_VARIABLE VERILATOR_SST_PORT_IO_IMPLS
                     OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -150,7 +198,7 @@ function(generate_verilator_component VERILOG_TOP
 
   message(STATUS "Building port handler implementations...")
   if(ENABLE_LINK_HANDLING)
-    execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortHandlerImpls.sh ${VTOP} ${VERILOG_DEVICE} 1 ${CLOCK_PORT_NAME}
+    execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortHandlerImpls.sh ${VTOP_PORTS} ${VERILOG_DEVICE} 1 ${CLOCK_PORT_NAME}
                         RESULT_VARIABLE PORT_HANDLER_IMPLS_CHECK
                         OUTPUT_VARIABLE VERILATOR_SST_PORT_HANDLER_IMPLS
                         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -160,7 +208,7 @@ function(generate_verilator_component VERILOG_TOP
     endif()
 
     message(STATUS "Building link definitions...")
-    execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildLinkDef.sh ${VTOP}
+    execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildLinkDef.sh ${VTOP_PORTS}
                         RESULT_VARIABLE LINK_DEF_CHECK
                         OUTPUT_VARIABLE VERILATOR_SST_LINK_DEFS
                         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -170,7 +218,7 @@ function(generate_verilator_component VERILOG_TOP
     endif()
 
     message(STATUS "Building link configurations...")
-    execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildLinkConfig.sh ${VTOP} ${VERILOG_DEVICE}
+    execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildLinkConfig.sh ${VTOP_PORTS} ${VERILOG_DEVICE} ${CLOCK_PORT_NAME}
                         RESULT_VARIABLE LINK_CONFIG_CHECK
                         OUTPUT_VARIABLE VERILATOR_SST_LINK_CONFIGS
                         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -180,7 +228,7 @@ function(generate_verilator_component VERILOG_TOP
     endif()
 
   else()
-    execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortHandlerImpls.sh ${VTOP} ${VERILOG_DEVICE} 0
+    execute_process(COMMAND ${VERILATORSST_SCRIPTS}/BuildPortHandlerImpls.sh ${VTOP_PORTS} ${VERILOG_DEVICE} 0
                         RESULT_VARIABLE PORT_HANDLER_IMPLS_CHECK
                         OUTPUT_VARIABLE VERILATOR_SST_PORT_HANDLER_IMPLS
                         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -194,8 +242,9 @@ function(generate_verilator_component VERILOG_TOP
 
   endif()
 
-  if ( ENABLE_CLK_HANDLING )
-    execute_process(COMMAND echo "// cycle verilator clock and apply queued writes
+  # Body of clock(). It is only registered with SST when the model clocks
+  # itself (always for Direct, selfClock=1 for Links), so it is always generated.
+  execute_process(COMMAND echo "// cycle verilator clock and apply queued writes
   std::vector<uint8_t> setHigh;
   std::vector<uint8_t> setLow;
   setLow.push_back((uint8_t)0U);
@@ -209,12 +258,6 @@ function(generate_verilator_component VERILOG_TOP
   Top->eval();"
   OUTPUT_VARIABLE VERILATOR_SST_CLOCK_TICK
   OUTPUT_STRIP_TRAILING_WHITESPACE )
-  else()
-    execute_process(COMMAND echo "// do nothing; link interface in use"
-  OUTPUT_VARIABLE VERILATOR_SST_CLOCK_TICK
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-                    WORKING_DIRECTORY ${VERILOG_BUILD_DIR})
-  endif()
 
   # -----------------------------------------------------------------
   # Configure the verilatorSST files

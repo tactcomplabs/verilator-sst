@@ -20,6 +20,15 @@
 #include "vpi_user.h"
 #include "verilatedos.h"
 
+// VL_VALUE_STRING_MAX_WORDS was an internal Verilator macro (default 64) that
+// existed through Verilator 5.026 but was removed once Verilator's VPI layer
+// switched to dynamically-sized vector value buffers. Fall back to its old
+// default here so SIGNAL_BITS_MAX keeps the same sanity-check bound on newer
+// Verilator versions that no longer define it.
+#ifndef VL_VALUE_STRING_MAX_WORDS
+    #define VL_VALUE_STRING_MAX_WORDS 64
+#endif
+
 #define SIGNAL_VPI_FORMAT vpiVectorVal
 #define SIGNAL_LOW (uint64_t) 0
 #define SIGNAL_HIGH (uint64_t) 1

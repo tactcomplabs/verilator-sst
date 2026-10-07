@@ -45,6 +45,10 @@ VerilatorSST@VERILOG_DEVICE@::VerilatorSST@VERILOG_DEVICE@(ComponentId_t id,
                   clockPort.c_str());
   }
 
+  // decide who clocks the model: itself (Direct, or Links with selfClock=1)
+  // or "clk" link events (Links default)
+  @VERILATOR_SST_SELF_CLOCK_INIT@
+
   // init verilator interfaces
   ContextP = new VerilatedContext();
   ContextP->threads(1);
@@ -62,9 +66,11 @@ VerilatorSST@VERILOG_DEVICE@::VerilatorSST@VERILOG_DEVICE@(ComponentId_t id,
   initResetValues(params);
   @VERILATOR_SST_LINK_CONFIGS@
 
-  // register the clock
-  registerClock(clockFreq,
-                new Clock::Handler<VerilatorSST@VERILOG_DEVICE@, &VerilatorSST@VERILOG_DEVICE@::clock>(this));
+  // register the clock, only needed when the model clocks itself
+  if( SelfClock ){
+    registerClock(clockFreq,
+                  new Clock::Handler<VerilatorSST@VERILOG_DEVICE@, &VerilatorSST@VERILOG_DEVICE@::clock>(this));
+  }
 
   // register statistics
   for(auto &portEntry : Ports) {
@@ -321,6 +327,36 @@ std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPortVPI(std::string PortN
     return d;
   }
 
+  // SV unpacked-array ports (e.g. "output [W-1:0] foo[N]") are exposed over
+  // VPI as vpiRegArray/vpiNetArray rather than the legacy vpiMemory type, and
+  // their rows aren't reachable via vpi_iterate(vpiMemoryWord, ...) (that
+  // iterator yields nothing for these handles) -- vpi_handle_by_index is the
+  // supported way to reach each element.
+  if(vpiTypeVal == vpiRegArray || vpiTypeVal == vpiNetArray){
+    SignalFactory * signalFactory = nullptr;
+    Signal * signalPtr = nullptr;
+    for(PLI_INT32 i = 0; i < vpiSizeVal; i++){
+      vpiHandle rowHandle = vpi_handle_by_index(vh1, i);
+      assert(rowHandle && "vpi_handle_by_index should return a handle for each array row");
+
+      if(i == 0){
+        const auto rowSizeBits = vpi_get(vpiSize, rowHandle);
+        signalFactory = new SignalFactory(rowSizeBits, vpiSizeVal);
+      }
+
+      s_vpi_value row{SIGNAL_VPI_FORMAT};
+      vpi_get_value(rowHandle, &row);
+      signalPtr = (*signalFactory)(row);
+
+      vpi_free_object(rowHandle);
+    }
+
+    const std::vector<uint8_t>& d = signalPtr->getUIntVector(true);
+    delete signalPtr;
+    delete signalFactory;
+    return d;
+  }
+
   assert(false && "unsupported vpiType");
   std::vector<uint8_t> d;
   return d;
@@ -363,6 +399,27 @@ void VerilatorSST@VERILOG_DEVICE@::writePortVPI(std::string PortName,
 
       vpi_free_object(rowHandle);
       i++;
+    }
+
+    return;
+  }
+
+  // See the matching comment in readPortVPI: SV unpacked-array ports show up
+  // as vpiRegArray/vpiNetArray here, not vpiMemory, and their rows must be
+  // reached with vpi_handle_by_index rather than vpi_iterate(vpiMemoryWord).
+  if(vpiTypeVal == vpiRegArray || vpiTypeVal == vpiNetArray){
+    assert(vpiSizeVal == Depth && "port depth must match signal depth");
+
+    for(PLI_INT32 i = 0; i < vpiSizeVal; i++){
+      vpiHandle rowHandle = vpi_handle_by_index(vh1, i);
+      assert(rowHandle && "vpi_handle_by_index should return a handle for each array row");
+      auto rowSizeBits = vpi_get(vpiSize, rowHandle);
+      assert(rowSizeBits == Width && "row width must match signal width");
+
+      t_vpi_value val = toWrite.getVpiValue(i);
+      vpi_put_value(rowHandle,&val,NULL,0);
+
+      vpi_free_object(rowHandle);
     }
 
     return;

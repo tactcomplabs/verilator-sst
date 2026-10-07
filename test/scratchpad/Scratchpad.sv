@@ -43,7 +43,7 @@ reg [63:0] scratchpad_addr;
 
 assign scratchpad_addr = addr - SCRATCHPAD_BASE;
 assert property (@(posedge clk) scratchpad_addr < SCRATCHPAD_SIZE);
-assert property (@(posedge clk) addr > SCRATCHPAD_BASE);
+assert property (@(posedge clk) addr >= SCRATCHPAD_BASE);
 
 RAM_64 #(.ADDR_WIDTH(ADDR_WIDTH)) ram (
     .clk(clk),
