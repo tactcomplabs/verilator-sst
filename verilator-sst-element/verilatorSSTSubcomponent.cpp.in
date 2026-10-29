@@ -283,6 +283,7 @@ uint64_t VerilatorSST@VERILOG_DEVICE@::getCurrentTick(){
 }
 
 std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPortVPI(std::string PortName){
+  Verilated::threadContextp(ContextP); // VPI looks scopes up in the thread's current context
   vpiHandle vh1 = vpi_handle_by_name((PLI_BYTE8 *)PortName.data(), NULL);
   assert(vh1 && "vpi should return a handle (port not found)");
 
@@ -364,6 +365,7 @@ std::vector<uint8_t> VerilatorSST@VERILOG_DEVICE@::readPortVPI(std::string PortN
 
 void VerilatorSST@VERILOG_DEVICE@::writePortVPI(std::string PortName,
                                                 const std::vector<uint8_t>& Packet){
+  Verilated::threadContextp(ContextP);
   vpiHandle vh1 = vpi_handle_by_name(PortName.data(), NULL);
   assert(vh1 && "vpi should return a handle (port not found)");
 
